@@ -49,77 +49,79 @@ const CravingHistoryListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white px-4 py-4 flex items-center gap-4 border-b border-gray-100 shadow-sm sticky top-0 z-10">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-        <h1 className="text-lg font-semibold text-gray-800">Semua Riwayat Craving</h1>
-      </div>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col">
+        {/* Header */}
+        <div className="bg-white px-4 py-4 flex items-center gap-4 border-b border-gray-100 shadow-sm sticky top-0 z-10">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
+          </button>
+          <h1 className="text-lg font-semibold text-gray-800">Semua Riwayat Craving</h1>
+        </div>
 
-      <main className="p-6 space-y-4">
-        {currentItems.map((item, index) => {
-          const style = getCravingStyle(item.intensity);
-          return (
-            <div
-              key={index}
-              className={`p-4 rounded-xl ${style.color} flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-gray-200`}
-              onClick={() => handleCravingHistoryClick(item)}
-            >
-              <div className={`w-3 h-3 rounded-full ${style.dot}`}></div>
-              <div className="flex-1">
-                <div className="font-semibold text-base">{item.emotion}</div>
-                <div className="text-xs opacity-80">{item.date}</div>
+        <main className="p-6 space-y-4 flex-1">
+          {currentItems.map((item, index) => {
+            const style = getCravingStyle(item.intensity);
+            return (
+              <div
+                key={index}
+                className={`p-4 rounded-xl ${style.color} flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-gray-200`}
+                onClick={() => handleCravingHistoryClick(item)}
+              >
+                <div className={`w-3 h-3 rounded-full ${style.dot}`}></div>
+                <div className="flex-1">
+                  <div className="font-semibold text-base">{item.emotion}</div>
+                  <div className="text-xs opacity-80">{item.date}</div>
+                </div>
+                <div className="text-sm font-semibold">Intensitas: {item.intensity}</div>
               </div>
-              <div className="text-sm font-semibold">Intensitas: {item.intensity}</div>
-            </div>
-          );
-        })}
-      </main>
+            );
+          })}
+        </main>
 
-      {totalPages > 1 && (
-        <footer className="p-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(currentPage - 1);
-                  }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
+        {totalPages > 1 && (
+          <footer className="p-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      handlePageChange(i + 1);
+                      handlePageChange(currentPage - 1);
                     }}
-                    isActive={currentPage === i + 1}
-                  >
-                    {i + 1}
-                  </PaginationLink>
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
                 </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(currentPage + 1);
-                  }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </footer>
-      )}
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(i + 1);
+                      }}
+                      isActive={currentPage === i + 1}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </footer>
+        )}
+      </div>
     </div>
   );
 };

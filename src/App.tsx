@@ -8,7 +8,9 @@ import OnboardingScreen from "./components/OnboardingScreen";
 import WelcomeScreen from "./components/SignInPage/WelcomeScreen";
 import SignInScreen from "./components/SignInPage/SignInScreen";
 import SignUpScreen from "./components/SignInPage/SignUpScreen";
+import JourneyStartScreen from "./components/SignInPage/JourneyStartScreen";
 import TimeSelectionScreen from "./components/SignInPage/TimeSelectionScreen";
+import SetQuitDatePastScreen from "./components/SignInPage/SetQuitDatePastScreen";
 import MotivationScreen from "./components/SignInPage/MotivationScreen";
 import HomePage from "./components/HomePage/HomePage";
 import CravingSupportPage from "./components/CravingSupportPage/CravingSupportPage";
@@ -38,11 +40,13 @@ const App = () => (
           <Route path="/welcome" element={<WelcomeScreen />} />
           <Route path="/signin" element={<SignInScreen />} /> 
           <Route path="/signup" element={<SignUpScreen />} /> 
+          <Route path="/journey-start" element={<JourneyStartScreen />} />
           <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
           <Route path="/otp-verification" element={<OtpVerificationScreen />} />
           <Route path="/reset-password" element={<ResetPasswordScreen />} />
           <Route path="/password-reset-success" element={<PasswordResetSuccessScreen />} />
           <Route path="/time-selection" element={<TimeSelectionScreen />} />
+          <Route path="/set-quit-date-past" element={<SetQuitDatePastScreen />} />
           <Route path="/motivation" element={<MotivationScreen />} />
           <Route element={<MainLayout />}>
             <Route path="/home" element={<HomePage />} />

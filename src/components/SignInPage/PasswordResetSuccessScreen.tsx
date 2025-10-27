@@ -6,7 +6,7 @@ const PasswordResetSuccessScreen = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-6 animate-fade-in">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-6 animate-fade-in max-w-sm mx-auto">
       <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
         <CheckCircle2 className="w-12 h-12 text-green-600" />
       </div>

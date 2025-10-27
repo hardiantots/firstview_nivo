@@ -40,43 +40,45 @@ const OtpVerificationScreen = () => {
       </div>
 
       {/* Content */}
-      <div className="px-6 py-8 animate-fade-in text-center">
-        <h1 className="text-2xl font-bold mb-2">Enter Code</h1>
-        <p className="text-muted-foreground mb-8">
-          We have sent a verification code to <br />
-          <span className="font-medium text-foreground">{email}</span>
-        </p>
+      <div className="max-w-sm mx-auto px-6 py-8">
+        <div className="animate-fade-in text-center">
+          <h1 className="text-2xl font-bold mb-2">Enter Code</h1>
+          <p className="text-muted-foreground mb-8">
+            We have sent a verification code to <br />
+            <span className="font-medium text-foreground">{email}</span>
+          </p>
 
-        <form onSubmit={handleSubmit}>
-          <OTPInput
-            maxLength={6}
-            value={otp}
-            onChange={setOtp}
-            containerClassName="group flex items-center justify-center has-[:disabled]:opacity-30"
-            render={({ slots }) => (
-              <div className="flex">
-                {slots.map((slot, idx) => (
-                  <Slot key={idx} {...slot} />
-                ))}
-              </div>
-            )}
-          />
+          <form onSubmit={handleSubmit}>
+            <OTPInput
+              maxLength={6}
+              value={otp}
+              onChange={setOtp}
+              containerClassName="group flex items-center justify-center has-[:disabled]:opacity-30"
+              render={({ slots }) => (
+                <div className="flex">
+                  {slots.map((slot, idx) => (
+                    <Slot key={idx} {...slot} />
+                  ))}
+                </div>
+              )}
+            />
 
-          <Button
-            type="submit"
-            className="w-full bg-primary hover:bg-primary/90 mt-8"
-            size="lg"
-            disabled={otp.length < 6}
-          >
-            Verify
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="w-full bg-primary hover:bg-primary/90 mt-8"
+              size="lg"
+              disabled={otp.length < 6}
+            >
+              Verify
+            </Button>
+          </form>
 
-        <div className="mt-6 text-sm">
-          <span className="text-muted-foreground">Didn't receive the code? </span>
-          <button className="font-medium text-accent hover:text-accent/80">
-            Resend
-          </button>
+          <div className="mt-6 text-sm">
+            <span className="text-muted-foreground">Didn't receive the code? </span>
+            <button className="font-medium text-accent hover:text-accent/80">
+              Resend
+            </button>
+          </div>
         </div>
       </div>
     </div>

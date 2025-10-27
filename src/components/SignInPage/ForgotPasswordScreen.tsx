@@ -44,35 +44,37 @@ const ForgotPasswordScreen = () => {
       </div>
 
       {/* Content */}
-      <div className="px-6 py-8 animate-fade-in">
-        <h1 className="text-2xl font-bold mb-2">Forgot Password</h1>
-        <p className="text-muted-foreground mb-8">
-          Enter your email to receive a verification code.
-        </p>
+      <div className="max-w-sm mx-auto px-6 py-8">
+        <div className="animate-fade-in">
+          <h1 className="text-2xl font-bold mb-2">Forgot Password</h1>
+          <p className="text-muted-foreground mb-8">
+            Enter your email to receive a verification code.
+          </p>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input type="email" placeholder="Masukkan email" {...field} className="pr-10" />
-                      <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90" size="lg" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Sending..." : "Send Code"}
-            </Button>
-          </form>
-        </Form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input type="email" placeholder="Masukkan email" {...field} className="pr-10" />
+                        <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" size="lg" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Sending..." : "Send Code"}
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
     </div>
   );
