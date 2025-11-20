@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,6 +9,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import Image from "next/image";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const ResetPasswordSchema = z.object({
@@ -20,10 +23,18 @@ const ResetPasswordSchema = z.object({
 type ResetPasswordFormValues = z.infer<typeof ResetPasswordSchema>;
 
 const ResetPasswordScreen = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    // Get email from localStorage
+    const storedEmail = localStorage.getItem('resetEmail');
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+  }, []);
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -32,24 +43,25 @@ const ResetPasswordScreen = () => {
 
   const onSubmit = (data: ResetPasswordFormValues) => {
     console.log("Resetting password with:", data.newPassword);
-    console.log("For email:", location.state?.email);
+    console.log("For email:", email);
     // Here you would make an API call to reset the password
-    // await resetPassword({ email: location.state?.email, newPassword: data.newPassword });
-    navigate("/password-reset-success");
+    // await resetPassword({ email, newPassword: data.newPassword });
+    router.push("/password-reset-success");
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="h-48 relative overflow-hidden">
-        <img
+        <Image
           src={abstractHeader}
           alt="Abstract colorful background"
           className="w-full h-full object-cover"
+          fill
         />
         <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+          onClick={() => router.back()}
+          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>

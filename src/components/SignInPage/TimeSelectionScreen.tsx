@@ -1,13 +1,16 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
 
 const TimeSelectionScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [selectedDays, setSelectedDays] = useState<number | null>(null);
 
   const timeOptions = [
@@ -19,7 +22,9 @@ const TimeSelectionScreen = () => {
 
   const handleContinue = () => {
     if (selectedDays) {
-      navigate("/motivation", { state: { selectedDays } });
+      // Store selected days in localStorage
+      localStorage.setItem('selectedDays', selectedDays.toString());
+      router.push("/motivation");
     }
   };
 
@@ -30,12 +35,12 @@ const TimeSelectionScreen = () => {
           {/* Header */}
           <div className="relative flex justify-center items-center mb-8 pt-8">
             <button
-              onClick={() => navigate('/journey-start')}
+              onClick={() => router.push('/journey-start')}
               className="absolute left-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-6 h-6 text-foreground" />
             </button>
-            <img src={logo} alt="NIVO Logo" className="h-10" />
+            <Image src={logo} alt="NIVO Logo" className="h-10" height={40} />
           </div>
 
           {/* Title */}
@@ -124,11 +129,13 @@ const TimeSelectionScreen = () => {
           )}
         </div>
         {/* Background Image */}
-        <img
-          src={assetsfirstpage}
-          alt="Decorative background graphic"
-          className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80"
-        />
+        <div className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80">
+          <Image
+            src={assetsfirstpage}
+            alt="Decorative background graphic"
+            className="w-full h-auto"
+          />
+        </div>
       </div>
     </div>
   );

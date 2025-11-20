@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -13,10 +15,11 @@ import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/ui/app-header";
 import Sidebar from "@/components/Sidebar";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import backimg from "@/assets/backimg.png";
 
 const CravingSupportPage = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [location, setLocation] = useState("");
   const [customLocation, setCustomLocation] = useState("");
   const [situation, setSituation] = useState("");
@@ -70,14 +73,16 @@ const CravingSupportPage = () => {
     const finalLocation = location === "Lainnya..." ? customLocation : location;
     const finalSituation = situation === "Lainnya..." ? customSituation : situation;
 
-    navigate("/ai-result", { 
-      state: { 
-        location: finalLocation, 
-        situation: finalSituation, 
-        emotions: selectedEmotions, 
-        intensity: intensity[0] 
-      } 
-    });
+    // Store data in localStorage temporarily or use query params
+    const data = {
+      location: finalLocation,
+      situation: finalSituation,
+      emotions: selectedEmotions,
+      intensity: intensity[0]
+    };
+    
+    localStorage.setItem('aiResultData', JSON.stringify(data));
+    router.push("/ai-result");
   };
 
   const isFormInvalid =
@@ -88,15 +93,15 @@ const CravingSupportPage = () => {
     selectedEmotions.length === 0;
 
   return (
-    <div className="flex flex-col bg-white">
+    <div className="relative">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
       {/* Main Content */}
-      <div className="flex-1 px-4 py-6">
+      <div className="px-4 py-6">
         <motion.h1 
-          className="text-2xl font-bold text-gray-800 mb-6"
+          className="text-xl font-bold text-green-900 mb-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -109,11 +114,15 @@ const CravingSupportPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          style={{
-            background: `url(${backimg}) no-repeat center center`,
-            backgroundSize: "cover",
-          }}
         >
+          {/* Background Image */}
+          <Image
+            src={backimg}
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
           <div className="relative z-10 bg-black/30 backdrop-blur-sm rounded-xl p-6 space-y-6">
             {/* Situasi Terkini */}
             <div>

@@ -1,5 +1,9 @@
+'use client'
+
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const SignInScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -30,7 +34,7 @@ const SignInScreen = () => {
       localStorage.setItem('userToken', 'dummy-token');
 
       // Navigate to the next page
-      navigate("/journey-start");
+      router.push("/journey-start");
     }, 1000);
   };
 
@@ -38,13 +42,14 @@ const SignInScreen = () => {
     <div className="min-h-screen bg-background">
       {/* Header with back button */}
       <div className="h-48 relative overflow-hidden">
-        <img
+        <Image
           src={abstractHeader}
           alt="Abstract colorful background"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
@@ -111,7 +116,7 @@ const SignInScreen = () => {
               </div>
               <button
                 type="button"
-                onClick={() => navigate("/forgot-password")}
+                onClick={() => router.push("/forgot-password")}
                 className="text-sm text-accent hover:text-accent/80 font-medium"
               >
                 Forgot Password?

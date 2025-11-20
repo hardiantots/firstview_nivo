@@ -1,5 +1,8 @@
+'use client'
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { format, subDays } from "date-fns";
 import { id } from "date-fns/locale";
 import {
@@ -22,11 +25,11 @@ import backimg4 from "@/assets/backimg4.jpg";
 import InfoCard from "@/components/ui/InfoCard";
 
 const TrackerPage = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // === Mock user phase ===
-  const [userPhase, setUserPhase] = useState<"PRE_QUIT" | "POST_QUIT">("POST_QUIT");
+  const [userPhase, setUserPhase] = useState<"PRE_QUIT" | "POST_QUIT">("PRE_QUIT");
 
   // === Mock data ===
   const today = new Date();
@@ -110,14 +113,14 @@ const TrackerPage = () => {
 
   // ===================== RENDER ======================
   return (
-    <div className="flex flex-col bg-white">
+    <div className="relative">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
-      <div className="flex-1 px-4 py-6">
+      <div className="px-4 py-6">
         {/* Title */}
         <motion.h1
-          className="text-2xl font-bold text-gray-800 mb-6"
+          className="text-xl font-bold text-green-900 mb-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -130,8 +133,15 @@ const TrackerPage = () => {
           className="relative rounded-2xl p-6 mb-6 text-white shadow-lg overflow-hidden bg-cover bg-center"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          style={{ backgroundImage: `url(${backimg4})` }}
         >
+          {/* Background Image */}
+          <Image
+            src={backimg4}
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
           <div className="relative z-10 bg-black/20 backdrop-blur-sm rounded-xl p-6 -m-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -147,7 +157,7 @@ const TrackerPage = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 my-6">
               <div className="w-32 h-32 sm:w-40 sm:h-40">
-                <ProgressRing percentage={progress} color="#fff" strokeWidth={12} />
+                <ProgressRing percentage={progress} color="#fff" />
               </div>
               <div className="text-center">
                 <div className="text-xl text-indigo-100 font-light">
@@ -169,6 +179,7 @@ const TrackerPage = () => {
           <InfoCard
             title="Uang Dihemat"
             value={`Rp ${moneySaved.toLocaleString("id-ID")}`}
+            subtitle="Total penghematan hingga hari ini"
             icon={CircleDollarSign}
             color="bg-green-500"
             bgColor="bg-white"
@@ -177,6 +188,7 @@ const TrackerPage = () => {
             <InfoCard
               title="Hari Stabil Tanpa Craving"
               value={`${Math.round((6 - avgCravingIntensity) / 5 * 100)}%`}
+              subtitle="Konsistensi dalam mengontrol keinginan"
               icon={CalendarCheck}
               color="bg-blue-500"
               bgColor="bg-white"
@@ -222,7 +234,7 @@ const TrackerPage = () => {
                 <h2 className="text-lg font-bold text-gray-800">Riwayat Craving</h2>
                 {cravingHistory.length > 5 && (
                   <button
-                    onClick={() => navigate("/craving-history")}
+                    onClick={() => router.push("/craving-history")}
                     className="text-sm font-medium text-primary hover:underline"
                   >
                     Lihat Semua
@@ -236,7 +248,10 @@ const TrackerPage = () => {
                     <motion.div
                       key={i}
                       className={`p-3 rounded-lg ${style.color} flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow`}
-                      onClick={() => navigate(`/craving-history/${item.id}`, { state: { craving: item } })}
+                      onClick={() => {
+                        localStorage.setItem('cravingDetail', JSON.stringify(item));
+                        router.push(`/craving-history/${item.id}`);
+                      }}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1 }}

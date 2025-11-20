@@ -1,11 +1,14 @@
+"use client";
+
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import Image from "next/image";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const ForgotPasswordSchema = z.object({
@@ -15,7 +18,7 @@ const ForgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
 
 const ForgotPasswordScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: { email: "" },
@@ -23,21 +26,24 @@ const ForgotPasswordScreen = () => {
 
   const onSubmit = (data: ForgotPasswordFormValues) => {
     console.log("Password reset request for:", data.email);
-    navigate("/otp-verification", { state: { email: data.email } });
+    // Store email in localStorage to pass to next page
+    localStorage.setItem('resetEmail', data.email);
+    router.push("/otp-verification");
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header with back button */}
       <div className="h-48 relative overflow-hidden">
-        <img
+        <Image
           src={abstractHeader}
           alt="Abstract colorful background"
           className="w-full h-full object-cover"
+          fill
         />
         <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+          onClick={() => router.back()}
+          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>

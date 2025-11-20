@@ -1,5 +1,8 @@
+'use client'
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, MessageCircle, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingScreen } from "@/components/ui/loading";
@@ -16,7 +19,7 @@ interface Notification {
 }
 
 const NotificationPage = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isLoading, withLoading } = useApiLoading();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -90,10 +93,10 @@ const NotificationPage = () => {
         <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm border-b border-gray-100 sticky top-0 z-10">
           <ArrowLeft 
             className="w-6 h-6 text-gray-600 cursor-pointer" 
-            onClick={() => navigate("/home")}
+            onClick={() => router.push("/home")}
           />
           <div className="flex items-center gap-2">
-            <img src={logo} alt="NIVO Logo" className="h-8"/>
+            <Image src={logo} alt="NIVO Logo" height={32} width={120}/>
           </div>
           <div className="w-6 h-6" />
         </div>

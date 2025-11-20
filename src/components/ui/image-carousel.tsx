@@ -1,6 +1,9 @@
+"use client";
+
 import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 interface CarouselItem {
@@ -90,10 +93,11 @@ export const ImageCarousel = ({
           {items.map((item, index) => (
             <div key={index} className="flex-[0_0_100%] min-w-0 relative">
               <div className="relative w-full h-32">
-                <img
+                <Image
                   src={item.src}
                   alt={item.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                   <h2 className="text-white text-xl font-bold text-center px-4">

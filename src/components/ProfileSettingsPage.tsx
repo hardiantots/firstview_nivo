@@ -1,6 +1,9 @@
+'use client'
+
 import { useState } from "react";
 import { ArrowLeft, Camera, Calendar } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -10,7 +13,7 @@ import { useApiLoading } from "@/hooks/useApiLoading";
 import logo from "@/assets/logo-with-text-horizontal.png";
 
 const ProfileSettingsPage = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isLoading, withLoading } = useApiLoading();
   const [formData, setFormData] = useState({
     name: "Sarah",
@@ -77,7 +80,7 @@ const ProfileSettingsPage = () => {
 
   const handleCancelChanges = () => {
     console.log("Canceling changes");
-    navigate("/home");
+    router.push("/home");
   };
 
   if (isLoading) {
@@ -90,13 +93,13 @@ const ProfileSettingsPage = () => {
       <div className="bg-white px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => navigate("/home")} 
+            onClick={() => router.push("/home")} 
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div className="flex items-center gap-2">
-            <img src={logo} alt="NIVO Logo" className="h-8"/>
+            <Image src={logo} alt="NIVO Logo" height={32} width={120}/>
           </div>
         </div>
         <div className="w-6 h-6 text-gray-600">

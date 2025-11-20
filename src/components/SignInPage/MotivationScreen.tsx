@@ -1,27 +1,39 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
 
 const MotivationScreen = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const selectedDays = location.state?.selectedDays || 30;
+  const router = useRouter();
+  const [selectedDays, setSelectedDays] = useState(30);
   
   const [motivation, setMotivation] = useState("");
   const maxLength = 80;
+
+  useEffect(() => {
+    // Get selected days from localStorage
+    const storedDays = localStorage.getItem('selectedDays');
+    if (storedDays) {
+      setSelectedDays(parseInt(storedDays));
+    }
+  }, []);
 
   const handleSubmit = () => {
     if (motivation.trim()) {
       // Here you would typically save the data and navigate to dashboard
       console.log("Motivation:", motivation);
       console.log("Selected days:", selectedDays);
+      // Store motivation for future use
+      localStorage.setItem('motivation', motivation);
       // Navigate to home page after completion
-      navigate("/home");
+      router.push("/home");
     }
   };
 
@@ -32,12 +44,12 @@ const MotivationScreen = () => {
           {/* Header */}
           <div className="relative flex justify-center items-center mb-8 pt-8">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => router.back()}
               className="absolute left-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-6 h-6 text-foreground" />
             </button>
-            <img src={logo} alt="NIVO Logo" className="h-10" />
+            <Image src={logo} alt="NIVO Logo" className="h-10" height={40} />
           </div>
 
           {/* Title */}
@@ -132,11 +144,13 @@ const MotivationScreen = () => {
           </motion.div>
         </div>
         {/* Background Image */}
-        <img
-          src={assetsfirstpage}
-          alt="Decorative background graphic"
-          className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80"
-        />
+        <div className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80">
+          <Image
+            src={assetsfirstpage}
+            alt="Decorative background graphic"
+            className="w-full h-auto"
+          />
+        </div>
       </div>
     </div>
   );
