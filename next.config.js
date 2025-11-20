@@ -26,6 +26,12 @@ const nextConfig = {
   trailingSlash: false,
   // Build configuration
   staticPageGenerationTimeout: 60,
+  // Vercel build output
+  distDir: '.next',
+  // Environment
+  env: {
+    NEXT_PUBLIC_APP_NAME: 'NIVO App',
+  },
   experimental: {
     optimizePackageImports: ['@radix-ui/*', 'lucide-react'],
   },
