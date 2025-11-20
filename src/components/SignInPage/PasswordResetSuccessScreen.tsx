@@ -1,9 +1,11 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 
 const PasswordResetSuccessScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-6 animate-fade-in max-w-sm mx-auto">
@@ -17,7 +19,7 @@ const PasswordResetSuccessScreen = () => {
       </p>
 
       <Button
-        onClick={() => navigate("/signin")}
+        onClick={() => router.push("/signin")}
         className="w-full max-w-xs bg-primary hover:bg-primary/90"
         size="lg"
       >

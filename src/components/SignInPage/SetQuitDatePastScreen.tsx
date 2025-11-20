@@ -1,5 +1,7 @@
+"use client";
+
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { format, getYear, getMonth } from "date-fns";
 import { id } from "date-fns/locale";
 import { Pencil, ArrowLeft } from "lucide-react";
@@ -15,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
 
@@ -82,13 +85,13 @@ function CustomCaption({ displayMonth }: CaptionProps) {
 // --- Akhir Komponen Kustom ---
 
 const SetQuitDatePastScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [date, setDate] = React.useState<Date | undefined>(new Date());
 
   const handleContinue = () => {
     if (date) {
       console.log("Selected quit date:", date);
-      navigate("/motivation");
+      router.push("/motivation");
     }
   };
 
@@ -97,12 +100,12 @@ const SetQuitDatePastScreen = () => {
       <div className="w-full max-w-md mx-auto p-4 sm:p-6 relative min-h-screen flex flex-col">
         <div className="relative flex justify-center items-center mb-8 pt-8">
           <button
-            onClick={() => navigate('/journey-start')}
+            onClick={() => router.push('/journey-start')}
             className="absolute left-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <ArrowLeft className="w-6 h-6 text-foreground" />
           </button>
-          <img src={logo} alt="NIVO Logo" className="h-10" />
+          <Image src={logo} alt="NIVO Logo" className="h-10" height={40} />
         </div>
 
         <div className="relative z-10">
@@ -169,11 +172,13 @@ const SetQuitDatePastScreen = () => {
           </div>
         </div>
         {/* Background Image */}
-        <img
-          src={assetsfirstpage}
-          alt="Decorative background graphic"
-          className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80"
-        />
+        <div className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80">
+          <Image
+            src={assetsfirstpage}
+            alt="Decorative background graphic"
+            className="w-full h-auto"
+          />
+        </div>
       </div>
     </div>
   );

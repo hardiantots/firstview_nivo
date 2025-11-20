@@ -1,5 +1,8 @@
+'use client'
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { X, User, Info, Star, LogOut } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import headerlogo from "@/assets/logo-with-text-horizontal.png";
@@ -10,12 +13,12 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
   const handleNavigateToProfile = () => {
     onClose();
-    navigate("/profile-settings");
+    router.push("/profile-settings");
   };
   
   const menuItems = [
@@ -29,7 +32,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     setShowLogoutDialog(false);
     onClose();
     // Add your logout logic here
-    navigate("/signin");
+    router.push("/signin");
   };
 
   return (
@@ -49,7 +52,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         {/* Header */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <img src={headerlogo} alt="Nivo Logo" className="h-8"/>
+            <Image src={headerlogo} alt="Nivo Logo" height={32} width={120}/>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-600" />

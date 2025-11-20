@@ -1,16 +1,19 @@
-import { useNavigate } from 'react-router-dom';
+'use client'
+
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
 
 const JourneyStartScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSelection = (choice: 'starting' | 'already_quit') => {
     if (choice === 'starting') {
-      navigate('/time-selection');
+      router.push('/time-selection');
     } else {
-      navigate('/set-quit-date-past');
+      router.push('/set-quit-date-past');
     }
   };
 
@@ -18,7 +21,7 @@ const JourneyStartScreen = () => {
     <div className="min-h-screen bg-background overflow-hidden">
       <div className="w-full max-w-md mx-auto p-6 relative min-h-screen flex flex-col">
         <div className="flex justify-center mb-8 pt-8">
-          <img src={logo} alt="NIVO Logo" className="h-10" />
+          <Image src={logo} alt="NIVO Logo" height={40} width={160} />
         </div>
 
         <div className="animate-fade-in relative z-10">
@@ -52,10 +55,12 @@ const JourneyStartScreen = () => {
           </div>
         </div>
         {/* Background Image */}
-        <img
+        <Image
           src={assetsfirstpage}
           alt="Decorative background graphic"
-          className="absolute bottom-0 right-0 w-[90%] max-w-xs pointer-events-none opacity-80"
+          width={240}
+          height={240}
+          className="absolute bottom-0 right-0 max-w-xs pointer-events-none opacity-80"
         />
       </div>
     </div>

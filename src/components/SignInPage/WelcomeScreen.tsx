@@ -1,18 +1,22 @@
-import { useNavigate } from "react-router-dom";
+'use client'
+
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import abstractHeader from "@/assets/abstract-header.jpg";
 import logo from "@/assets/logo.png";
 const WelcomeScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-background">
       {/* Abstract Header */}
       <div className="h-48 relative overflow-hidden">
-        <img
+        <Image
           src={abstractHeader}
           alt="Abstract colorful background"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
       </div>
 
@@ -23,7 +27,7 @@ const WelcomeScreen = () => {
           <div className="flex flex-col items-center mb-6">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full flex items-center justify-center">
-                <img src={logo} alt="Nivo Logo"/>
+                <Image src={logo} alt="Nivo Logo" width={64} height={64}/>
               </div>
               <h1 className="text-3xl font-bold text-foreground">
                 Selamat<br />Datang
@@ -44,14 +48,14 @@ const WelcomeScreen = () => {
               variant="outline"
               size="lg"
               className="w-full"
-              onClick={() => navigate("/signin")}
+              onClick={() => router.push("/signin")}
             >
               Sign In
             </Button>
             <Button
               size="lg"
               className="w-full bg-accent hover:bg-accent/90"
-              onClick={() => navigate("/signup")}
+              onClick={() => router.push("/signup")}
             >
               Sign Up
             </Button>

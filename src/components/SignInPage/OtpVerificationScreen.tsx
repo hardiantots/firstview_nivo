@@ -1,16 +1,26 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OTPInput, SlotProps } from "input-otp";
 import { cn } from "@/lib/utils"; // Assuming you have a cn utility
+import Image from "next/image";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const OtpVerificationScreen = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const email = location.state?.email || "your email";
+  const router = useRouter();
+  const [email, setEmail] = useState("your email");
   const [otp, setOtp] = useState("");
+
+  useEffect(() => {
+    // Get email from localStorage
+    const storedEmail = localStorage.getItem('resetEmail');
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +28,7 @@ const OtpVerificationScreen = () => {
     console.log("Verifying OTP:", otp);
     if (otp.length === 6) {
       // Navigate to reset password on successful verification
-      navigate("/reset-password", { state: { email } });
+      router.push("/reset-password");
     }
   };
 
@@ -26,14 +36,15 @@ const OtpVerificationScreen = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="h-48 relative overflow-hidden">
-        <img
+        <Image
           src={abstractHeader}
           alt="Abstract colorful background"
           className="w-full h-full object-cover"
+          fill
         />
         <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+          onClick={() => router.back()}
+          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
@@ -74,7 +85,7 @@ const OtpVerificationScreen = () => {
           </form>
 
           <div className="mt-6 text-sm">
-            <span className="text-muted-foreground">Didn't receive the code? </span>
+            <span className="text-muted-foreground">Didn&apos;t receive the code? </span>
             <button className="font-medium text-accent hover:text-accent/80">
               Resend
             </button>

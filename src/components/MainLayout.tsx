@@ -1,6 +1,9 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+'use client'
+
+import { usePathname, useRouter } from "next/navigation";
 import { Home, Heart, BarChart3, Trophy } from "lucide-react";
 import ScrollToTop from "./ScrollToTop";
+import { ReactNode } from "react";
 
 // ✅ Definisikan tinggi navbar agar konsisten di seluruh halaman
 const NAVBAR_HEIGHT = 80;
@@ -12,9 +15,13 @@ const navItems = [
   { path: "/pencapaian", icon: Trophy, label: "Pencapaian" },
 ];
 
-const MainLayout = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+interface MainLayoutProps {
+  children: ReactNode;
+}
+
+const MainLayout = ({ children }: MainLayoutProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <div className="bg-gray-50 min-h-screen relative">
@@ -23,19 +30,16 @@ const MainLayout = () => {
 
         {/* 
           ✅ Area konten utama:
-          Gunakan padding bawah yang menyesuaikan tinggi navbar + safe-area.
+          Gunakan padding atas untuk fixed header dan padding bawah untuk navbar.
         */}
         <main
-          className="flex-1 relative overflow-y-auto"
+          className="flex-1 relative overflow-y-auto pt-[60px]"
           style={{
             paddingBottom: `calc(${NAVBAR_HEIGHT}px + env(safe-area-inset-bottom, 0px))`,
           }}
         >
-          <Outlet />
+          {children}
         </main>
-
-        {/* ✅ Efek Fade di Atas Navbar */}
-        <div className="absolute bottom-[80px] left-0 right-0 h-12 bg-gradient-to-t from-white/95 to-transparent pointer-events-none z-30"></div>
 
         {/* ✅ Bottom Navigation */}
         <nav
@@ -47,12 +51,12 @@ const MainLayout = () => {
         >
           <div className="flex justify-around items-center h-full">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = pathname === item.path;
               const Icon = item.icon;
               return (
                 <button
                   key={item.path}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => router.push(item.path)}
                   className="flex flex-col items-center justify-center py-2 focus:outline-none"
                 >
                   <Icon

@@ -1,12 +1,15 @@
+'use client'
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, Eye, EyeOff, Mail, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const SignUpScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -27,20 +30,21 @@ const SignUpScreen = () => {
     // Simulate a successful registration
     localStorage.setItem('userToken', 'fake-token');
     // Navigate to the next step in your onboarding flow
-    navigate("/journey-start");
+    router.push("/journey-start");
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header with back button */}
       <div className="h-48 relative overflow-hidden">
-        <img
+        <Image
           src={abstractHeader}
           alt="Abstract colorful background"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />

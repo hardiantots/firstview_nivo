@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import logo from "@/assets/logo-with-text-horizontal.png";
 
 interface LoadingProps {
@@ -32,7 +35,7 @@ const LoadingScreen = () => {
     <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
       {/* Logo */}
       <div className="mb-8">
-        <img src={logo} alt="NIVO Logo" className="h-12"/>
+        <Image src={logo} alt="NIVO Logo" className="h-12" height={48} />
       </div>
 
       {/* Loading text */}
