@@ -22,12 +22,23 @@ const nextConfig = {
   swcMinify: true,
   compress: true,
   productionBrowserSourceMaps: false,
-  // Routing & trailing slash
+  // Routing configuration untuk Next.js & Vercel
   trailingSlash: false,
+  skipTrailingSlashRedirect: false,
   // Build configuration
   staticPageGenerationTimeout: 60,
   // Vercel build output
   distDir: '.next',
+  // Vercel compatibility
+  poweredByHeader: false,
+  // Rewrites untuk SPA-like behavior jika diperlukan
+  async rewrites() {
+    return {
+      beforeFiles: [],
+      afterFiles: [],
+      fallback: [],
+    }
+  },
   // Environment
   env: {
     NEXT_PUBLIC_APP_NAME: 'NIVO App',
