@@ -139,8 +139,10 @@ const TrackerPage = () => {
         } else {
           const days = Array.from({ length: 7 }).map((_, i) => subDays(today, 6 - i));
           const perDay: Record<string, number> = {};
+          const perDayMoney: Record<string, number> = {};
           logs.forEach((l) => {
             perDay[l.date] = l.cigarette_count || 0;
+            perDayMoney[l.date] = l.money_spent || 0;
           });
           const consArray = days.map((d) => {
             const key = format(d, 'yyyy-MM-dd');
@@ -149,6 +151,7 @@ const TrackerPage = () => {
           
           console.log("📊 TrackerPage - Consumption Array:", consArray);
           console.log("📊 TrackerPage - perDay data:", perDay);
+          console.log("💰 TrackerPage - perDayMoney data:", perDayMoney);
           console.log("📊 TrackerPage - days keys:", days.map(d => format(d, 'yyyy-MM-dd')));
           setConsumptionData(consArray);
 
@@ -170,12 +173,12 @@ const TrackerPage = () => {
           setPreQuitStreak(streak);
 
           const fin = days.map((date, i) => {
-            const key = date.toISOString().split("T")[0];
+            const key = format(date, 'yyyy-MM-dd');
             const hasData = perDay[key] !== undefined;
             const actualConsumption = consArray[i];
             
-            // Hanya hitung spending/savings jika ada data input untuk hari itu
-            const spending = hasData ? actualConsumption * pricePerCigarette : 0;
+            // Gunakan money_spent dari database jika ada, fallback ke perhitungan manual
+            const spending = hasData ? (perDayMoney[key] || (actualConsumption * pricePerCigarette)) : 0;
             // Savings dihitung hanya jika user sudah pernah input baseline sebelumnya
             const avoided = hasData ? Math.max(0, baselineConsumption - actualConsumption) : 0;
             const savings = avoided * pricePerCigarette;
@@ -187,6 +190,8 @@ const TrackerPage = () => {
               label: format(date, "d MMM", { locale: id }),
             };
           });
+          
+          console.log("💰 TrackerPage - Financial Data:", fin);
           setFinancialData(fin);
         }
       } catch (e) {
