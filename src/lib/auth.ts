@@ -76,10 +76,12 @@ export const signUpWithEmail = async (
  */
 export const signInWithGoogle = async () => {
   try {
+    // Use site URL from environment variable for consistent OAuth redirect
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
       },
     });
 
@@ -98,10 +100,12 @@ export const signInWithGoogle = async () => {
  */
 export const signInWithFacebook = async () => {
   try {
+    // Use site URL from environment variable for consistent OAuth redirect
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
       },
     });
 
@@ -120,8 +124,10 @@ export const signInWithFacebook = async () => {
  */
 export const sendPasswordResetEmail = async (email: string) => {
   try {
+    // Use site URL from environment variable
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${siteUrl}/reset-password`,
     });
 
     if (error) {
@@ -177,8 +183,10 @@ export const verifyOTPAndResetPassword = async (
  */
 export const resendPasswordResetEmail = async (email: string) => {
   try {
+    // Use site URL from environment variable
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${siteUrl}/reset-password`,
     });
 
     if (error) {
