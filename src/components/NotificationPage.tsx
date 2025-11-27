@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingScreen } from "@/components/ui/loading";
 import { useApiLoading } from "@/hooks/useApiLoading";
 import logo from "@/assets/logo-with-text-horizontal.png";
+import AuthGuard from "./AuthGuard";
 
 interface Notification {
   id: string;
@@ -87,8 +88,9 @@ const NotificationPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col">
+    <AuthGuard>
+      <div className="bg-gray-50 min-h-screen">
+        <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col">
         {/* Header */}
         <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm border-b border-gray-100 sticky top-0 z-10">
           <ArrowLeft 
@@ -214,8 +216,9 @@ const NotificationPage = () => {
             </Button>
           </div>
         </main>
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 };
 

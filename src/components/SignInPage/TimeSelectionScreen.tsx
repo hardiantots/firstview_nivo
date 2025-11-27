@@ -25,13 +25,20 @@ const TimeSelectionScreen = () => {
     if (selectedDays) {
       // Store selected days and planned quit date in localStorage
       if (typeof window !== 'undefined') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Set journey start date (today)
+        localStorage.setItem('journeyStartDate', today.toISOString());
         localStorage.setItem('selectedDays', selectedDays.toString());
 
         // Hitung quitDate sebagai hari ini + selectedDays (PRE_QUIT target)
-        const today = new Date();
         const quitDate = new Date(today);
         quitDate.setDate(today.getDate() + selectedDays);
         localStorage.setItem('quitDate', quitDate.toISOString());
+        
+        // Set initial countdown
+        localStorage.setItem('countdownDays', selectedDays.toString());
 
         // Pastikan fase terset ke PRE_QUIT
         localStorage.setItem('userPhase', 'PRE_QUIT');

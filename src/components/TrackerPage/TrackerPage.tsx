@@ -273,11 +273,26 @@ const TrackerPage = () => {
   if (userPhase === "PRE_QUIT" && typeof window !== "undefined") {
     const totalDaysRaw = Number(localStorage.getItem("selectedDays") || "0");
     const totalDays = Number.isNaN(totalDaysRaw) ? 0 : totalDaysRaw;
+    
     if (totalDays > 0) {
-      const countdownRaw = Number(localStorage.getItem("countdownDays") || `${totalDays}`);
-      const countdown = Number.isNaN(countdownRaw) ? totalDays : countdownRaw;
-      const done = Math.max(0, totalDays - countdown);
-      preQuitProgressPercent = Math.max(0, Math.min(100, (done / totalDays) * 100));
+      // Calculate actual days passed since journey start
+      const startDateStr = localStorage.getItem("journeyStartDate");
+      if (startDateStr) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startDate = new Date(startDateStr);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const daysPassed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysPassedClamped = Math.max(0, Math.min(totalDays, daysPassed));
+        preQuitProgressPercent = Math.max(0, Math.min(100, (daysPassedClamped / totalDays) * 100));
+      } else {
+        // Fallback to countdown-based calculation
+        const countdownRaw = Number(localStorage.getItem("countdownDays") || `${totalDays}`);
+        const countdown = Number.isNaN(countdownRaw) ? totalDays : countdownRaw;
+        const done = Math.max(0, totalDays - countdown);
+        preQuitProgressPercent = Math.max(0, Math.min(100, (done / totalDays) * 100));
+      }
     }
   }
 

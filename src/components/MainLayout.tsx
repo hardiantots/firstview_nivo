@@ -6,6 +6,7 @@ import ScrollToTop from "./ScrollToTop";
 import { ReactNode } from "react";
 import Image from "next/image";
 import headerlogo from "@/assets/logo-with-text-horizontal.png";
+import AuthGuard from "./AuthGuard";
 
 // ✅ Definisikan tinggi navbar agar konsisten di seluruh halaman
 const NAVBAR_HEIGHT = 80;
@@ -26,9 +27,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const pathname = usePathname();
 
   return (
-    <div className="bg-gray-50 min-h-screen relative">
-      <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col relative">
-        <ScrollToTop />
+    <AuthGuard>
+      <div className="bg-gray-50 min-h-screen relative">
+        <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col relative">
+          <ScrollToTop />
 
         {/* ✅ Header dengan Logo */}
         <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-b border-gray-100 px-4 py-3 z-30 flex items-center justify-center shadow-sm">
@@ -134,8 +136,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             })()}
           </div>
         </nav>
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 };
 
