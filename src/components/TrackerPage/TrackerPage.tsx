@@ -122,15 +122,6 @@ const TrackerPage = () => {
       try {
         const logs = await fetchDailyConsumptionLogs(userId);
         
-        // Debug: Show what we got from database
-        if (logs.length === 0) {
-          console.warn("⚠️ No consumption logs found for userId:", userId);
-          console.warn("⚠️ Check if data in database has matching user_id");
-        } else {
-          console.log("✅ Found", logs.length, "consumption logs");
-          console.log("📅 Date range:", logs[0]?.date, "to", logs[logs.length-1]?.date);
-        }
-        
         // Jika belum ada data sama sekali (user baru PRE-QUIT), set semua ke 0
         if (logs.length === 0) {
           setConsumptionData([0, 0, 0, 0, 0, 0, 0]);
@@ -149,10 +140,6 @@ const TrackerPage = () => {
             return perDay[key] ?? 0;
           });
           
-          console.log("📊 TrackerPage - Consumption Array:", consArray);
-          console.log("📊 TrackerPage - perDay data:", perDay);
-          console.log("💰 TrackerPage - perDayMoney data:", perDayMoney);
-          console.log("📊 TrackerPage - days keys:", days.map(d => format(d, 'yyyy-MM-dd')));
           setConsumptionData(consArray);
 
           // Hitung streak hari berturut-turut dengan konsumsi 0 (hanya dihitung jika ada input dan == 0)
@@ -191,11 +178,12 @@ const TrackerPage = () => {
             };
           });
           
-          console.log("💰 TrackerPage - Financial Data:", fin);
           setFinancialData(fin);
         }
       } catch (e) {
-        console.error("Gagal mengambil data konsumsi dari Supabase", e);
+        // Silent error handling - set default values
+        setConsumptionData([0, 0, 0, 0, 0, 0, 0]);
+        setFinancialData([]);
       }
 
       // Calculate streak for POST-QUIT users
@@ -248,10 +236,6 @@ const TrackerPage = () => {
     consumption: consumptionData[i] ?? 0,
   }));
 
-  console.log("📈 Chart Data for Rendering:", chartData);
-  console.log("📈 Consumption Data State:", consumptionData);
-  console.log("📈 Financial Data State:", financialData);
-
   // Hitung total penghematan dari data finansial
   const totalSavings = financialData.reduce((sum, item) => sum + item.savings, 0);
   const totalSpending = financialData.reduce((sum, item) => sum + item.spending, 0);
@@ -272,7 +256,6 @@ const TrackerPage = () => {
           setDbMoneySaved(stats.moneySaved || 0);
         }
       } catch (e) {
-        console.error("Gagal fetch stats dari database", e);
         // Fallback ke localStorage
         const storedStreak = Number(localStorage.getItem("streakDays") || "0");
         const storedMoney = Number(localStorage.getItem("homeMoneySaved") || "0");
