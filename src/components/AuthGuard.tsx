@@ -29,6 +29,7 @@ const PUBLIC_ROUTES = [
   '/time-selection',
   '/motivation',
   '/set-quit-date-past',
+  '/auth/callback', // OAuth callback route
 ];
 
 export function useAuth() {
@@ -67,6 +68,12 @@ export function useAuth() {
       const isPublicRoute = PUBLIC_ROUTES.some(route => 
         pathname === route || pathname?.startsWith(`${route}/`)
       );
+
+      // Skip redirect logic for auth callback (let it handle its own redirects)
+      if (pathname?.startsWith('/auth/callback')) {
+        setIsLoading(false);
+        return;
+      }
 
       // Redirect logic
       if (isProtectedRoute && !authenticated) {
