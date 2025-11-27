@@ -322,13 +322,22 @@ const ProfileSettingsPage = () => {
           {/* Logout Button */}
           <div className="pt-6 border-t border-gray-200">
             <Button 
-              onClick={() => {
+              onClick={async () => {
+                // Call Supabase signOut
+                try {
+                  const { signOut } = await import('@/lib/auth');
+                  await signOut();
+                } catch (e) {
+                  // Silent fail
+                }
+                
                 // Clear all authentication data
                 localStorage.removeItem('userToken');
                 localStorage.removeItem('userId');
                 localStorage.removeItem('userEmail');
                 localStorage.removeItem('lastLoginAt');
                 localStorage.removeItem('sessionMaxAgeDays');
+                localStorage.removeItem('loginMethod');
                 
                 // Clear user data
                 localStorage.removeItem('userPhase');
@@ -340,6 +349,8 @@ const ProfileSettingsPage = () => {
                 localStorage.removeItem('actualQuitDate');
                 localStorage.removeItem('selectedDays');
                 localStorage.removeItem('homeMoneySaved');
+                localStorage.removeItem('rememberMe');
+                localStorage.removeItem('savedEmail');
                 
                 // Redirect to signin
                 router.replace('/signin');

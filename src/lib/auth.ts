@@ -22,8 +22,8 @@ export const signInWithEmail = async (email: string, password: string) => {
       localStorage.setItem('userEmail', data.user.email || '');
       const now = Date.now();
       localStorage.setItem('lastLoginAt', String(now));
-      // default sesi 7 hari untuk remember me, bisa diubah saat form
-      localStorage.setItem('sessionMaxAgeDays', '7');
+      // Default 30 hari untuk persistent login - bisa di-override oleh form
+      localStorage.setItem('sessionMaxAgeDays', '30');
       localStorage.setItem('loginMethod', 'password');
     }
 
