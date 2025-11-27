@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { ensureUserProfile } from "@/lib/db/userProfile";
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -14,9 +12,20 @@ export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const handleOAuthCallback = async () => {
+      // Lazy import to avoid SSR issues
+      const { supabase } = await import("@/lib/supabase");
+      const { ensureUserProfile } = await import("@/lib/db/userProfile");
+      
       try {
         // Check for error in URL params (Supabase returns errors this way)
         const errorParam = searchParams.get('error');
@@ -171,7 +180,19 @@ export default function AuthCallbackPage() {
     };
 
     handleOAuthCallback();
-  }, [router, searchParams]);
+  }, [router, searchParams, mounted]);
+
+  // Show loading during SSR
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <h1 className="text-xl font-semibold">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

@@ -1,1 +1,47 @@
-{}
+{
+  "..\\app\\auth\\callback\\page.tsx -> @/lib/db/userProfile": {
+    "id": 45795,
+    "files": [
+      "static/chunks/2724-3bf045e3754af59f.js",
+      "static/chunks/5795.de82dd91bed741d8.js"
+    ]
+  },
+  "..\\app\\auth\\callback\\page.tsx -> @/lib/supabase": {
+    "id": 5526,
+    "files": [
+      "static/chunks/2724-3bf045e3754af59f.js",
+      "static/chunks/5526.7752938bf9f63b01.js"
+    ]
+  },
+  "components\\SignInPage\\MotivationScreen.tsx -> @/lib/supabase": {
+    "id": 5526,
+    "files": [
+      "static/chunks/2724-3bf045e3754af59f.js",
+      "static/chunks/5526.7752938bf9f63b01.js"
+    ]
+  },
+  "components\\SignInPage\\SignInScreen.tsx -> @/lib/supabase": {
+    "id": 5526,
+    "files": []
+  },
+  "components\\SignInPage\\TimeSelectionScreen.tsx -> @/lib/supabase": {
+    "id": 5526,
+    "files": []
+  },
+  "components\\TrackerPage\\TrackerPage.tsx -> @/lib/supabase": {
+    "id": 5526,
+    "files": []
+  },
+  "components\\TrackerPage\\TrackerPage.tsx -> date-fns": {
+    "id": 89570,
+    "files": [
+      "static/chunks/9570.4078a7608fd7791e.js"
+    ]
+  },
+  "components\\TrackerPage\\TrackerPage.tsx -> date-fns/locale": {
+    "id": 12259,
+    "files": [
+      "static/chunks/2259.638f6850ee9984f0.js"
+    ]
+  }
+}
