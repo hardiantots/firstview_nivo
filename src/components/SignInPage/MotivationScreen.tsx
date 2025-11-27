@@ -35,22 +35,35 @@ const MotivationScreen = () => {
     // This ensures empty state on initial visit to motivation screen
   }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedMotivations.length > 0) {
       console.log("Selected Motivations:", selectedMotivations);
       console.log("Selected days:", selectedDays);
       localStorage.setItem('selectedMotivations', JSON.stringify(selectedMotivations));
-      // simpan juga ke user_profile.motivations bila user sudah login
+      
+      // Save motivations to database
       const userId = localStorage.getItem('userId');
       if (userId) {
-        fetch('/api/profile/motivations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, motivations: selectedMotivations }),
-        }).catch(() => {
-          // biarkan gagal diam-diam, localStorage tetap menyimpan
-        });
+        try {
+          // Import supabase client
+          const { supabase } = await import('@/lib/supabase');
+          
+          // Update user_profile with motivations
+          const { error } = await supabase
+            .from('user_profile')
+            .update({ motivations: selectedMotivations })
+            .eq('user_id', userId);
+          
+          if (error) {
+            console.error('Failed to save motivations to database:', error);
+          } else {
+            console.log('Motivations saved to database successfully');
+          }
+        } catch (error) {
+          console.error('Error saving motivations:', error);
+        }
       }
+      
       router.push("/home");
     }
   };

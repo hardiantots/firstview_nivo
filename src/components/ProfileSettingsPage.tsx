@@ -12,6 +12,7 @@ import { LoadingScreen } from "./ui/loading";
 import { supabase } from "@/lib/supabase";
 import { useApiLoading } from "@/hooks/useApiLoading";
 import logo from "@/assets/logo-with-text-horizontal.png";
+import AuthGuard from "./AuthGuard";
 
 const ProfileSettingsPage = () => {
   const router = useRouter();
@@ -145,9 +146,10 @@ const ProfileSettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white max-w-md mx-auto md:max-w-lg lg:max-w-xl">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-white px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
+    <AuthGuard>
+      <div className="min-h-screen bg-white max-w-md mx-auto md:max-w-lg lg:max-w-xl">
+        {/* Header */}
+        <div className="sticky top-0 z-20 bg-white px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.push("/home")} 
@@ -312,9 +314,42 @@ const ProfileSettingsPage = () => {
           >
             Batalkan Perubahan
           </Button>
+          
+          {/* Logout Button */}
+          <div className="pt-6 border-t border-gray-200">
+            <Button 
+              onClick={() => {
+                // Clear all authentication data
+                localStorage.removeItem('userToken');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('lastLoginAt');
+                localStorage.removeItem('sessionMaxAgeDays');
+                
+                // Clear user data
+                localStorage.removeItem('userPhase');
+                localStorage.removeItem('selectedMotivations');
+                localStorage.removeItem('countdownDays');
+                localStorage.removeItem('streakDays');
+                localStorage.removeItem('journeyStartDate');
+                localStorage.removeItem('quitDate');
+                localStorage.removeItem('actualQuitDate');
+                localStorage.removeItem('selectedDays');
+                localStorage.removeItem('homeMoneySaved');
+                
+                // Redirect to signin
+                router.replace('/signin');
+              }}
+              variant="outline"
+              className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500 py-3 rounded-lg shadow-sm"
+            >
+              Keluar / Logout
+            </Button>
+          </div>
+        </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 };
 

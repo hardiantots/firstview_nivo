@@ -137,18 +137,33 @@ const HomePage = () => {
         localStorage.setItem("lastLoginAt", String(Date.now()));
       }
 
-      const storedMotivations = localStorage.getItem("selectedMotivations");
-      const parsedMotivations: string[] = storedMotivations ? JSON.parse(storedMotivations) : [];
-
       const userId = localStorage.getItem("userId");
       let userCondition: "PRE_QUIT" | "POST_QUIT" = "PRE_QUIT";
       let countdown = 0;
       let streak = 0;
       let totalSaved = 0;
+      let parsedMotivations: string[] = [];
 
       // Fetch dari database untuk data real-time
       if (userId) {
         try {
+          // Fetch motivations from database
+          const { data: profileData } = await supabase
+            .from("user_profile")
+            .select("motivations")
+            .eq("user_id", userId)
+            .maybeSingle();
+          
+          if (profileData?.motivations && Array.isArray(profileData.motivations)) {
+            parsedMotivations = profileData.motivations;
+            // Update localStorage cache
+            localStorage.setItem("selectedMotivations", JSON.stringify(parsedMotivations));
+          } else {
+            // Fallback to localStorage
+            const storedMotivations = localStorage.getItem("selectedMotivations");
+            parsedMotivations = storedMotivations ? JSON.parse(storedMotivations) : [];
+          }
+
           const journey = await fetchJourneyStatus(userId);
           const stats = await fetchUserJourneyStats(userId);
           
