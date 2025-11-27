@@ -584,45 +584,85 @@ const HomePage = () => {
     setTodaysConsumption(sliderValue[0]);
     
     const today = new Date().toISOString().split('T')[0];
-    const userId = localStorage.getItem("userId");
+    
+    // Verify userId matches auth user
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || localStorage.getItem("userId");
+    
+    if (user?.id) {
+      localStorage.setItem("userId", user.id);
+    }
 
     // Simpan ke Supabase jika userId tersedia
     if (userId) {
       try {
-        const pricePerCigarette = 1750; // Konsisten dengan TrackerPage
-        const moneySpent = sliderValue[0] * pricePerCigarette;
+        const pricePerCigarette = 1750;
+        const cigaretteCount = Number(sliderValue[0]); // Ensure it's a number
+        const moneySpent = cigaretteCount * pricePerCigarette;
+        
+        // Validate data before save
+        if (isNaN(cigaretteCount) || cigaretteCount < 0) {
+          throw new Error("Invalid cigarette count");
+        }
         
         // Check if entry exists for today first
-        const { data: existing } = await supabase
+        const { data: existing, error: checkError } = await supabase
           .from("daily_consumption")
           .select("id")
           .eq("user_id", userId)
           .eq("date", today)
           .maybeSingle();
         
+        if (checkError) {
+          console.error("❌ Error checking existing entry:", checkError);
+          throw checkError;
+        }
+        
+        console.log("🔍 Existing entry check:", existing);
+        
         if (existing) {
           // Update existing record
-          await supabase
+          const { data: updateData, error: updateError } = await supabase
             .from("daily_consumption")
             .update({
-              cigarette_count: sliderValue[0],
+              cigarette_count: cigaretteCount,
               money_spent: moneySpent,
               updated_at: new Date().toISOString(),
             })
-            .eq("id", existing.id);
+            .eq("id", existing.id)
+            .select();
+          
+          if (updateError) {
+            console.error("❌ Update error:", updateError);
+            throw updateError;
+          }
+          console.log("✅ Update successful:", updateData);
         } else {
           // Insert new record
-          await supabase
+          const { data: insertData, error: insertError } = await supabase
             .from("daily_consumption")
-            .insert({
+            .insert([{
               user_id: userId,
               date: today,
-              cigarette_count: sliderValue[0],
+              cigarette_count: cigaretteCount,
               money_spent: moneySpent,
-            });
+            }])
+            .select();
+          
+          if (insertError) {
+            console.error("❌ Insert error:", insertError);
+            throw insertError;
+          }
+          console.log("✅ Insert successful:", insertData);
         }
       } catch (e) {
-        console.error("Gagal menyimpan ke Supabase, fallback ke localStorage", e);
+        console.error("❌ Gagal menyimpan ke Supabase:", e);
+        toast({
+          title: "Error",
+          description: "Gagal menyimpan data. Silakan coba lagi.",
+          variant: "destructive",
+        });
+        return; // Don't proceed if save failed
       }
     }
 
