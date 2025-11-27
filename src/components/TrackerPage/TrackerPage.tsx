@@ -60,7 +60,19 @@ const TrackerPage = () => {
 
   useEffect(() => {
     const init = async () => {
-      const userId = localStorage.getItem("userId");
+      // Get userId from localStorage first
+      let userId = localStorage.getItem("userId");
+      
+      // Verify with Supabase auth - ensure they match
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && user.id !== userId) {
+        // Sync localStorage with actual auth user
+        userId = user.id;
+        localStorage.setItem("userId", user.id);
+      }
+      
       if (!userId) {
         setIsCravingLoading(false);
         return;
@@ -110,6 +122,15 @@ const TrackerPage = () => {
       try {
         const logs = await fetchDailyConsumptionLogs(userId);
         
+        // Debug: Show what we got from database
+        if (logs.length === 0) {
+          console.warn("⚠️ No consumption logs found for userId:", userId);
+          console.warn("⚠️ Check if data in database has matching user_id");
+        } else {
+          console.log("✅ Found", logs.length, "consumption logs");
+          console.log("📅 Date range:", logs[0]?.date, "to", logs[logs.length-1]?.date);
+        }
+        
         // Jika belum ada data sama sekali (user baru PRE-QUIT), set semua ke 0
         if (logs.length === 0) {
           setConsumptionData([0, 0, 0, 0, 0, 0, 0]);
@@ -125,6 +146,9 @@ const TrackerPage = () => {
             const key = d.toISOString().split("T")[0];
             return perDay[key] ?? 0;
           });
+          
+          console.log("📊 TrackerPage - Consumption Array:", consArray);
+          console.log("📊 TrackerPage - perDay data:", perDay);
           setConsumptionData(consArray);
 
           // Hitung streak hari berturut-turut dengan konsumsi 0 (hanya dihitung jika ada input dan == 0)
@@ -216,6 +240,10 @@ const TrackerPage = () => {
     date: subDays(today, 6 - i),
     consumption: consumptionData[i] ?? 0,
   }));
+
+  console.log("📈 Chart Data for Rendering:", chartData);
+  console.log("📈 Consumption Data State:", consumptionData);
+  console.log("📈 Financial Data State:", financialData);
 
   // Hitung total penghematan dari data finansial
   const totalSavings = financialData.reduce((sum, item) => sum + item.savings, 0);
@@ -529,17 +557,66 @@ const TrackerPage = () => {
     const moneySpent = sliderValue[0] * pricePerCigarette;
     
     try {
-      // Save to Supabase
+      // Save to Supabase with check for existing entry
       const { supabase } = await import('@/lib/supabase');
-      await supabase.from("daily_consumption").upsert(
-        {
-          user_id: userId,
-          date: today,
-          cigarette_count: sliderValue[0],
-          money_spent: moneySpent,
-        },
-        { onConflict: "user_id,date" }
-      );
+      
+      const cigaretteCount = Number(sliderValue[0]);
+      
+      // Validate data before save
+      if (isNaN(cigaretteCount) || cigaretteCount < 0) {
+        throw new Error("Invalid cigarette count");
+      }
+      
+      // Check if entry exists for today first
+      const { data: existing, error: checkError } = await supabase
+        .from("daily_consumption")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("date", today)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("❌ TrackerPage - Error checking existing entry:", checkError);
+        throw checkError;
+      }
+      
+      console.log("🔍 TrackerPage - Existing entry check:", existing);
+      
+      if (existing) {
+        // Update existing record
+        const { data: updateData, error: updateError } = await supabase
+          .from("daily_consumption")
+          .update({
+            cigarette_count: cigaretteCount,
+            money_spent: moneySpent,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id)
+          .select();
+        
+        if (updateError) {
+          console.error("❌ TrackerPage - Update error:", updateError);
+          throw updateError;
+        }
+        console.log("✅ TrackerPage - Update successful:", updateData);
+      } else {
+        // Insert new record
+        const { data: insertData, error: insertError } = await supabase
+          .from("daily_consumption")
+          .insert([{
+            user_id: userId,
+            date: today,
+            cigarette_count: cigaretteCount,
+            money_spent: moneySpent,
+          }])
+          .select();
+        
+        if (insertError) {
+          console.error("❌ TrackerPage - Insert error:", insertError);
+          throw insertError;
+        }
+        console.log("✅ TrackerPage - Insert successful:", insertData);
+      }
       
       // Show success message
       toast({
@@ -574,6 +651,9 @@ const TrackerPage = () => {
           const key = d.toISOString().split("T")[0];
           return perDay[key] ?? 0;
         });
+        
+        console.log("📊 After Log - Updated Consumption Array:", consArray);
+        console.log("📊 After Log - perDay data:", perDay);
         setConsumptionData(consArray);
 
         // Calculate new streak
@@ -811,7 +891,7 @@ const TrackerPage = () => {
 
               {/* Chart */}
               <div className="h-56 mb-2">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" key={`financial-${financialData.length}`}>
                   <LineChart data={financialData} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                     <XAxis
@@ -880,7 +960,7 @@ const TrackerPage = () => {
                     Lihat bagaimana jumlah rokokmu berubah dari hari ke hari.
                   </p>
                   <div className="h-56 mb-2">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" key={`chart-${consumptionData.join('-')}`}>
                       <LineChart data={chartData} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                         <XAxis
