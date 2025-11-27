@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
+import { upsertJourneyStatus } from "@/lib/db/journey";
 
 // --- Komponen Kustom untuk Caption Kalender ---
 function CustomCaption({ displayMonth }: CaptionProps) {
@@ -88,9 +89,22 @@ const SetQuitDatePastScreen = () => {
   const router = useRouter();
   const [date, setDate] = React.useState<Date | undefined>(new Date());
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (date) {
-      console.log("Selected quit date:", date);
+      if (typeof window !== 'undefined') {
+        // Simpan tanggal berhenti di masa lalu sebagai quitDate
+        const quitDateIso = date.toISOString();
+        localStorage.setItem('quitDate', quitDateIso);
+
+        // Pastikan fase terset ke POST_QUIT karena user sudah berhenti
+        localStorage.setItem('userPhase', 'POST_QUIT');
+
+        // Simpan juga ke database (smoke_free_journey)
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          await upsertJourneyStatus(userId, quitDateIso, 'POST_QUIT');
+        }
+      }
       router.push("/motivation");
     }
   };

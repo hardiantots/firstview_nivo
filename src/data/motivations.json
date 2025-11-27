@@ -1,0 +1,60 @@
+{
+  "dailyMissions": [
+    "Identifikasi 3 situasi yang memicu keinginan merokok hari ini.",
+    "Beritahu satu teman dekat tentang rencanamu berhenti merokok.",
+    "Bersihkan ruang favoritmu dari asbak dan pemantik.",
+    "Siapkan camilan sehat sebagai pengganti rokok di tasmu.",
+    "Unduh aplikasi meditasi dan coba latihan pernapasan 5 menit.",
+    "Buat daftar aktivitas yang bisa kamu lakukan saat keinginan merokok muncul.",
+    "Hitung dan catat berapa banyak uang yang bisa kamu hemat dalam sebulan tanpa rokok.",
+    "Buat jadwal harian yang penuh dengan aktivitas produktif.",
+    "Tulis jurnal tentang perasaanmu dalam proses berhenti merokok.",
+    "Olahraga ringan selama 15 menit untuk mengalihkan pikiran.",
+    "Hubungi seorang teman atau keluarga untuk berbagi progresmu.",
+    "Buang semua barang yang berhubungan dengan rokok dari rumahmu."
+  ],
+  "postQuitMotivations": [
+    {
+      "id": "health",
+      "key": "kesehatan",
+      "label": "Kesehatan",
+      "title": "💪 Kesehatan yang Lebih Baik",
+      "message": "Tubuhmu sedang memperbaiki diri! Terus jaga kesehatan yang sudah kamu raih."
+    },
+    {
+      "id": "finance",
+      "key": "keuangan",
+      "label": "Keuangan",
+      "title": "💰 Hemat Keuangan",
+      "message": "Lihat berapa banyak uang yang sudah kamu hemat! Gunakan untuk hal yang lebih bermanfaat."
+    },
+    {
+      "id": "family",
+      "key": "keluarga",
+      "label": "Keluarga",
+      "title": "👨‍👩‍👧‍👦 Untuk Keluarga Tercinta",
+      "message": "Keluargamu bangga dengan pencapaianmu. Terus jadi teladan yang baik untuk mereka!"
+    },
+    {
+      "id": "energy",
+      "key": "energi",
+      "label": "Energi & Stamina",
+      "title": "⚡ Energi & Stamina Meningkat",
+      "message": "Tubuhmu lebih bertenaga! Terus manfaatkan energi barumu untuk hal-hal produktif."
+    },
+    {
+      "id": "cognitive",
+      "key": "fokus",
+      "label": "Fokus & Konsentrasi",
+      "title": "🧠 Fokus & Konsentrasi Lebih Baik",
+      "message": "Pikiranmu lebih jernih sekarang. Terus asah kemampuan fokusmu untuk mencapai lebih banyak!"
+    },
+    {
+      "id": "confidence",
+      "key": "percaya_diri",
+      "label": "Kepercayaan Diri",
+      "title": "✨ Kepercayaan Diri Meningkat",
+      "message": "Kamu sudah membuktikan bahwa kamu bisa! Ini adalah pencapaian luar biasa yang patut dibanggakan."
+    }
+  ]
+}

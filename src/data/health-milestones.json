@@ -1,0 +1,322 @@
+[
+  {
+    "minDays": 0,
+    "maxDays": 0.042,
+    "icon": "HeartPulse",
+    "title": "20 Menit",
+    "value": "Tekanan Darah Normal",
+    "desc": "Tekanan darah dan detak jantung mulai kembali normal",
+    "journalName": "Circulation (AHA)",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.107.699579"
+  },
+  {
+    "minDays": 0.5,
+    "maxDays": 1,
+    "icon": "Wind",
+    "title": "12 Jam",
+    "value": "Kadar CO Normal",
+    "desc": "Karbon monoksida dalam darah kembali ke tingkat normal",
+    "journalName": "The Lancet",
+    "journalUrl": "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(12)60988-5/fulltext"
+  },
+  {
+    "minDays": 1,
+    "maxDays": 3,
+    "icon": "Activity",
+    "title": "24-72 Jam",
+    "value": "Risiko Serangan Jantung ↓",
+    "desc": "Risiko serangan jantung mulai menurun, fungsi paru-paru meningkat",
+    "journalName": "BMJ",
+    "journalUrl": "https://www.bmj.com/content/348/bmj.g2659"
+  },
+  {
+    "minDays": 3,
+    "maxDays": 7,
+    "icon": "Brain",
+    "title": "3-7 Hari",
+    "value": "Indra Perasa Membaik",
+    "desc": "Indra perasa dan penciuman mulai membaik secara signifikan",
+    "journalName": "NEJM",
+    "journalUrl": "https://www.nejm.org/doi/full/10.1056/NEJMsa1211128"
+  },
+  {
+    "minDays": 7,
+    "maxDays": 14,
+    "icon": "HeartPulse",
+    "title": "1-2 Minggu",
+    "value": "Sirkulasi Membaik",
+    "desc": "Sirkulasi darah meningkat, walking dan aktivitas fisik lebih mudah",
+    "journalName": "Circulation",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.110.956839"
+  },
+  {
+    "minDays": 14,
+    "maxDays": 30,
+    "icon": "Wind",
+    "title": "2-4 Minggu",
+    "value": "Fungsi Paru Meningkat",
+    "desc": "Fungsi paru-paru meningkat hingga 30%, batuk berkurang",
+    "journalName": "Thorax",
+    "journalUrl": "https://thorax.bmj.com/content/59/9/713"
+  },
+  {
+    "minDays": 30,
+    "maxDays": 90,
+    "icon": "Activity",
+    "title": "1-3 Bulan",
+    "value": "Sistem Imun Menguat",
+    "desc": "Sistem kekebalan tubuh mulai pulih, energi meningkat drastis",
+    "journalName": "JACC",
+    "journalUrl": "https://www.jacc.org/doi/10.1016/j.jacc.2018.02.047"
+  },
+  {
+    "minDays": 90,
+    "maxDays": 180,
+    "icon": "Brain",
+    "title": "3-6 Bulan",
+    "value": "Stres Berkurang",
+    "desc": "Tingkat stres menurun, mood lebih stabil, kualitas tidur membaik",
+    "journalName": "BMJ",
+    "journalUrl": "https://www.bmj.com/content/348/bmj.g1151"
+  },
+  {
+    "minDays": 180,
+    "maxDays": 270,
+    "icon": "HeartPulse",
+    "title": "6-9 Bulan",
+    "value": "Silia Paru Pulih",
+    "desc": "Silia di paru-paru pulih, kemampuan mengatasi infeksi meningkat",
+    "journalName": "Chest Journal",
+    "journalUrl": "https://journal.chestnet.org/article/S0012-3692(15)50363-4/fulltext"
+  },
+  {
+    "minDays": 270,
+    "maxDays": 365,
+    "icon": "Wind",
+    "title": "9-12 Bulan",
+    "value": "Kapasitas Paru +50%",
+    "desc": "Kapasitas paru-paru meningkat hingga 50%, sesak napas berkurang drastis",
+    "journalName": "Respiratory Medicine",
+    "journalUrl": "https://www.resmedjournal.com/article/S0954-6111(13)00123-4/fulltext"
+  },
+  {
+    "minDays": 365,
+    "maxDays": 730,
+    "icon": "Activity",
+    "title": "1 Tahun",
+    "value": "Risiko Jantung ↓50%",
+    "desc": "Risiko penyakit jantung koroner turun 50% dibanding perokok",
+    "journalName": "Circulation (AHA)",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000000678"
+  },
+  {
+    "minDays": 730,
+    "maxDays": 1095,
+    "icon": "HeartPulse",
+    "title": "2 Tahun",
+    "value": "Risiko Stroke Normal",
+    "desc": "Risiko stroke mendekati level non-perokok",
+    "journalName": "Stroke (AHA)",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/STROKEAHA.112.676940"
+  },
+  {
+    "minDays": 1095,
+    "maxDays": 1825,
+    "icon": "Brain",
+    "title": "3-5 Tahun",
+    "value": "Risiko Kanker Mulut ↓50%",
+    "desc": "Risiko kanker mulut, tenggorokan, dan esofagus turun setengahnya",
+    "journalName": "NEJM",
+    "journalUrl": "https://www.nejm.org/doi/full/10.1056/NEJMsa1211128"
+  },
+  {
+    "minDays": 1825,
+    "maxDays": 2555,
+    "icon": "Wind",
+    "title": "5-7 Tahun",
+    "value": "Risiko Kanker Serviks Normal",
+    "desc": "Risiko kanker serviks sama dengan non-perokok",
+    "journalName": "The Lancet Oncology",
+    "journalUrl": "https://www.thelancet.com/journals/lanonc/article/PIIS1470-2045(13)70096-2/fulltext"
+  },
+  {
+    "minDays": 2555,
+    "maxDays": 3650,
+    "icon": "Activity",
+    "title": "7-10 Tahun",
+    "value": "Risiko Kanker Paru ↓50%",
+    "desc": "Risiko kanker paru-paru turun hingga 50%, risiko diabetes menurun drastis",
+    "journalName": "JAMA",
+    "journalUrl": "https://jamanetwork.com/journals/jama/fullarticle/202249"
+  },
+  {
+    "minDays": 3650,
+    "maxDays": 5475,
+    "icon": "HeartPulse",
+    "title": "10-15 Tahun",
+    "value": "Risiko Jantung = Non-perokok",
+    "desc": "Risiko penyakit jantung sama dengan orang yang tidak pernah merokok",
+    "journalName": "Circulation",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.115.017640"
+  },
+  {
+    "minDays": 5475,
+    "maxDays": 7300,
+    "icon": "Brain",
+    "title": "15-20 Tahun",
+    "value": "Harapan Hidup Normal",
+    "desc": "Harapan hidup kembali setara dengan non-perokok seumur hidup",
+    "journalName": "NEJM",
+    "journalUrl": "https://www.nejm.org/doi/full/10.1056/NEJMsa1211128"
+  },
+  {
+    "minDays": 0.021,
+    "maxDays": 0.042,
+    "icon": "HeartPulse",
+    "title": "30 Menit",
+    "value": "Oksigenasi Sel Meningkat",
+    "desc": "Tingkat oksigen dalam darah meningkat, sel-sel tubuh mulai mendapat oksigen lebih baik",
+    "journalName": "Circulation",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.107.699579"
+  },
+  {
+    "minDays": 0.083,
+    "maxDays": 0.167,
+    "icon": "Wind",
+    "title": "2-4 Jam",
+    "value": "Nikotin Mulai Keluar",
+    "desc": "Nikotin mulai dikeluarkan dari tubuh, gejala withdrawal ringan mulai muncul",
+    "journalName": "Nicotine & Tobacco Research",
+    "journalUrl": "https://academic.oup.com/ntr/article/15/2/267/1280815"
+  },
+  {
+    "minDays": 0.333,
+    "maxDays": 0.5,
+    "icon": "Activity",
+    "title": "8-12 Jam",
+    "value": "Oksigen Darah Optimal",
+    "desc": "Kadar oksigen dalam darah mencapai tingkat optimal, CO berkurang drastis",
+    "journalName": "BMJ",
+    "journalUrl": "https://www.bmj.com/content/328/7445/885"
+  },
+  {
+    "minDays": 1,
+    "maxDays": 2,
+    "icon": "Brain",
+    "title": "1-2 Hari",
+    "value": "Indra Penciuman Pulih",
+    "desc": "Ujung saraf mulai tumbuh kembali, indra penciuman mulai membaik",
+    "journalName": "Chemical Senses",
+    "journalUrl": "https://academic.oup.com/chemse/article/30/2/127/309750"
+  },
+  {
+    "minDays": 2,
+    "maxDays": 3,
+    "icon": "Wind",
+    "title": "2-3 Hari",
+    "value": "Bronkus Lebih Rileks",
+    "desc": "Bronkial tubes mulai rileks, bernapas menjadi lebih mudah",
+    "journalName": "Thorax",
+    "journalUrl": "https://thorax.bmj.com/content/58/8/659"
+  },
+  {
+    "minDays": 3,
+    "maxDays": 5,
+    "icon": "HeartPulse",
+    "title": "3-5 Hari",
+    "value": "Energi Meningkat",
+    "desc": "Tingkat energi mulai meningkat, aktivitas sehari-hari terasa lebih ringan",
+    "journalName": "Journal of Applied Physiology",
+    "journalUrl": "https://journals.physiology.org/doi/full/10.1152/japplphysiol.00847.2013"
+  },
+  {
+    "minDays": 5,
+    "maxDays": 7,
+    "icon": "Activity",
+    "title": "5-7 Hari",
+    "value": "Withdrawal Puncak",
+    "desc": "Masa puncak withdrawal, tapi setelah ini akan lebih mudah",
+    "journalName": "Addiction",
+    "journalUrl": "https://onlinelibrary.wiley.com/doi/10.1111/j.1360-0443.2012.03889.x"
+  },
+  {
+    "minDays": 7,
+    "maxDays": 10,
+    "icon": "Brain",
+    "title": "1-1.5 Minggu",
+    "value": "Mood Stabil",
+    "desc": "Mood swings mulai berkurang, emosi lebih terkontrol",
+    "journalName": "BMJ",
+    "journalUrl": "https://www.bmj.com/content/348/bmj.g1151"
+  },
+  {
+    "minDays": 10,
+    "maxDays": 14,
+    "icon": "Wind",
+    "title": "1.5-2 Minggu",
+    "value": "Batuk Berkurang",
+    "desc": "Batuk perokok mulai berkurang drastis, dahak lebih mudah keluar",
+    "journalName": "Chest",
+    "journalUrl": "https://journal.chestnet.org/article/S0012-3692(15)50363-4/fulltext"
+  },
+  {
+    "minDays": 14,
+    "maxDays": 21,
+    "icon": "HeartPulse",
+    "title": "2-3 Minggu",
+    "value": "Stamina Meningkat",
+    "desc": "Stamina fisik meningkat signifikan, olahraga lebih mudah",
+    "journalName": "European Heart Journal",
+    "journalUrl": "https://academic.oup.com/eurheartj/article/36/32/2135/2293377"
+  },
+  {
+    "minDays": 21,
+    "maxDays": 30,
+    "icon": "Activity",
+    "title": "3-4 Minggu",
+    "value": "Kulit Lebih Cerah",
+    "desc": "Sirkulasi kulit membaik, wajah tampak lebih segar dan cerah",
+    "journalName": "Dermatologic Surgery",
+    "journalUrl": "https://journals.lww.com/dermatologicsurgery/Abstract/2013/08000/The_Effect_of_Smoking_on_Skin_and_Skin_Surgery.1.aspx"
+  },
+  {
+    "minDays": 45,
+    "maxDays": 60,
+    "icon": "Brain",
+    "title": "1.5-2 Bulan",
+    "value": "Konsentrasi Membaik",
+    "desc": "Kemampuan konsentrasi dan fokus meningkat, produktivitas kerja lebih baik",
+    "journalName": "Psychopharmacology",
+    "journalUrl": "https://link.springer.com/article/10.1007/s00213-012-2889-6"
+  },
+  {
+    "minDays": 60,
+    "maxDays": 90,
+    "icon": "Wind",
+    "title": "2-3 Bulan",
+    "value": "Napas Lebih Panjang",
+    "desc": "Kapasitas vital paru meningkat, bisa bernapas lebih dalam dan lama",
+    "journalName": "Respiratory Care",
+    "journalUrl": "https://rc.rcjournal.com/content/58/9/1495"
+  },
+  {
+    "minDays": 120,
+    "maxDays": 150,
+    "icon": "HeartPulse",
+    "title": "4-5 Bulan",
+    "value": "Tekanan Darah Stabil",
+    "desc": "Tekanan darah terstabilisasi pada level yang lebih sehat",
+    "journalName": "Hypertension (AHA)",
+    "journalUrl": "https://www.ahajournals.org/doi/10.1161/HYPERTENSIONAHA.118.11035"
+  },
+  {
+    "minDays": 150,
+    "maxDays": 180,
+    "icon": "Activity",
+    "title": "5-6 Bulan",
+    "value": "Sistem Kardio Membaik",
+    "desc": "Sistem kardiovaskular membaik signifikan, risiko serangan jantung turun drastis",
+    "journalName": "JACC",
+    "journalUrl": "https://www.jacc.org/doi/10.1016/j.jacc.2018.02.047"
+  }
+]

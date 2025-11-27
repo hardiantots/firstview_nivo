@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -17,9 +17,15 @@ import Sidebar from "@/components/Sidebar";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import backimg from "@/assets/backimg.png";
+import { createCravingLog } from "@/lib/db/cravingLogs";
+import { saveAISuggestion } from "@/lib/db/userJourneyStats";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Cigarette } from "lucide-react";
 
 const CravingSupportPage = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const [location, setLocation] = useState("");
   const [customLocation, setCustomLocation] = useState("");
   const [situation, setSituation] = useState("");
@@ -27,6 +33,9 @@ const CravingSupportPage = () => {
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [intensity, setIntensity] = useState([3]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userPhase, setUserPhase] = useState<"PRE_QUIT" | "POST_QUIT">("PRE_QUIT");
+  const [consumptionValue, setConsumptionValue] = useState([0]);
+  const [todaysConsumption, setTodaysConsumption] = useState(0);
 
   const emotions = [
     { id: "senang", label: "Senang", color: "bg-green-100 text-green-800" },
@@ -69,20 +78,191 @@ const CravingSupportPage = () => {
     });
   };
 
-  const handleGetAIHelp = () => {
+  const handleGetAIHelp = async () => {
     const finalLocation = location === "Lainnya..." ? customLocation : location;
     const finalSituation = situation === "Lainnya..." ? customSituation : situation;
 
-    // Store data in localStorage temporarily or use query params
+    // Validasi input
+    if (!finalLocation || !finalSituation || selectedEmotions.length === 0) {
+      toast({
+        title: "Input tidak lengkap",
+        description: "Mohon lengkapi semua field (lokasi, situasi, dan minimal 1 emosi)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get user motivations from localStorage
+    const storedMotivations = localStorage.getItem('selectedMotivations');
+    let motivations: string[] = [];
+    if (storedMotivations) {
+      try {
+        motivations = JSON.parse(storedMotivations);
+      } catch (e) {
+        console.error("Failed to parse motivations", e);
+      }
+    }
+
     const data = {
       location: finalLocation,
       situation: finalSituation,
       emotions: selectedEmotions,
-      intensity: intensity[0]
+      intensity: intensity[0],
+      motivations: motivations
     };
-    
-    localStorage.setItem('aiResultData', JSON.stringify(data));
-    router.push("/ai-result");
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      toast({
+        title: "User tidak ditemukan",
+        description: "Silakan login kembali",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Show loading toast
+    toast({
+      title: "Memproses...",
+      description: "NIVO AI sedang menganalisis situasi Anda",
+    });
+
+    try {
+      console.log("Saving craving log with data:", {
+        userId,
+        intensity: intensity[0],
+        location: finalLocation,
+        situation: finalSituation,
+        emotions: selectedEmotions,
+      });
+
+      // Simpan craving log
+      await createCravingLog({
+        userId,
+        intensity: intensity[0],
+        location: finalLocation,
+        situation: finalSituation,
+        emotions: selectedEmotions,
+      });
+
+      console.log("Craving log saved successfully");
+
+      // Call AI API
+      const aiResponse = await fetch('/api/ai-support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!aiResponse.ok) {
+        const errorData = await aiResponse.json().catch(() => ({}));
+        console.error('AI API Error:', aiResponse.status, errorData);
+        
+        if (aiResponse.status === 429) {
+          throw new Error('AI sedang sibuk, coba lagi dalam beberapa detik');
+        }
+        throw new Error(errorData.error || 'Failed to get AI response');
+      }
+
+      const aiData = await aiResponse.json();
+      console.log("AI Response:", aiData);
+
+      // Simpan AI suggestion ke database dengan response dari AI
+      const suggestionContent = aiData.suggestion || `Lokasi: ${finalLocation}, Situasi: ${finalSituation}, Emosi: ${selectedEmotions.join(", ")}`;
+      const result = await saveAISuggestion({
+        userId,
+        suggestionType: "craving_support",
+        content: suggestionContent,
+        intensity: intensity[0],
+        triggers: [finalLocation, finalSituation, ...selectedEmotions],
+      });
+
+      console.log("AI suggestion save result:", result);
+
+      // Simpan data lengkap ke localStorage untuk AIResultPage
+      const resultData = {
+        ...data,
+        aiSuggestion: aiData.suggestion,
+        timestamp: aiData.timestamp,
+      };
+      localStorage.setItem('aiResultData', JSON.stringify(resultData));
+
+      if (result.success) {
+        toast({
+          title: "Berhasil!",
+          description: "NIVO AI telah menyiapkan saran untuk Anda",
+          variant: "default",
+        });
+      }
+
+      // Navigate to result page
+      router.push("/ai-result");
+
+    } catch (e) {
+      console.error("Error during AI help process:", e);
+      
+      const errorMessage = e instanceof Error ? e.message : "Gagal mendapatkan saran AI";
+      
+      toast({
+        title: "Terjadi kesalahan",
+        description: "Tidak dapat terhubung ke AI. Silakan coba lagi dalam beberapa saat.",
+        variant: "destructive",
+      });
+      
+      // Don't navigate if AI fails - let user try again
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const phase = localStorage.getItem("userPhase");
+    if (phase === "POST_QUIT") {
+      setUserPhase("POST_QUIT");
+    } else {
+      setUserPhase("PRE_QUIT");
+    }
+  }, []);
+
+  const handleLogConsumption = async () => {
+    if (consumptionValue[0] === 0) {
+      alert("Pilih jumlah rokok terlebih dahulu");
+      return;
+    }
+
+    setTodaysConsumption(consumptionValue[0]);
+
+    const today = new Date().toISOString().split("T")[0];
+    const userId = localStorage.getItem("userId");
+
+    if (userId) {
+      try {
+        await supabase.from("daily_consumption").upsert(
+          {
+            user_id: userId,
+            date: today,
+            cigarette_count: consumptionValue[0],
+          },
+          { onConflict: "user_id,date" }
+        );
+      } catch (e) {
+        console.error("Gagal menyimpan konsumsi ke Supabase dari CravingSupport", e);
+      }
+    }
+
+    const consumptionLog = {
+      date: today,
+      amount: consumptionValue[0],
+      timestamp: new Date().toISOString(),
+    };
+    const existingLogs = JSON.parse(localStorage.getItem("consumptionLogs") || "[]");
+    const updatedLogs = existingLogs.filter((log: any) => log.date !== today);
+    updatedLogs.push(consumptionLog);
+    localStorage.setItem("consumptionLogs", JSON.stringify(updatedLogs));
+
+    alert(`✓ Berhasil mencatat ${consumptionValue[0]} batang rokok hari ini`);
+    setConsumptionValue([0]);
   };
 
   const isFormInvalid =
@@ -211,6 +391,31 @@ const CravingSupportPage = () => {
                 <span>Sangat Rendah</span>
                 <span>Sangat Tinggi</span>
               </div>
+
+              {/* Quick actions distraksi */}
+              <div className="mt-4">
+                <p className="text-xs text-white/80 mb-2">
+                  Sebelum meminta bantuan AI, coba salah satu aksi cepat ini:
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="bg-white/10 text-white border-white/40 text-[11px] leading-snug px-2 py-2 whitespace-normal min-h-[40px] flex items-center justify-center text-center"
+                    onClick={() => router.push("/breathing-exercise")}
+                  >
+                    Latihan Nafas 4-7-8
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="bg-white/10 text-white border-white/40 text-[11px] leading-snug px-2 py-2 whitespace-normal min-h-[40px] flex items-center justify-center text-center"
+                    onClick={() => router.push("/distractions")}
+                  >
+                    Ide Distraksi 5 Menit
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -223,6 +428,56 @@ const CravingSupportPage = () => {
         >
           Dapatkan Bantuan AI
         </Button>
+
+        {userPhase === "POST_QUIT" && (
+          <motion.div
+            className="mt-6 bg-white p-5 rounded-2xl shadow-md border border-gray-100"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-gray-800">Catat Konsumsi Hari Ini</h3>
+                <p className="text-xs text-gray-500">
+                  Jika hari ini kamu masih merokok, catat jumlahnya di sini.
+                </p>
+              </div>
+              <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
+                <span className="text-base font-bold text-orange-600">{consumptionValue[0]}</span>
+              </div>
+            </div>
+
+            <div className="mb-4 px-1">
+              <Slider
+                value={consumptionValue}
+                onValueChange={setConsumptionValue}
+                max={24}
+                min={0}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-[11px] text-gray-400 mt-1">
+                <span>0 batang</span>
+                <span>24 batang</span>
+              </div>
+            </div>
+
+            <Button
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-lg text-sm"
+              onClick={handleLogConsumption}
+            >
+              <Cigarette className="w-4 h-4 mr-1.5" />
+              Catat Konsumsi Hari Ini
+            </Button>
+
+            {todaysConsumption > 0 && (
+              <p className="text-[11px] text-green-600 mt-2 text-center">
+                ✓ Tercatat: {todaysConsumption} batang hari ini
+              </p>
+            )}
+          </motion.div>
+        )}
       </div>
     </div>
   );

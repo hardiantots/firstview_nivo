@@ -1,0 +1,16 @@
+{
+  "name": "nivo-app-client",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "deploy:preview": "vercel",
+    "deploy:production": "vercel --prod",
+    "env:check": "node scripts/check-env.js",
+    "env:setup": "bash scripts/setup-vercel-env.sh"
+  }
+}

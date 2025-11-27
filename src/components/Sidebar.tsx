@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { X, User, Info, Star, LogOut } from "lucide-react";
+import { X, User, Info, Star, LogOut, Users, CreditCard } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import headerlogo from "@/assets/logo-with-text-horizontal.png";
+import { supabase } from "@/lib/supabase";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,14 +16,54 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const router = useRouter();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [displayName, setDisplayName] = useState("User");
+  const [displayEmail, setDisplayEmail] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+      const emailLocal = typeof window !== "undefined" ? localStorage.getItem("userEmail") : "";
+
+      if (userId) {
+        const { data } = await supabase
+          .from("user_profile")
+          .select("full_name,email")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (data) {
+          setDisplayName((data.full_name as string) || (emailLocal ? emailLocal.split("@")[0] : "User"));
+          setDisplayEmail((data.email as string) || emailLocal || "");
+          return;
+        }
+      }
+
+      if (emailLocal) {
+        setDisplayName(emailLocal.split("@")[0]);
+        setDisplayEmail(emailLocal);
+      }
+    };
+
+    load();
+  }, []);
   
   const handleNavigateToProfile = () => {
     onClose();
     router.push("/profile-settings");
   };
+  const handleNavigateToPricing = () => {
+    onClose();
+    router.push("/pricing");
+  };
+  const handleNavigateToCommunity = () => {
+    onClose();
+    router.push("/community");
+  };
   
   const menuItems = [
     { icon: User, label: "Pengaturan Profil", onClick: handleNavigateToProfile },
+    { icon: CreditCard, label: "Paket & Harga", onClick: handleNavigateToPricing },
+    { icon: Users, label: "Komunitas NIVO", onClick: handleNavigateToCommunity },
     { icon: Info, label: "Tentang NIVO", onClick: () => console.log("About NIVO") },
     { icon: Star, label: "Beri Rating Aplikasi", onClick: () => console.log("Rate app") },
   ];
@@ -63,11 +104,13 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           {/* User Profile */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-lg">C</span>
+              <span className="text-white font-medium text-lg">
+                {displayName ? displayName.charAt(0).toUpperCase() : "U"}
+              </span>
             </div>
             <div>
-              <div className="font-semibold text-gray-800">Clara Seraphina</div>
-              <div className="text-sm text-gray-600">clara.s@email.com</div>
+              <div className="font-semibold text-gray-800">{displayName}</div>
+              <div className="text-sm text-gray-600">{displayEmail}</div>
             </div>
           </div>
 

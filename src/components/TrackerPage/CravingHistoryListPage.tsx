@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Brain } from "lucide-react";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import {
   Pagination,
   PaginationContent,
@@ -11,24 +13,44 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-// Mock data for all craving history
-const allCravingHistory = [
-    { id: 1, emotion: "Stres", date: "Sabtu, 4 Juli 2025 14:30", intensity: 5, location: "di kantor", situation: "Banyak disekitar saya merokok" },
-    { id: 2, emotion: "Bosan", date: "Jumat, 3 Juli 2025 20:15", intensity: 3, location: "di rumah", situation: "Menonton TV sendirian" },
-    { id: 3, emotion: "Cemas", date: "Jumat, 3 Juli 2025 09:51", intensity: 2, location: "di kafe", situation: "Menunggu teman" },
-    { id: 4, emotion: "Lelah", date: "Kamis, 2 Juli 2025 18:00", intensity: 4, location: "di mobil", situation: "Macet di jalan pulang" },
-    { id: 5, emotion: "Senang", date: "Rabu, 1 Juli 2025 21:00", intensity: 1, location: "di pesta", situation: "Merayakan dengan teman" },
-    { id: 6, emotion: "Stres", date: "Selasa, 30 Juni 2025 10:00", intensity: 5, location: "di kantor", situation: "Deadline pekerjaan" },
-    { id: 7, emotion: "Bosan", date: "Senin, 29 Juni 2025 15:45", intensity: 2, location: "di rumah", situation: "Tidak ada kerjaan" },
-    { id: 8, emotion: "Cemas", date: "Minggu, 28 Juni 2025 11:20", intensity: 4, location: "di tempat umum", situation: "Menunggu hasil ujian" },
-];
+import { fetchRecentCravingLogs } from "@/lib/db/cravingLogs";
 
 const ITEMS_PER_PAGE = 5;
 
 const CravingHistoryListPage = () => {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [allCravingHistory, setAllCravingHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCravingHistory = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const logs = await fetchRecentCravingLogs(userId, 100); // Fetch up to 100 records
+        const mapped = logs.map((log) => ({
+          id: log.id,
+          emotion: log.mood || "Tidak disebutkan",
+          date: format(new Date(log.occurred_at || new Date()), "EEEE, d MMM yyyy HH:mm", { locale: id }),
+          intensity: log.intensity || 0,
+          location: log.location || "-",
+          situation: log.situation || "-",
+        }));
+        setAllCravingHistory(mapped);
+      } catch (error) {
+        console.error("Failed to fetch craving history:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCravingHistory();
+  }, []);
 
   const totalPages = Math.ceil(allCravingHistory.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -63,23 +85,35 @@ const CravingHistoryListPage = () => {
         </div>
 
         <main className="p-6 space-y-4 flex-1">
-          {currentItems.map((item, index) => {
-            const style = getCravingStyle(item.intensity);
-            return (
-              <div
-                key={index}
-                className={`p-4 rounded-xl ${style.color} flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-gray-200`}
-                onClick={() => handleCravingHistoryClick(item)}
-              >
-                <div className={`w-3 h-3 rounded-full ${style.dot}`}></div>
-                <div className="flex-1">
-                  <div className="font-semibold text-base">{item.emotion}</div>
-                  <div className="text-xs opacity-80">{item.date}</div>
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+              <p className="text-sm text-gray-500">Memuat riwayat...</p>
+            </div>
+          ) : allCravingHistory.length === 0 ? (
+            <div className="text-center py-12">
+              <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-lg font-semibold text-gray-700 mb-2">Belum ada riwayat craving</p>
+              <p className="text-sm text-gray-500">Mulai catat craving pertamamu untuk melacak pola dan trigger</p>
+            </div>
+          ) : (
+            currentItems.map((item, index) => {
+              const style = getCravingStyle(item.intensity);
+              return (
+                <div
+                  key={item.id}
+                  className={`p-4 rounded-xl ${style.color} flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-gray-200`}
+                  onClick={() => handleCravingHistoryClick(item)}
+                >
+                  <div className={`w-3 h-3 rounded-full ${style.dot}`}></div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-base">{item.date}</div>
+                  </div>
+                  <div className="text-sm font-semibold">Intensitas: {item.intensity}</div>
                 </div>
-                <div className="text-sm font-semibold">Intensitas: {item.intensity}</div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </main>
 
         {totalPages > 1 && (

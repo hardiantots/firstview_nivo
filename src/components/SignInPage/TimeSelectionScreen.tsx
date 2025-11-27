@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
+import { upsertJourneyStatus } from "@/lib/db/journey";
 
 const TimeSelectionScreen = () => {
   const router = useRouter();
@@ -20,10 +21,27 @@ const TimeSelectionScreen = () => {
     { days: 90, label: "90 Hari" },
   ];
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedDays) {
-      // Store selected days in localStorage
-      localStorage.setItem('selectedDays', selectedDays.toString());
+      // Store selected days and planned quit date in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedDays', selectedDays.toString());
+
+        // Hitung quitDate sebagai hari ini + selectedDays (PRE_QUIT target)
+        const today = new Date();
+        const quitDate = new Date(today);
+        quitDate.setDate(today.getDate() + selectedDays);
+        localStorage.setItem('quitDate', quitDate.toISOString());
+
+        // Pastikan fase terset ke PRE_QUIT
+        localStorage.setItem('userPhase', 'PRE_QUIT');
+
+        // Simpan juga ke database (smoke_free_journey)
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          await upsertJourneyStatus(userId, quitDate.toISOString(), 'PRE_QUIT', selectedDays);
+        }
+      }
       router.push("/motivation");
     }
   };
