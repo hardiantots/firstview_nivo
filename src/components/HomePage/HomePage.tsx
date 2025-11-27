@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState, useEffect, FC, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -10,21 +10,45 @@ import { AppHeader } from "@/components/ui/app-header";
 import { Slider } from "@/components/ui/slider";
 import Sidebar from "@/components/Sidebar";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { fetchDailyConsumptionLogs } from "@/lib/db/dailyConsumption";
+import { useToast } from "@/hooks/use-toast";
+import { fetchJourneyStatus, upsertJourneyStatus } from "@/lib/db/journey";
+import { getOrCreateUserStats } from "@/lib/db/userStats";
+import { fetchUserJourneyStats, getUserStats } from "@/lib/db/userJourneyStats";
+import { 
+  getAchievementsForPhase, 
+  getRewardMilestones, 
+  checkAchievementCondition,
+  calculateTotalXp,
+  getNextReward,
+  type Achievement as AchievementType
+} from "@/lib/achievementUtils";
+import motivationsData from "@/data/motivations.json";
 
 const HomePage = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const [todaysConsumption, setTodaysConsumption] = useState(0);
   const [sliderValue, setSliderValue] = useState([0]);
   const [userName, setUserName] = useState("User");
   const [moneySaved, setMoneySaved] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userStatus, setUserStatus] = useState<"PRE_QUIT" | "POST_QUIT">("POST_QUIT");
+  const [userStatus, setUserStatus] = useState<"PRE_QUIT" | "POST_QUIT">("PRE_QUIT");
   const [showConsumptionDialog, setShowConsumptionDialog] = useState(false);
   const [timeProgress, setTimeProgress] = useState({ months: 0, days: 0, hours: 0 });
   const [streakDays, setStreakDays] = useState(0);
   const [userMotivation, setUserMotivation] = useState("");
   const [countdownDays, setCountdownDays] = useState(0);
   const [badgeIndex, setBadgeIndex] = useState(0);
+  const [totalXp, setTotalXp] = useState(0);
+  const [nextBadgeXp, setNextBadgeXp] = useState(0);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [profileFullName, setProfileFullName] = useState("");
+  const [profileDob, setProfileDob] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileGender, setProfileGender] = useState<string>("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const [nivoCoachContent, setNivoCoachContent] = useState<{
     greeting: string;
@@ -42,101 +66,252 @@ const HomePage = () => {
     }
   });
 
-  /* ===== ACHIEVEMENT DATA ===== */
-  type Achievement = {
-    id: number;
-    icon: LucideIcon;
-    title: string;
-    description: string;
-    completed: boolean;
-    locked?: boolean;
+  /* ===== ACHIEVEMENT DATA - Loaded from JSON ===== */
+  type Achievement = AchievementType;
+  const [allBadges, setAllBadges] = useState<Achievement[]>([]);
+
+  // Cek apakah user layak auto-transisi dari PRE_QUIT ke POST_QUIT
+  const checkAndAutoTransitionPhase = async (userId: string) => {
+    try {
+      const journey = await fetchJourneyStatus(userId);
+      const currentPhase = journey?.phase ?? "PRE_QUIT";
+      if (currentPhase !== "PRE_QUIT") return;
+
+      const logs = await fetchDailyConsumptionLogs(userId);
+      if (!logs.length) return;
+
+      // Ambil 28 hari terakhir berdasarkan tanggal
+      const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));
+      const uniqueByDate = Object.values(
+        sorted.reduce<Record<string, typeof sorted[0]>>((acc, log) => {
+          acc[log.date] = log;
+          return acc;
+        }, {})
+      ).sort((a, b) => a.date.localeCompare(b.date));
+
+      const last28 = uniqueByDate.slice(-28);
+      if (last28.length < 21) return; // butuh minimal 3 minggu data
+
+      const allZero = last28.every((d) => (d.cigarette_count ?? 0) === 0);
+      if (!allZero) return;
+
+      // Tentukan quitDate sebagai tanggal hari pertama dari rangkaian nol rokok
+      const firstZeroDate = last28[0].date;
+
+      await upsertJourneyStatus(userId, firstZeroDate, "POST_QUIT");
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userPhase", "POST_QUIT");
+        localStorage.setItem("quitDate", firstZeroDate);
+      }
+
+      setUserStatus("POST_QUIT");
+    } catch (e) {
+      console.error("checkAndAutoTransitionPhase error", e);
+    }
   };
-
-  const PRE_QUIT_MILESTONES: Achievement[] = [
-    { id: 1, icon: Leaf, title: "Langkah Pertama", description: "Mendaftar dan mulai perjalanan berhenti merokok.", completed: true },
-    { id: 2, icon: Zap, title: "Hari Tanpa Asap", description: "Menjalani 1 hari tanpa rokok.", completed: true },
-    { id: 3, icon: Heart, title: "Minggu Kebebasan", description: "Menjalani 7 hari tanpa rokok.", completed: false, locked: true },
-    { id: 4, icon: Shield, title: "Bulan Pertama", description: "Menjaga komitmen selama 30 hari.", completed: false, locked: true },
-  ];
-
-  const PRE_QUIT_BEHAVIOR: Achievement[] = [
-    { id: 1, icon: Target, title: "Pemula Pengendali Diri", description: "Berhasil menolak satu keinginan merokok.", completed: true },
-    { id: 2, icon: Shield, title: "Kuat Menghadapi Godaan", description: "Menolak lima kali keinginan merokok.", completed: false, locked: true },
-  ];
-
-  const POST_QUIT_MILESTONES: Achievement[] = [
-    { id: 1, icon: Leaf, title: "Pelanjut Kebebasan", description: "Menjaga 30 hari penuh bebas rokok.", completed: true },
-    { id: 2, icon: Award, title: "100 Hari Konsisten", description: "Melewati 100 hari tanpa rokok.", completed: true },
-    { id: 3, icon: Shield, title: "Setahun Penuh", description: "Menjaga 365 hari tanpa rokok.", completed: false, locked: true },
-  ];
-
-  const POST_QUIT_BEHAVIOR: Achievement[] = [
-    { id: 1, icon: Target, title: "Kembali Fokus", description: "Menggantikan waktu merokok dengan aktivitas produktif.", completed: true },
-    { id: 2, icon: Zap, title: "Stabil Tanpa Ketergantungan", description: "Sebulan tanpa keinginan kembali merokok.", completed: false, locked: true },
-  ];
-
-  const milestoneData = userStatus === "PRE_QUIT" ? PRE_QUIT_MILESTONES : POST_QUIT_MILESTONES;
-  const behaviorData = userStatus === "PRE_QUIT" ? PRE_QUIT_BEHAVIOR : POST_QUIT_BEHAVIOR;
-  const allBadges = useMemo(() => [...milestoneData, ...behaviorData], [milestoneData, behaviorData]);
 
   // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("userToken");
-      if (!token) {
+      const lastLoginAt = Number(localStorage.getItem("lastLoginAt") || 0);
+      const maxAgeDays = Number(localStorage.getItem("sessionMaxAgeDays") || 0);
+
+      if (!token || !lastLoginAt || !maxAgeDays) {
         router.push("/signin");
         return;
       }
 
-      const mockUserData = {
-        userName: "Budi",
-        userCondition: "POST_QUIT" as "PRE_QUIT" | "POST_QUIT",
-        countdownDays: 15,
-        streakDays: 127,
-        personalMotivation: "Untuk bisa bermain futsal lagi dengan teman-teman tanpa cepat lelah.",
-        moneySaved: 12345
+      const diffMs = Date.now() - lastLoginAt;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      if (diffDays > maxAgeDays) {
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("lastLoginAt");
+        localStorage.removeItem("sessionMaxAgeDays");
+        router.push("/signin");
+        return;
+      } else {
+        localStorage.setItem("lastLoginAt", String(Date.now()));
+      }
+
+      const storedMotivations = localStorage.getItem("selectedMotivations");
+      const parsedMotivations: string[] = storedMotivations ? JSON.parse(storedMotivations) : [];
+
+      const userId = localStorage.getItem("userId");
+      let userCondition: "PRE_QUIT" | "POST_QUIT" = "PRE_QUIT";
+      let countdown = 0;
+      let streak = 0;
+      let totalSaved = 0;
+
+      // Fetch dari database untuk data real-time
+      if (userId) {
+        try {
+          const journey = await fetchJourneyStatus(userId);
+          const stats = await fetchUserJourneyStats(userId);
+          
+          if (journey && stats) {
+            userCondition = journey.phase;
+            totalSaved = stats.moneySaved || 0;
+            
+            // Calculate countdown/streak based on dates
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (userCondition === "PRE_QUIT") {
+              // PRE-QUIT: Calculate countdown based on preparation days
+              const totalPrepDays = Number(localStorage.getItem("selectedDays") || "0");
+              const startDateStr = localStorage.getItem("journeyStartDate");
+              
+              if (totalPrepDays > 0 && startDateStr) {
+                const startDate = new Date(startDateStr);
+                startDate.setHours(0, 0, 0, 0);
+                const daysPassed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                countdown = Math.max(0, totalPrepDays - daysPassed);
+                
+                // Auto-transition to POST-QUIT when countdown reaches 0
+                if (countdown === 0 && totalPrepDays > 0) {
+                  const todayStr = today.toISOString().split("T")[0];
+                  await upsertJourneyStatus(userId, todayStr, "POST_QUIT");
+                  localStorage.setItem("userPhase", "POST_QUIT");
+                  localStorage.setItem("actualQuitDate", todayStr);
+                  userCondition = "POST_QUIT";
+                }
+              } else {
+                countdown = 0;
+              }
+            } else {
+              // POST-QUIT: Calculate days since quit date
+              const quitDateStr = localStorage.getItem("actualQuitDate");
+              if (quitDateStr) {
+                const quitDate = new Date(quitDateStr);
+                quitDate.setHours(0, 0, 0, 0);
+                const diffTime = today.getTime() - quitDate.getTime();
+                streak = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+              } else {
+                streak = stats.streakDays || 0;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Gagal mengambil stats dari database, fallback ke localStorage", e);
+          // Fallback ke localStorage jika database error
+          const storedPhase = localStorage.getItem("userPhase");
+          userCondition = storedPhase === "POST_QUIT" ? "POST_QUIT" : "PRE_QUIT";
+          
+          const storedCountdown = localStorage.getItem("countdownDays");
+          const storedStreak = localStorage.getItem("streakDays");
+          countdown = storedCountdown ? parseInt(storedCountdown, 10) || 0 : 0;
+          streak = storedStreak ? parseInt(storedStreak, 10) || 0 : 0;
+        }
+      }
+
+      const personalMotivation =
+        parsedMotivations.length > 0
+          ? `Alasan terkuatmu: ${parsedMotivations
+              .map((m) => m.replace(/^[a-z]/, (c) => c.toUpperCase()))
+              .join(", ")}`
+          : "Ingat alasan terkuatmu untuk berhenti hari ini.";
+
+      const userEmail = localStorage.getItem("userEmail") || undefined;
+      
+      // Fetch full name from user_profile
+      let fullName = "Budi";
+      const userIdForName = localStorage.getItem("userId");
+      if (userIdForName) {
+        const { data: profileData } = await supabase
+          .from("user_profile")
+          .select("full_name")
+          .eq("user_id", userIdForName)
+          .maybeSingle();
+        
+        if (profileData?.full_name && String(profileData.full_name).trim() !== "") {
+          fullName = String(profileData.full_name).trim();
+        } else if (userEmail) {
+          fullName = userEmail.split("@")[0];
+        }
+      } else if (userEmail) {
+        fullName = userEmail.split("@")[0];
+      }
+
+      const userData = {
+        userName: fullName,
+        userCondition,
+        countdownDays: countdown,
+        streakDays: streak,
+        personalMotivation,
+        moneySaved: totalSaved,
       };
 
-      setUserName(mockUserData.userName);
-      setMoneySaved(mockUserData.moneySaved);
-      setUserStatus(mockUserData.userCondition);
-      setCountdownDays(mockUserData.countdownDays);
-      setStreakDays(mockUserData.streakDays);
-      setUserMotivation(mockUserData.personalMotivation);
+      setUserName(userData.userName);
+      setMoneySaved(userData.moneySaved);
+      setUserStatus(userData.userCondition);
+      setCountdownDays(userData.countdownDays);
+      setStreakDays(userData.streakDays);
+      setUserMotivation(userData.personalMotivation);
+      
+      // Simpan ke localStorage sebagai cache untuk kompatibilitas dengan halaman lain
+      localStorage.setItem("userPhase", userData.userCondition);
+      localStorage.setItem("countdownDays", String(userData.countdownDays));
+      localStorage.setItem("streakDays", String(userData.streakDays));
+      localStorage.setItem("homeMoneySaved", String(userData.moneySaved));
 
-      if (mockUserData.userCondition === "PRE_QUIT") {
-        const totalHours = mockUserData.countdownDays * 24;
+      if (userData.userCondition === "PRE_QUIT") {
+        const totalHours = userData.countdownDays * 24;
         setTimeProgress({
-          months: Math.floor(mockUserData.countdownDays / 30),
-          days: mockUserData.countdownDays % 30,
-          hours: totalHours % 24
+          months: Math.floor(userData.countdownDays / 30),
+          days: userData.countdownDays % 30,
+          hours: totalHours % 24,
         });
       } else {
         setTimeProgress({
-          months: Math.floor(mockUserData.streakDays / 30),
-          days: mockUserData.streakDays % 30,
-          hours: new Date().getHours()
+          months: Math.floor(userData.streakDays / 30),
+          days: userData.streakDays % 30,
+          hours: new Date().getHours(),
         });
       }
 
-      // Save userCondition to localStorage for PencapaianPage
-      localStorage.setItem("userCondition", mockUserData.userCondition);
+      // Simpan status untuk PencapaianPage
+      localStorage.setItem("userCondition", userData.userCondition);
 
-      const dailyMissions = [
-        "Identifikasi 3 situasi yang memicu keinginan merokok hari ini.",
-        "Beritahu satu teman dekat tentang rencanamu berhenti merokok.",
-        "Bersihkan ruang favoritmu dari asbak dan pemantik.",
-        "Siapkan camilan sehat sebagai pengganti rokok di tasmu.",
-        "Unduh aplikasi meditasi dan coba latihan pernapasan 5 menit.",
-        "Buat daftar aktivitas yang bisa kamu lakukan saat keinginan merokok muncul.",
-        "Hitung dan catat berapa banyak uang yang bisa kamu hemat dalam sebulan tanpa rokok."
-      ];
+      // Coba auto-transisi PRE_QUIT -> POST_QUIT bila 3-4 minggu 0 rokok
+      if (userId) {
+        await checkAndAutoTransitionPhase(userId);
+      }
 
+      // Cek profil di Supabase untuk nomor WhatsApp dan gender
+      const userIdForProfile = localStorage.getItem("userId");
+      if (userIdForProfile) {
+        const { data: profile } = await supabase
+          .from("user_profile")
+          .select("full_name, date_of_birth, phone_number, gender")
+          .eq("user_id", userIdForProfile)
+          .maybeSingle();
+
+        const needsFullName = !profile?.full_name || String(profile.full_name).trim() === "";
+        const needsDob = !profile?.date_of_birth;
+        const needsPhone = !profile?.phone_number || String(profile.phone_number).trim() === "";
+        const needsGender = !profile?.gender || String(profile.gender).trim() === "";
+
+        if (needsFullName || needsDob || needsPhone || needsGender) {
+          setProfileFullName((profile?.full_name as string) || "");
+          setProfileDob((profile?.date_of_birth as string) || "");
+          setProfilePhone((profile?.phone_number as string) || "");
+          setProfileGender((profile?.gender as string) || "");
+          setShowProfileDialog(true);
+        }
+      }
+
+      const dailyMissions = motivationsData.dailyMissions;
       const randomMission = dailyMissions[Math.floor(Math.random() * dailyMissions.length)];
 
-      if (mockUserData.userCondition === "PRE_QUIT") {
+      // XP and achievements will be loaded separately via useEffect
+
+      if (userData.userCondition === "PRE_QUIT") {
         setNivoCoachContent({
-          greeting: `Semangat, ${mockUserData.userName}! ${mockUserData.countdownDays} hari lagi menuju hari bebasmu dari rokok.`,
+          greeting: `Semangat, ${userData.userName}! ${userData.countdownDays} hari lagi menuju hari bebasmu dari rokok.`,
           dynamicCard: {
             type: "DAILY_MISSION",
             title: "Misi Persiapan Hari Ini",
@@ -144,12 +319,36 @@ const HomePage = () => {
           }
         });
       } else {
+        // POST-QUIT: Show ALL motivations based on user's selected reasons
+        let motivationContent = userData.personalMotivation;
+        
+        // Match ALL user's motivations with our detailed motivation messages
+        if (parsedMotivations.length > 0) {
+          const matchedMotivations: string[] = [];
+          
+          parsedMotivations.forEach(userMotivation => {
+            // Match by label (Indonesian) - stored labels are now in Indonesian
+            const matched = motivationsData.postQuitMotivations.find(
+              m => m.label.toLowerCase() === userMotivation.toLowerCase()
+            );
+            
+            if (matched) {
+              matchedMotivations.push(`${matched.title}\n${matched.message}`);
+            }
+          });
+          
+          // Add all matched motivations to the content
+          if (matchedMotivations.length > 0) {
+            motivationContent = `${userData.personalMotivation}\n\n${matchedMotivations.join('\n\n')}`;
+          }
+        }
+        
         setNivoCoachContent({
-          greeting: `Luar biasa, ${mockUserData.userName}! ${mockUserData.streakDays} hari tanpa rokok sangat membanggakan!`,
+          greeting: `Luar biasa, ${userData.userName}! ${userData.streakDays} hari tanpa rokok sangat membanggakan!`,
           dynamicCard: {
             type: "MOTIVATION_REMINDER",
             title: "Ingat Alasan Terkuatmu",
-            content: mockUserData.personalMotivation
+            content: motivationContent
           }
         });
       }
@@ -157,8 +356,71 @@ const HomePage = () => {
     fetchUserData();
   }, [router, setUserName, setMoneySaved, setUserStatus, setCountdownDays, setStreakDays, setUserMotivation, setTimeProgress, setNivoCoachContent]);
 
+  // Load achievements from JSON and compute status
+  useEffect(() => {
+    const loadAchievements = async () => {
+      const userId = localStorage.getItem("userId");
+      const phase = userStatus;
+
+      // Get achievements structure from JSON
+      const { milestones, behaviors } = getAchievementsForPhase(phase);
+      const rewards = getRewardMilestones();
+
+      if (!userId) {
+        setAllBadges([...milestones, ...behaviors]);
+        return;
+      }
+
+      try {
+        // Fetch user data
+        const stats = await fetchUserJourneyStats(userId);
+        const userStats = await getUserStats(userId);
+        
+        const cravingsRejected = userStats?.cravings_rejected || 0;
+        const productiveActivities = userStats?.productive_activities || 0;
+
+        // Check each achievement
+        const updatedMilestones = milestones.map((ach) => {
+          const completed = checkAchievementCondition(ach.condition, {
+            streakDays,
+            cravingsRejected,
+            productiveActivities,
+          });
+          return { ...ach, completed, locked: !completed };
+        });
+
+        const updatedBehaviors = behaviors.map((ach) => {
+          const completed = checkAchievementCondition(ach.condition, {
+            streakDays,
+            cravingsRejected,
+            productiveActivities,
+          });
+          return { ...ach, completed, locked: !completed };
+        });
+
+        const allAchievements = [...updatedMilestones, ...updatedBehaviors];
+        setAllBadges(allAchievements);
+
+        // Calculate and update XP
+        const xpTotal = calculateTotalXp(allAchievements);
+        setTotalXp(xpTotal);
+
+        // Get next reward target
+        const nextReward = getNextReward(xpTotal, rewards);
+        setNextBadgeXp(nextReward?.xpRequired || 1200);
+      } catch (e) {
+        console.error("Error loading achievements:", e);
+        setAllBadges([...milestones, ...behaviors]);
+      }
+    };
+
+    loadAchievements();
+  }, [userStatus, streakDays]);
+
   // Auto-slide badge carousel every 15 seconds
   useEffect(() => {
+    if (allBadges.length === 0) return;
+    
     const interval = setInterval(() => {
       setBadgeIndex((prev) => (prev === allBadges.length - 1 ? 0 : prev + 1));
     }, 15000);
@@ -174,37 +436,166 @@ const HomePage = () => {
     }).format(amount);
   };
 
-  const handleLogConsumption = async () => {
-    if (sliderValue[0] === 0) {
-      alert("Pilih jumlah rokok terlebih dahulu");
-      return;
-    }
+  // Check for phase transition based on consumption patterns
+  const checkPhaseTransition = async (userId: string, todayConsumption: number) => {
+    try {
+      const journey = await fetchJourneyStatus(userId);
+      const currentPhase = journey?.phase ?? "PRE_QUIT";
 
+      // Case 1: POST_QUIT user smoked again → Transition back to PRE_QUIT
+      if (currentPhase === "POST_QUIT" && todayConsumption > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        await upsertJourneyStatus(userId, today, "PRE_QUIT", 30); // Default 30 days target
+        
+        setUserStatus("PRE_QUIT");
+        setCountdownDays(30);
+        setStreakDays(0);
+        
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userPhase", "PRE_QUIT");
+          localStorage.setItem("countdownDays", "30");
+          localStorage.setItem("streakDays", "0");
+        }
+
+        toast({
+          title: "Fase Berubah",
+          description: "Jangan khawatir! Kembali ke fase persiapan untuk membangun kembali momentum. Kamu bisa melakukannya!",
+          variant: "default",
+        });
+        
+        // Reload to reflect changes
+        setTimeout(() => window.location.reload(), 2000);
+        return;
+      }
+
+      // Case 2: PRE_QUIT user has 14+ consecutive days of zero → Auto transition to POST_QUIT
+      if (currentPhase === "PRE_QUIT") {
+        const logs = await fetchDailyConsumptionLogs(userId);
+        if (!logs.length) return;
+
+        // Get last 14 days of unique data
+        const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
+        const uniqueByDate = Object.values(
+          sorted.reduce<Record<string, typeof sorted[0]>>((acc, log) => {
+            if (!acc[log.date]) acc[log.date] = log;
+            return acc;
+          }, {})
+        ).sort((a, b) => b.date.localeCompare(a.date));
+
+        const last14 = uniqueByDate.slice(0, 14);
+        if (last14.length < 14) return; // Need at least 14 days of data
+
+        const allZero = last14.every((d) => (d.cigarette_count ?? 0) === 0);
+        if (!allZero) return;
+
+        // Find the first day of the zero streak
+        const firstZeroDate = last14[last14.length - 1].date;
+        
+        await upsertJourneyStatus(userId, firstZeroDate, "POST_QUIT");
+        
+        setUserStatus("POST_QUIT");
+        setStreakDays(14);
+        
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userPhase", "POST_QUIT");
+          localStorage.setItem("quitDate", firstZeroDate);
+          localStorage.setItem("streakDays", "14");
+        }
+
+        toast({
+          title: "🎉 Selamat!",
+          description: "Kamu telah menyelesaikan 14 hari tanpa rokok! Sekarang memasuki fase Post-Quit. Teruskan!",
+          variant: "default",
+        });
+        
+        // Reload to reflect changes
+        setTimeout(() => window.location.reload(), 2000);
+      }
+    } catch (e) {
+      console.error("checkPhaseTransition error", e);
+    }
+  };
+
+  const handleLogConsumption = async () => {
+    // Allow 0 cigarettes - it means user didn't smoke today
     setTodaysConsumption(sliderValue[0]);
     
-    // Log ke localStorage (sementara, bisa diganti dengan API call)
     const today = new Date().toISOString().split('T')[0];
+    const userId = localStorage.getItem("userId");
+
+    // Simpan ke Supabase jika userId tersedia
+    if (userId) {
+      try {
+        const pricePerCigarette = 1750; // Konsisten dengan TrackerPage
+        const moneySpent = sliderValue[0] * pricePerCigarette;
+        
+        await supabase.from("daily_consumption").upsert(
+          {
+            user_id: userId,
+            date: today,
+            cigarette_count: sliderValue[0],
+            money_spent: moneySpent,
+          },
+          { onConflict: "user_id,date" }
+        );
+      } catch (e) {
+        console.error("Gagal menyimpan ke Supabase, fallback ke localStorage", e);
+      }
+    }
+
+    // Tetap log ke localStorage sebagai cache lokal
     const consumptionLog = {
       date: today,
       amount: sliderValue[0],
       timestamp: new Date().toISOString()
     };
-    
-    // Save to localStorage
     const existingLogs = JSON.parse(localStorage.getItem("consumptionLogs") || "[]");
     const updatedLogs = existingLogs.filter((log: any) => log.date !== today);
     updatedLogs.push(consumptionLog);
     localStorage.setItem("consumptionLogs", JSON.stringify(updatedLogs));
-    
-    // Show success message
-    alert(`✓ Berhasil mencatat ${sliderValue[0]} batang rokok hari ini`);
-    
-    // Reset slider
+
+    toast({
+      title: "Berhasil!",
+      description: `✓ Berhasil mencatat ${sliderValue[0]} batang rokok hari ini`,
+      variant: "default",
+    });
     setSliderValue([0]);
+
+    // Check for phase transition after logging
+    if (userId) {
+      await checkPhaseTransition(userId, sliderValue[0]);
+    }
+  };
+
+  const xpProgressPercentage = nextBadgeXp > 0 ? Math.min(100, Math.round((totalXp / nextBadgeXp) * 100)) : 0;
+
+  const handleSaveProfile = async () => {
+    if (!profileFullName.trim() || !profileDob || !profilePhone.trim() || !profileGender) {
+      return;
+    }
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    setSavingProfile(true);
+    try {
+      await supabase.from("user_profile").upsert(
+        {
+          user_id: userId,
+          full_name: profileFullName.trim(),
+          date_of_birth: profileDob,
+          phone_number: profilePhone.trim(),
+          gender: profileGender,
+        },
+        { onConflict: "user_id" }
+      );
+      setShowProfileDialog(false);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   return (
-    <div className="relative">
+    <div className="relative max-w-md mx-auto md:max-w-lg lg:max-w-xl">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
@@ -230,13 +621,13 @@ const HomePage = () => {
             <div className="relative z-10 space-y-6 h-full flex flex-col justify-between">
               {/* Greeting Section */}
               <div>
-                <h1 className="text-2xl text-white font-bold mb-2 drop-shadow-lg leading-tight">{nivoCoachContent.greeting}</h1>
-                <p className="text-white/90 text-sm drop-shadow-md">NIVO mendukung perjalananmu!</p>
+                <h1 className="text-xl sm:text-2xl text-white font-bold mb-2 drop-shadow-lg leading-tight">{nivoCoachContent.greeting}</h1>
+                <p className="text-white/90 text-xs sm:text-sm drop-shadow-md">NIVO mendukung perjalananmu!</p>
               </div>
 
               {/* Time Progress Section */}
               <div className="backdrop-blur-md bg-white/10 p-6 rounded-2xl border border-white/20">
-                <p className="text-xs text-white font-medium mb-4 text-center uppercase tracking-wider">
+                <p className="text-[10px] sm:text-xs text-white font-medium mb-4 text-center uppercase tracking-wider">
                   {userStatus === "PRE_QUIT" ? "Waktu Menuju Hari Bebas Rokok" : "Waktu Bebas dari Rokok"}
                 </p>
                 <div className="grid grid-cols-3 gap-3">
@@ -256,7 +647,7 @@ const HomePage = () => {
             className="bg-gradient-to-br from-teal-50 to-emerald-50 p-5 rounded-2xl border border-teal-200 shadow-sm"
           >
             <h3 className="text-sm font-bold text-teal-900 mb-2">{nivoCoachContent.dynamicCard.title}</h3>
-            <p className={`text-sm leading-relaxed text-teal-800 ${nivoCoachContent.dynamicCard.type === "MOTIVATION_REMINDER" ? "italic" : ""}`}>
+            <p className={`text-sm leading-relaxed text-teal-800 whitespace-pre-line ${nivoCoachContent.dynamicCard.type === "MOTIVATION_REMINDER" ? "italic" : ""}`}>
               {nivoCoachContent.dynamicCard.content}
             </p>
           </motion.div>
@@ -340,6 +731,33 @@ const HomePage = () => {
             </div>
           </motion.div>
 
+          {/* XP Progress Toward Next Reward */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18 }}
+            className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
+                Progress XP Menuju Reward Berikutnya
+              </p>
+              <span className="text-xs font-medium text-teal-700">
+                {totalXp} / {nextBadgeXp} XP
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all"
+                style={{ width: `${xpProgressPercentage}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-gray-500">
+              Dapatkan XP dengan menyelesaikan misi harian, menahan keinginan merokok,
+              dan menjaga streak bebas rokok. Reward spesial akan terbuka saat bar ini penuh.
+            </p>
+          </motion.div>
+
           {/* Metrics Section - New Layout */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -348,25 +766,27 @@ const HomePage = () => {
             className="flex gap-3 items-center"
           >
             {/* Left Card - Smoke Free Days */}
-            <div className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl p-4 shadow-md flex-1 h-32 flex flex-col items-center justify-center text-center">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-2">
-                <Cigarette className="w-5 h-5 text-white" />
+            <div className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl p-3 shadow-md flex-1 h-28 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center mb-1">
+                <Cigarette className="w-4 h-4 text-white" />
               </div>
-              <div className="text-3xl font-bold text-white mb-1">
+              <div className="text-xl sm:text-2xl font-bold text-white mb-0.5">
                 {userStatus === "PRE_QUIT" ? countdownDays : streakDays}
               </div>
-              <div className="text-xs text-white/90 font-medium">
-                {userStatus === "PRE_QUIT" ? "Hari Menuju" : "Hari Tanpa"}<br />Rokok
+              <div className="text-[10px] text-white/90 font-medium leading-tight">
+                {userStatus === "PRE_QUIT" ? "Hari Menuju Berhenti" : "Hari Tanpa"}
+                <br />
+                Merokok
               </div>
             </div>
 
             {/* Right Card - Money Saved Progress */}
-            <div className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-2xl p-4 shadow-md h-32 flex flex-col items-center justify-center text-center">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-2">
-                <CircleDollarSign className="w-5 h-5 text-white" />
+            <div className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-2xl p-3 shadow-md h-28 flex flex-col items-center justify-center text-center">
+              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center mb-1">
+                <CircleDollarSign className="w-4 h-4 text-white" />
               </div>
-              <div className="text-3xl font-bold text-white mb-1">{formatCurrency(moneySaved)}</div>
-              <div className="text-xs text-white/90 font-medium">Dihemat</div>
+              <div className="text-xl font-bold text-white mb-0.5">{formatCurrency(moneySaved)}</div>
+              <div className="text-[10px] text-white/90 font-medium leading-tight">Uang yang Dihemat</div>
             </div>
           </motion.div>
 
@@ -385,55 +805,151 @@ const HomePage = () => {
             </Button>
           </motion.div>
 
-          {/* Daily Consumption Tracker */}
-          <motion.div 
-            className="bg-white p-6 rounded-2xl shadow-md border border-gray-100"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Catat Konsumsi Hari Ini</h3>
-                <p className="text-xs text-gray-500">Berapa batang rokok yang kamu merokok?</p>
+          {/* Daily Consumption Tracker - Only for PRE-QUIT */}
+          {userStatus === "PRE_QUIT" && (
+            <motion.div 
+              className="bg-white p-6 rounded-2xl shadow-md border border-gray-100"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Catat Konsumsi Hari Ini</h3>
+                  <p className="text-xs text-gray-500">Berapa batang rokok yang kamu merokok?</p>
+                </div>
+                <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full">
+                  <span className="text-lg font-bold text-orange-600">{sliderValue[0]}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full">
-                <span className="text-lg font-bold text-orange-600">{sliderValue[0]}</span>
-              </div>
-            </div>
 
-            <div className="mb-6 px-2">
-              <div className="mb-3">
-                <Slider
-                  value={sliderValue}
-                  onValueChange={setSliderValue}
-                  max={24}
-                  min={0}
-                  step={1}
-                  className="w-full"
+              <div className="mb-6 px-2">
+                <div className="mb-3">
+                  <Slider
+                    value={sliderValue}
+                    onValueChange={setSliderValue}
+                    max={24}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>0 batang</span>
+                  <span>24 batang</span>
+                </div>
+              </div>
+
+              <Button
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-lg transition-all active:scale-95"
+                onClick={handleLogConsumption}
+              >
+                <Cigarette className="w-4 h-4 mr-2" />
+                Catat Sekarang
+              </Button>
+              
+              {todaysConsumption > 0 && (
+                <p className="text-xs text-green-600 mt-2 text-center">
+                  ✓ Tercatat: {todaysConsumption} batang hari ini
+                </p>
+              )}
+            </motion.div>
+          )}
+      </div>
+
+      {showProfileDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold mb-2">Lengkapi Profilmu</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Beberapa informasi tambahan membantu NIVO memberi dukungan yang lebih personal.
+            </p>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                <input
+                  type="text"
+                  value={profileFullName}
+                  onChange={(e) => setProfileFullName(e.target.value)}
+                  placeholder="Masukkan nama lengkap"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>0 batang</span>
-                <span>24 batang</span>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                <input
+                  type="date"
+                  value={profileDob}
+                  onChange={(e) => setProfileDob(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
+                <input
+                  type="tel"
+                  value={profilePhone}
+                  onChange={(e) => setProfilePhone(e.target.value)}
+                  placeholder="Contoh: 081234567890"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setProfileGender("Laki-Laki")}
+                    className={`w-full px-3 py-2 rounded-lg border text-sm text-left transition-colors ${
+                      profileGender === "Laki-Laki"
+                        ? "bg-emerald-50 border-emerald-400 text-emerald-800"
+                        : "bg-white border-gray-300 text-gray-800 hover:border-gray-400"
+                    }`}
+                  >
+                    Laki-Laki
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProfileGender("Perempuan")}
+                    className={`w-full px-3 py-2 rounded-lg border text-sm text-left transition-colors ${
+                      profileGender === "Perempuan"
+                        ? "bg-emerald-50 border-emerald-400 text-emerald-800"
+                        : "bg-white border-gray-300 text-gray-800 hover:border-gray-400"
+                    }`}
+                  >
+                    Perempuan
+                  </button>
+                </div>
               </div>
             </div>
 
-            <Button
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-lg transition-all active:scale-95"
-              onClick={handleLogConsumption}
-            >
-              <Cigarette className="w-4 h-4 mr-2" />
-              Catat Sekarang
-            </Button>
-            
-            {todaysConsumption > 0 && (
-              <p className="text-xs text-green-600 mt-2 text-center">
-                ✓ Tercatat: {todaysConsumption} batang hari ini
-              </p>
-            )}
-          </motion.div>
-      </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowProfileDialog(false)}
+                disabled={savingProfile}
+              >
+                Nanti Saja
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveProfile}
+                disabled={
+                  savingProfile ||
+                  !profileFullName.trim() ||
+                  !profileDob ||
+                  !profilePhone.trim() ||
+                  !profileGender
+                }
+              >
+                {savingProfile ? "Menyimpan..." : "Simpan"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -446,8 +962,8 @@ interface TimeStatItemProps {
 }
 const TimeStatItem: FC<TimeStatItemProps> = ({ value, label }) => (
   <div className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl p-3 text-center">
-    <div className="text-2xl font-bold text-white mb-1">{value}</div>
-    <div className="text-xs text-white/80">{label}</div>
+    <div className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</div>
+    <div className="text-[10px] sm:text-xs text-white/80">{label}</div>
   </div>
 );
 

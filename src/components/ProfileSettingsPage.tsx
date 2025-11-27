@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from "react";
-import { ArrowLeft, Camera, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "./ui/button";
@@ -9,48 +9,39 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { LoadingScreen } from "./ui/loading";
+import { supabase } from "@/lib/supabase";
 import { useApiLoading } from "@/hooks/useApiLoading";
 import logo from "@/assets/logo-with-text-horizontal.png";
 
 const ProfileSettingsPage = () => {
   const router = useRouter();
   const { isLoading, withLoading } = useApiLoading();
+  const [initialData, setInitialData] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    gender: "",
+    birthDate: "",
+    smokingPattern: "",
+    motivasiPilihan: [] as string[],
+  });
   const [formData, setFormData] = useState({
-    name: "Sarah",
-    email: "sarah.johnson@email.com",
-    regionCode: "+62",
-    phoneNumber: "851-5503-2260",
-    gender: "Perempuan",
-    birthDate: "1992-05-15",
-    address: "Jl. Mks",
-    city: "Jakarta",
-    province: "Jakarta Utara", 
-    targetBerhenti: "30 Hari",
-    motivasiBerhenti: "Jakarta"
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    gender: "",
+    birthDate: "",
+    smokingPattern: "",
+    motivasiPilihan: [] as string[],
   });
 
-  const regionCodes = [
-    { value: "+62", label: "+62" },
-    { value: "+1", label: "+1" },
-    { value: "+44", label: "+44" },
-    { value: "+81", label: "+81" },
-    { value: "+86", label: "+86" }
-  ];
-
-  const cities = [
-    { value: "Jakarta", label: "Jakarta" },
-    { value: "Surabaya", label: "Surabaya" },
-    { value: "Bandung", label: "Bandung" },
-    { value: "Medan", label: "Medan" },
-    { value: "Semarang", label: "Semarang" }
-  ];
-
-  const provinces = [
-    { value: "Jakarta Utara", label: "Jakarta Utara" },
-    { value: "Jakarta Selatan", label: "Jakarta Selatan" },
-    { value: "Jakarta Timur", label: "Jakarta Timur" },
-    { value: "Jakarta Barat", label: "Jakarta Barat" },
-    { value: "Jakarta Pusat", label: "Jakarta Pusat" }
+  const motivationOptions = [
+    { value: "health", label: "Kesehatan" },
+    { value: "finance", label: "Keuangan" },
+    { value: "family", label: "Keluarga" },
+    { value: "energy", label: "Energi & Stamina" },
+    { value: "cognitive", label: "Fokus & Konsentrasi" },
+    { value: "confidence", label: "Kepercayaan Diri" },
   ];
 
   const genderOptions = [
@@ -58,23 +49,89 @@ const ProfileSettingsPage = () => {
     { value: "Perempuan", label: "Perempuan" }
   ];
 
-  const targetOptions = [
-    { value: "30 Hari", label: "30 Hari" },
-    { value: "45 Hari", label: "45 Hari" },
-    { value: "60 Hari", label: "60 Hari" },
-    { value: "90 Hari", label: "90 Hari" }
-  ];
+  // Sinkronisasi awal dengan data dari onboarding / HomePage
+  useEffect(() => {
+    const loadProfile = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      // Ambil data user_profile
+      const { data, error } = await supabase
+        .from("user_profile")
+        .select("full_name,email,phone_number,gender,date_of_birth,smoking_pattern,motivations")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Gagal mengambil profil user", error);
+        return;
+      }
+
+      // Ambil fase dari smoke_free_journey sebagai source of truth
+      const { data: journeyData } = await supabase
+        .from("smoke_free_journey")
+        .select("phase, status")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const currentPhase = journeyData?.phase || journeyData?.status || "";
+
+      if (data) {
+        const loaded = {
+          fullName: (data.full_name as string) || "",
+          email: (data.email as string) || "",
+          phoneNumber: (data.phone_number as string) || "",
+          gender: (data.gender as string) || "",
+          birthDate: data.date_of_birth ? String(data.date_of_birth) : "",
+          smokingPattern: currentPhase || (data.smoking_pattern as string) || "",
+          motivasiPilihan: (data.motivations as string[] | null) || [],
+        };
+        setInitialData(loaded);
+        setFormData(loaded);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const toggleMotivation = (value: string) => {
+    setFormData(prev => {
+      const exists = prev.motivasiPilihan.includes(value);
+      const next = exists
+        ? prev.motivasiPilihan.filter(v => v !== value)
+        : prev.motivasiPilihan.length >= 2
+        ? prev.motivasiPilihan
+        : [...prev.motivasiPilihan, value];
+      return { ...prev, motivasiPilihan: next };
+    });
+  };
+
+  const hasChanges = JSON.stringify(formData) !== JSON.stringify(initialData);
+
   const handleSaveChanges = async () => {
     await withLoading(async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log("Saving changes:", formData);
-      // Here you would typically save to backend
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      await supabase.from("user_profile").upsert(
+        {
+          user_id: userId,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone_number: formData.phoneNumber,
+          gender: formData.gender,
+          date_of_birth: formData.birthDate || null,
+          smoking_pattern: formData.smokingPattern,
+          motivations: formData.motivasiPilihan,
+        },
+        { onConflict: "user_id" }
+      );
+
+      setInitialData(formData);
     });
   };
 
@@ -88,9 +145,9 @@ const ProfileSettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white max-w-md mx-auto md:max-w-lg lg:max-w-xl">
       {/* Header */}
-      <div className="bg-white px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
+      <div className="sticky top-0 z-20 bg-white px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.push("/home")} 
@@ -110,17 +167,17 @@ const ProfileSettingsPage = () => {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Profile Photo Section */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 flex items-center justify-center overflow-hidden">
-              <span className="text-white font-medium text-2xl">S</span>
-            </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-              <Camera className="w-4 h-4 text-white" />
-            </button>
+        {/* Profile Header - no photo upload for now */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 flex items-center justify-center overflow-hidden">
+            <span className="text-white font-medium text-lg">
+              {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : "U"}
+            </span>
           </div>
-          <span className="text-sm text-gray-600">Klik untuk mengubah foto</span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900">{formData.fullName || "Nama belum diisi"}</span>
+            <span className="text-xs text-gray-500">{formData.email || "Email belum diisi"}</span>
+          </div>
         </div>
 
         {/* Personal Information Section */}
@@ -128,17 +185,17 @@ const ProfileSettingsPage = () => {
           <h3 className="text-lg font-semibold text-gray-800">Informasi Pribadi</h3>
           
           <div className="space-y-2">
-            <Label htmlFor="nama">Nama</Label>
+            <Label htmlFor="nama">Nama Lengkap</Label>
             <Input
               id="nama"
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
+              value={formData.fullName}
+              onChange={(e) => handleInputChange("fullName", e.target.value)}
               className="bg-white border border-gray-200 rounded-lg shadow-sm"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Alamat E-mail</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
@@ -149,29 +206,12 @@ const ProfileSettingsPage = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Nomor HP</Label>
-            <div className="flex gap-2">
-              <Select
-                value={formData.regionCode}
-                onValueChange={(value) => handleInputChange("regionCode", value)}
-              >
-                <SelectTrigger className="w-20 bg-white border border-gray-200 rounded-lg shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                  {regionCodes.map((code) => (
-                    <SelectItem key={code.value} value={code.value}>
-                      {code.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                value={formData.phoneNumber}
-                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm"
-              />
-            </div>
+            <Label>Nomor WhatsApp</Label>
+            <Input
+              value={formData.phoneNumber}
+              onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm"
+            />
           </div>
 
           <div className="space-y-2">
@@ -195,105 +235,60 @@ const ProfileSettingsPage = () => {
 
           <div className="space-y-2">
             <Label htmlFor="birthDate">Tanggal Lahir</Label>
-            <div className="relative">
-              <Input
-                id="birthDate"
-                type="date"
-                value={formData.birthDate}
-                onChange={(e) => handleInputChange("birthDate", e.target.value)}
-                className="bg-white border border-gray-200 rounded-lg shadow-sm pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Address Information Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Informasi Alamat</h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="address">Alamat</Label>
             <Input
-              id="address"
-              value={formData.address}
-              onChange={(e) => handleInputChange("address", e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm"
+              id="birthDate"
+              type="date"
+              value={formData.birthDate}
+              onChange={(e) => handleInputChange("birthDate", e.target.value)}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Kota</Label>
-              <Select
-                value={formData.city}
-                onValueChange={(value) => handleInputChange("city", value)}
-              >
-                <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                  {cities.map((city) => (
-                    <SelectItem key={city.value} value={city.value}>
-                      {city.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Provinsi</Label>
-              <Select
-                value={formData.province}
-                onValueChange={(value) => handleInputChange("province", value)}
-              >
-                <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                  {provinces.map((province) => (
-                    <SelectItem key={province.value} value={province.value}>
-                      {province.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </div>
 
         {/* Preferences Section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800">Preferensi</h3>
-          
-          <div className="space-y-2">
-            <Label>Target Berhenti</Label>
-            <Select
-              value={formData.targetBerhenti}
-              onValueChange={(value) => handleInputChange("targetBerhenti", value)}
-            >
-              <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                {targetOptions.map((target) => (
-                  <SelectItem key={target.value} value={target.value}>
-                    {target.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="space-y-2">
-            <Label htmlFor="motivasi">Motivasi Berhenti</Label>
-            <Input
-              id="motivasi"
-              value={formData.motivasiBerhenti}
-              onChange={(e) => handleInputChange("motivasiBerhenti", e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm"
-            />
+            <Label>Motivasi Utama (seperti saat onboarding)</Label>
+            <p className="text-xs text-gray-500 mb-1">
+              Pilih kembali 1-3 alasan terkuatmu. Ini akan mempengaruhi pesan di beranda.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {motivationOptions.map((m) => {
+                const active = formData.motivasiPilihan.includes(m.value);
+                return (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => toggleMotivation(m.value)}
+                    className={`text-xs px-3 py-2 rounded-lg border transition-colors text-left ${
+                      active
+                        ? "bg-primary text-white border-primary"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-gray-100">
+            <Label>Fase yang Sedang Dijalani</Label>
+            <Select
+              value={formData.smokingPattern}
+              onValueChange={(value) => handleInputChange("smokingPattern", value)}
+            >
+              <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                <SelectValue placeholder="Pilih fase" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                <SelectItem value="PRE-QUIT">PRE-QUIT</SelectItem>
+                <SelectItem value="POST-QUIT">POST-QUIT</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -301,7 +296,12 @@ const ProfileSettingsPage = () => {
         <div className="space-y-4 pt-4">
           <Button 
             onClick={handleSaveChanges}
-            className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg shadow-sm"
+            disabled={!hasChanges}
+            className={`w-full py-3 rounded-lg shadow-sm ${
+              hasChanges
+                ? "bg-primary hover:bg-primary/90 text-white"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
           >
             Simpan Perubahan
           </Button>

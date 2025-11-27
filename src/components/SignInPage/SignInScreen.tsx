@@ -4,15 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Mail, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const SignInScreen = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -24,18 +27,76 @@ const SignInScreen = () => {
       ...prev,
       [field]: e.target.value
     }));
+    setError(""); // Clear error on input change
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate a successful login
-    setTimeout(() => {
-      // On successful login, store a dummy token.
-      localStorage.setItem('userToken', 'dummy-token');
+    setLoading(true);
+    setError("");
 
-      // Navigate to the next page
+    if (!formData.email || !formData.password) {
+      setError("Email dan password harus diisi");
+      setLoading(false);
+      return;
+    }
+
+    const result = await signInWithEmail(formData.email, formData.password);
+    
+    if (result.success) {
+      // Store remember me preference
+      if (formData.rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('savedEmail', formData.email);
+      }
+      
+      // Check if user already has journey data (sudah pernah onboarding)
+      const userId = localStorage.getItem("userId");
+      console.log("Login success, checking journey data for userId:", userId);
+      
+      if (userId) {
+        try {
+          const { supabase } = await import("@/lib/supabase");
+          const { data: journeyData, error: journeyError } = await supabase
+            .from("smoke_free_journey")
+            .select("user_id, phase, start_date")
+            .eq("user_id", userId)
+            .maybeSingle();
+          
+          console.log("Journey query result:", { journeyData, journeyError });
+          
+          // Jika sudah ada journey data, langsung ke home
+          if (journeyData && journeyData.user_id) {
+            console.log("User has journey data, redirecting to /home");
+            router.push("/home");
+            setLoading(false);
+            return;
+          } else {
+            console.log("No journey data found, redirecting to /journey-start");
+          }
+        } catch (e) {
+          console.error("Error checking journey data:", e);
+        }
+      }
+      
+      // Jika belum ada journey data, ke journey-start untuk onboarding
       router.push("/journey-start");
-    }, 1000);
+    } else {
+      setError(result.error || "Sign in gagal. Silakan cek email dan password Anda.");
+    }
+
+    setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
+    const result = await signInWithGoogle();
+    
+    if (!result.success) {
+      setError(result.error || "Google sign in gagal");
+    }
+    setLoading(false);
   };
 
   return (
@@ -60,6 +121,12 @@ const SignInScreen = () => {
       <div className="max-w-sm mx-auto px-6 py-8">
         <div className="animate-fade-in">
           <h1 className="text-2xl font-bold mb-8">Sign In</h1>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-sm text-red-800">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Input */}
@@ -119,7 +186,7 @@ const SignInScreen = () => {
                 onClick={() => router.push("/forgot-password")}
                 className="text-sm text-accent hover:text-accent/80 font-medium"
               >
-                Forgot Password?
+                Lupa Password?
               </button>
             </div>
 
@@ -128,10 +195,29 @@ const SignInScreen = () => {
               type="submit"
               className="w-full bg-primary hover:bg-primary/90"
               size="lg"
+              disabled={loading}
             >
-              Sign In
+              {loading ? (
+                <>
+                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
+
+          {/* Sign up link */}
+          <div className="text-center mt-4">
+            <span className="text-sm text-muted-foreground">Belum punya akun? </span>
+            <button
+              onClick={() => router.push("/signup")}
+              className="text-sm text-accent hover:text-accent/80 font-medium"
+            >
+              Daftar di sini
+            </button>
+          </div>
 
           {/* Social Login */}
           <div className="mt-8">
@@ -142,8 +228,11 @@ const SignInScreen = () => {
             </div>
 
             <div className="flex justify-center gap-4">
-              <a 
-                className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors"
+              <button 
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
@@ -163,13 +252,7 @@ const SignInScreen = () => {
                     fill="#EA4335"
                   />
                 </svg>
-              </a>
-                          <a 
-                            className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                          >              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </a>
+              </button>
             </div>
           </div>
         </div>

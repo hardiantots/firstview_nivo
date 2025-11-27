@@ -1,4 +1,31 @@
 /** @type {import('next').NextConfig} */
+
+// Validate environment variables at build time
+const requiredEnvVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'OPENROUTER_API_KEY',
+  'NEXT_PUBLIC_SITE_URL',
+];
+
+const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:');
+  missingEnvVars.forEach((envVar) => {
+    console.error(`   - ${envVar}`);
+  });
+  console.error('\n📝 Please check .env.local file or set them in Vercel.');
+  console.error('📖 See DEPLOYMENT_GUIDE.md for instructions.\n');
+  
+  // Only fail in production builds
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Missing required environment variables');
+  }
+} else {
+  console.log('✅ All required environment variables are set');
+}
+
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,

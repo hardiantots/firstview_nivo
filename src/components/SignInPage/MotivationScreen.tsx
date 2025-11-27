@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, Wallet, Users, Zap, Brain, Smile } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
@@ -13,9 +12,17 @@ import assetsfirstpage from '@/assets/assetsfirstpage.png';
 const MotivationScreen = () => {
   const router = useRouter();
   const [selectedDays, setSelectedDays] = useState(30);
-  
-  const [motivation, setMotivation] = useState("");
-  const maxLength = 80;
+  const [selectedMotivations, setSelectedMotivations] = useState<string[]>([]);
+  const maxSelections = 2;
+
+  const motivationOptions = [
+    { id: 'health', label: 'Kesehatan', icon: Heart, description: 'Demi tubuh yang lebih sehat' },
+    { id: 'finance', label: 'Keuangan', icon: Wallet, description: 'Menghemat biaya rokok' },
+    { id: 'family', label: 'Keluarga', icon: Users, description: 'Untuk orang-orang terkasih' },
+    { id: 'energy', label: 'Energi & Stamina', icon: Zap, description: 'Lebih bugar dan bertenaga' },
+    { id: 'cognitive', label: 'Fokus & Konsentrasi', icon: Brain, description: 'Pikiran lebih jernih' },
+    { id: 'confidence', label: 'Kepercayaan Diri', icon: Smile, description: 'Merasa lebih percaya diri' },
+  ];
 
   useEffect(() => {
     // Get selected days from localStorage
@@ -23,18 +30,44 @@ const MotivationScreen = () => {
     if (storedDays) {
       setSelectedDays(parseInt(storedDays));
     }
+
+    // Don't preload motivations - let user select fresh
+    // This ensures empty state on initial visit to motivation screen
   }, []);
 
   const handleSubmit = () => {
-    if (motivation.trim()) {
-      // Here you would typically save the data and navigate to dashboard
-      console.log("Motivation:", motivation);
+    if (selectedMotivations.length > 0) {
+      console.log("Selected Motivations:", selectedMotivations);
       console.log("Selected days:", selectedDays);
-      // Store motivation for future use
-      localStorage.setItem('motivation', motivation);
-      // Navigate to home page after completion
+      localStorage.setItem('selectedMotivations', JSON.stringify(selectedMotivations));
+      // simpan juga ke user_profile.motivations bila user sudah login
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        fetch('/api/profile/motivations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, motivations: selectedMotivations }),
+        }).catch(() => {
+          // biarkan gagal diam-diam, localStorage tetap menyimpan
+        });
+      }
       router.push("/home");
     }
+  };
+
+  const toggleMotivation = (id: string) => {
+    // Find the label (Indonesian) for this id
+    const option = motivationOptions.find(opt => opt.id === id);
+    const label = option?.label || id;
+    
+    setSelectedMotivations(prev => {
+      if (prev.includes(label)) {
+        return prev.filter(item => item !== label);
+      } else if (prev.length < maxSelections) {
+        return [...prev, label];
+      }
+      return prev;
+    });
   };
 
   return (
@@ -68,29 +101,48 @@ const MotivationScreen = () => {
             </p>
           </motion.div>
 
-          {/* Motivation Input */}
+          {/* Motivation Options Grid */}
           <motion.div 
-            className="mb-6"
+            className="grid grid-cols-2 gap-3 mb-6"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
           >
-            <Textarea
-              value={motivation}
-              onChange={(e) => {
-                if (e.target.value.length <= maxLength) {
-                  setMotivation(e.target.value);
-                }
-              }}
-              placeholder="Contoh: Untuk kesehatan anak saya dan bisa melihatnya tumbuh dewasa."
-              className="min-h-[120px] resize-none text-sm shadow-sm"
-              maxLength={maxLength}
-            />
-            <div className="flex justify-end mt-2">
-              <span className="text-xs text-muted-foreground">
-                {motivation.length}/{maxLength}
-              </span>
-            </div>
+            {motivationOptions.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedMotivations.includes(option.label);
+              return (
+                <motion.button
+                  key={option.id}
+                  onClick={() => toggleMotivation(option.id)}
+                  className={`p-4 rounded-2xl border-2 transition-all duration-200 ${
+                    isSelected
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className={`flex flex-col items-center text-center ${isSelected ? 'text-orange-600' : 'text-gray-600'}`}>
+                    <Icon className="w-6 h-6 mb-2" />
+                    <p className="text-sm font-semibold">{option.label}</p>
+                    <p className="text-xs text-gray-500 mt-1">{option.description}</p>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </motion.div>
+
+          {/* Selection Counter */}
+          <motion.div 
+            className="text-center mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <p className="text-sm text-muted-foreground">
+              {selectedMotivations.length} / {maxSelections} pilihan dipilih
+            </p>
           </motion.div>
 
           {/* Motivational Card */}
@@ -100,28 +152,6 @@ const MotivationScreen = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
           >
-            <div className="flex justify-center mb-4">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-primary"
-                >
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-                  <path
-                    d="M8 12C8 12 9.5 9 12 10.5C14.5 12 16 9 16 9"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    fill="currentColor"
-                    fillOpacity="0.2"
-                  />
-                </svg>
-              </div>
-            </div>
             <p className="text-xs leading-relaxed">
               Apa alasan terkuatmu untuk berhenti? Entah itu demi keluarga tercinta, demi kesehatanmu sendiri, atau demi masa depan yang lebih cerah, kekuatan dari dalam dirimu. Bayangkan hidup bebas dari rokok, bernapas lega, dan meraih kesehatan yang prima. Setiap hari tanpa rokok adalah bukti kekuatanmu!
             </p>
@@ -137,7 +167,7 @@ const MotivationScreen = () => {
               className="w-full bg-accent hover:bg-accent/90 text-white"
               size="lg"
               onClick={handleSubmit}
-              disabled={!motivation.trim()}
+              disabled={selectedMotivations.length === 0}
             >
               Selesai & Mulai Perjalananmu
             </Button>

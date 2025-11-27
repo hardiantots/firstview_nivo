@@ -1,34 +1,41 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { sendPasswordResetEmail } from "@/lib/auth";
 import Image from "next/image";
 import abstractHeader from "@/assets/abstract-header.jpg";
 
 const ForgotPasswordSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
+  email: z.string().email({ message: "Masukkan email yang valid." }),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
 
 const ForgotPasswordScreen = () => {
   const router = useRouter();
+  const [error, setError] = useState("");
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: { email: "" },
   });
 
-  const onSubmit = (data: ForgotPasswordFormValues) => {
-    console.log("Password reset request for:", data.email);
-    // Store email in localStorage to pass to next page
-    localStorage.setItem('resetEmail', data.email);
-    router.push("/otp-verification");
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    setError("");
+    const result = await sendPasswordResetEmail(data.email);
+    
+    if (result.success) {
+      router.push("/otp-verification");
+    } else {
+      setError(result.error || "Gagal mengirim kode reset. Silakan coba lagi.");
+    }
   };
 
   return (
@@ -52,10 +59,16 @@ const ForgotPasswordScreen = () => {
       {/* Content */}
       <div className="max-w-sm mx-auto px-6 py-8">
         <div className="animate-fade-in">
-          <h1 className="text-2xl font-bold mb-2">Forgot Password</h1>
+          <h1 className="text-2xl font-bold mb-2">Lupa Password</h1>
           <p className="text-muted-foreground mb-8">
-            Enter your email to receive a verification code.
+            Masukkan email terdaftar Anda di bawah ini. Kami akan mengirimkan kode verifikasi untuk mengatur ulang kata sandi Anda.
           </p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-sm text-red-800">
+              {error}
+            </div>
+          )}
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -76,7 +89,14 @@ const ForgotPasswordScreen = () => {
                 )}
               />
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90" size="lg" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Sending..." : "Send Code"}
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Code"
+                )}
               </Button>
             </form>
           </Form>

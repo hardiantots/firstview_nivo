@@ -11,8 +11,17 @@ const JourneyStartScreen = () => {
 
   const handleSelection = (choice: 'starting' | 'already_quit') => {
     if (choice === 'starting') {
+      // PRE_QUIT journey: user akan mulai berhenti di masa depan
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userPhase', 'PRE_QUIT');
+        localStorage.removeItem('quitDate');
+      }
       router.push('/time-selection');
     } else {
+      // POST_QUIT journey: user sudah berhenti, akan memilih tanggal berhenti di masa lalu
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userPhase', 'POST_QUIT');
+      }
       router.push('/set-quit-date-past');
     }
   };

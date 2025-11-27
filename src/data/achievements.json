@@ -1,0 +1,47 @@
+{
+  "PRE_QUIT_MILESTONES": [
+    { "id": 1, "icon": "Leaf", "title": "Langkah Pertama", "description": "Mendaftar dan mulai perjalanan berhenti merokok.", "xp": 10, "condition": "registration" },
+    { "id": 2, "icon": "Zap", "title": "Hari Tanpa Asap", "description": "Menjalani 1 hari tanpa rokok.", "xp": 25, "condition": "streak_1" },
+    { "id": 3, "icon": "Heart", "title": "Minggu Kebebasan", "description": "Menjalani 7 hari tanpa rokok.", "xp": 75, "condition": "streak_7" },
+    { "id": 4, "icon": "Shield", "title": "Dua Minggu Solid", "description": "Mencapai 14 hari berturut-turut tanpa rokok.", "xp": 100, "condition": "streak_14" },
+    { "id": 5, "icon": "Award", "title": "Tiga Minggu Bertahan", "description": "Melewati 21 hari perjalanan berhenti merokok.", "xp": 125, "condition": "streak_21" },
+    { "id": 6, "icon": "Target", "title": "Bulan Pertama", "description": "Menjaga komitmen selama 30 hari.", "xp": 150, "condition": "streak_30" },
+    { "id": 7, "icon": "Leaf", "title": "Lima Minggu Kokoh", "description": "Bertahan selama 35 hari tanpa rokok.", "xp": 160, "condition": "streak_35" },
+    { "id": 8, "icon": "Zap", "title": "Enam Minggu Cemerlang", "description": "Mencapai 42 hari bebas rokok.", "xp": 180, "condition": "streak_42" },
+    { "id": 9, "icon": "Heart", "title": "Tujuh Minggu Tangguh", "description": "Merayakan 49 hari kemenangan.", "xp": 200, "condition": "streak_49" },
+    { "id": 10, "icon": "Shield", "title": "Dua Bulan Penuh", "description": "Mencapai 60 hari bebas dari rokok.", "xp": 220, "condition": "streak_60" }
+  ],
+  "PRE_QUIT_BEHAVIOR": [
+    { "id": 1, "icon": "Target", "title": "Pemula Pengendali Diri", "description": "Berhasil menolak satu keinginan merokok.", "xp": 15, "condition": "reject_craving_1" },
+    { "id": 2, "icon": "Shield", "title": "Kuat Menghadapi Godaan", "description": "Menolak lima kali keinginan merokok.", "xp": 50, "condition": "reject_craving_5" },
+    { "id": 3, "icon": "Zap", "title": "Tangguh Berlawanan", "description": "Berhasil menolak sepuluh kali keinginan merokok.", "xp": 85, "condition": "reject_craving_10" },
+    { "id": 4, "icon": "Heart", "title": "Pendaki Kuat", "description": "Menolak 20 kali keinginan merokok dengan sabar.", "xp": 140, "condition": "reject_craving_20" },
+    { "id": 5, "icon": "Leaf", "title": "Penguasa Hasrat", "description": "Mencapai 50 kali menolak keinginan merokok.", "xp": 200, "condition": "reject_craving_50" },
+    { "id": 6, "icon": "Award", "title": "Master Penolakan", "description": "Menolak 100 kali keinginan merokok.", "xp": 300, "condition": "reject_craving_100" }
+  ],
+  "POST_QUIT_MILESTONES": [
+    { "id": 1, "icon": "Leaf", "title": "Pelanjut Kebebasan", "description": "Menjaga 30 hari penuh bebas rokok.", "xp": 150, "condition": "streak_30" },
+    { "id": 2, "icon": "Zap", "title": "Seperempat Tahun", "description": "Bertahan selama 90 hari tanpa merokok.", "xp": 280, "condition": "streak_90" },
+    { "id": 3, "icon": "Award", "title": "100 Hari Konsisten", "description": "Melewati 100 hari tanpa rokok.", "xp": 300, "condition": "streak_100" },
+    { "id": 4, "icon": "Heart", "title": "Lima Bulan Menakjubkan", "description": "Melewati 150 hari kemenangan berkelanjutan.", "xp": 350, "condition": "streak_150" },
+    { "id": 5, "icon": "Target", "title": "Enam Bulan Bersinar", "description": "Mencapai 180 hari kehidupan bebas nikotin.", "xp": 400, "condition": "streak_180" },
+    { "id": 6, "icon": "Shield", "title": "Delapan Bulan Gemilang", "description": "Merayakan 240 hari kesuksesan.", "xp": 500, "condition": "streak_240" },
+    { "id": 7, "icon": "Leaf", "title": "Sepuluh Bulan Legendaris", "description": "Melewati 300 hari sebagai seseorang yang bebas rokok.", "xp": 600, "condition": "streak_300" },
+    { "id": 8, "icon": "Trophy", "title": "Setahun Penuh", "description": "Menjaga 365 hari tanpa rokok.", "xp": 1000, "condition": "streak_365" }
+  ],
+  "POST_QUIT_BEHAVIOR": [
+    { "id": 1, "icon": "Target", "title": "Kembali Fokus", "description": "Menggantikan waktu merokok dengan aktivitas produktif.", "xp": 100, "condition": "productive_replacement_1" },
+    { "id": 2, "icon": "Zap", "title": "Stabil Tanpa Ketergantungan", "description": "Sebulan tanpa keinginan kembali merokok.", "xp": 180, "condition": "streak_30_post" },
+    { "id": 3, "icon": "Heart", "title": "Resiliensi Sejati", "description": "Menghadapi 5 situasi godaan tanpa kembali merokok.", "xp": 120, "condition": "reject_craving_5_post" },
+    { "id": 4, "icon": "Shield", "title": "Pencapaian Ganda", "description": "Melakukan 50 aktivitas pengganti rokok post-quit.", "xp": 200, "condition": "productive_replacement_50" },
+    { "id": 5, "icon": "Leaf", "title": "Transformasi Jiwa", "description": "Mencapai 100 hari tanpa memikirkan rokok.", "xp": 250, "condition": "streak_100_post" }
+  ],
+  "REWARD_MILESTONES": [
+    { "id": 1, "name": "Pemula Bersemangat", "description": "Kumpulkan 50 XP untuk unlock badge pemula", "xpRequired": 50, "icon": "Award" },
+    { "id": 2, "name": "Petualang Maju", "description": "Dapatkan 150 XP untuk unlock badge petualang", "xpRequired": 150, "icon": "Zap" },
+    { "id": 3, "name": "Prajurit Tekad", "description": "Raih 300 XP untuk unlock badge prajurit", "xpRequired": 300, "icon": "Shield" },
+    { "id": 4, "name": "Juara Sejati", "description": "Capai 500 XP untuk unlock badge juara", "xpRequired": 500, "icon": "Trophy" },
+    { "id": 5, "name": "Master Disiplin", "description": "Kumpulkan 800 XP untuk unlock badge master", "xpRequired": 800, "icon": "Heart" },
+    { "id": 6, "name": "Legenda Abadi", "description": "Cetak 1200 XP untuk unlock status legenda", "xpRequired": 1200, "icon": "Leaf" }
+  ]
+}
