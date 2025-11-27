@@ -29,7 +29,8 @@ const TimeSelectionScreen = () => {
         today.setHours(0, 0, 0, 0);
         
         // Set journey start date (today)
-        localStorage.setItem('journeyStartDate', today.toISOString());
+        const journeyStartDate = today.toISOString();
+        localStorage.setItem('journeyStartDate', journeyStartDate);
         localStorage.setItem('selectedDays', selectedDays.toString());
 
         // Hitung quitDate sebagai hari ini + selectedDays (PRE_QUIT target)
@@ -43,10 +44,25 @@ const TimeSelectionScreen = () => {
         // Pastikan fase terset ke PRE_QUIT
         localStorage.setItem('userPhase', 'PRE_QUIT');
 
-        // Simpan juga ke database (smoke_free_journey)
+        // Simpan ke database (smoke_free_journey & user_profile)
         const userId = localStorage.getItem('userId');
         if (userId) {
-          await upsertJourneyStatus(userId, quitDate.toISOString(), 'PRE_QUIT', selectedDays);
+          try {
+            // Save to smoke_free_journey
+            await upsertJourneyStatus(userId, quitDate.toISOString(), 'PRE_QUIT', selectedDays);
+            
+            // Save journeyStartDate and selectedDays to user_profile for cross-device sync
+            const { supabase } = await import('@/lib/supabase');
+            await supabase
+              .from('user_profile')
+              .upsert({
+                user_id: userId,
+                journey_start_date: journeyStartDate,
+                selected_preparation_days: selectedDays,
+              }, { onConflict: 'user_id' });
+          } catch (error) {
+            console.error('Failed to save to database:', error);
+          }
         }
       }
       router.push("/motivation");

@@ -414,15 +414,32 @@ const TrackerPage = () => {
 
       // Case 1: POST_QUIT user smoked again → Transition back to PRE_QUIT
       if (currentPhase === "POST_QUIT" && todayConsumption > 0) {
-        const today = new Date().toISOString().split('T')[0];
-        await upsertJourneyStatus(userId, today, "PRE_QUIT", 30);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString();
         
-        setUserPhase("PRE_QUIT");
+        // Use today as new journey start date (reset preparation)
+        const newTargetDays = 30; // Default 30 days preparation
+        await upsertJourneyStatus(userId, todayStr, "PRE_QUIT", newTargetDays);
         
+        // Update user_profile for cross-device sync
+        const { supabase } = await import('@/lib/supabase');
+        await supabase
+          .from('user_profile')
+          .update({
+            journey_start_date: todayStr,
+            selected_preparation_days: newTargetDays,
+          })
+          .eq('user_id', userId);
+        
+        // Clear actualQuitDate from localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userPhase", "PRE_QUIT");
-          localStorage.setItem("countdownDays", "30");
+          localStorage.setItem("journeyStartDate", todayStr);
+          localStorage.setItem("selectedDays", String(newTargetDays));
+          localStorage.setItem("countdownDays", String(newTargetDays));
           localStorage.setItem("streakDays", "0");
+          localStorage.removeItem("actualQuitDate"); // Clear old quit date
         }
 
         toast({
@@ -431,7 +448,13 @@ const TrackerPage = () => {
           variant: "default",
         });
         
-        setTimeout(() => window.location.reload(), 2000);
+        // Hot-reload: refetch all data without page reload
+        const journey = await fetchJourneyStatus(userId);
+        if (journey) {
+          setUserPhase(journey.phase);
+          setCountdownDays(newTargetDays);
+          setStreakDays(0);
+        }
         return;
       }
 
@@ -457,12 +480,22 @@ const TrackerPage = () => {
         const firstZeroDate = last14[last14.length - 1].date;
         await upsertJourneyStatus(userId, firstZeroDate, "POST_QUIT");
         
+        // Save actualQuitDate to user_profile for cross-device sync
+        const { supabase } = await import('@/lib/supabase');
+        await supabase
+          .from('user_profile')
+          .update({
+            actual_quit_date: firstZeroDate,
+          })
+          .eq('user_id', userId);
+        
         setUserPhase("POST_QUIT");
         
         if (typeof window !== "undefined") {
           localStorage.setItem("userPhase", "POST_QUIT");
-          localStorage.setItem("quitDate", firstZeroDate);
+          localStorage.setItem("actualQuitDate", firstZeroDate);
           localStorage.setItem("streakDays", "14");
+          localStorage.setItem("countdownDays", "0");
         }
 
         toast({
@@ -471,7 +504,13 @@ const TrackerPage = () => {
           variant: "default",
         });
         
-        setTimeout(() => window.location.reload(), 2000);
+        // Hot-reload: refetch all data without page reload
+        const journey = await fetchJourneyStatus(userId);
+        if (journey) {
+          setUserPhase(journey.phase);
+          setStreakDays(14);
+          setCountdownDays(0);
+        }
       }
     } catch (e) {
       console.error("checkPhaseTransition error", e);
@@ -479,37 +518,106 @@ const TrackerPage = () => {
   };
 
   const handleLogConsumption = async () => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+    
     // Allow 0 cigarettes - it means user didn't smoke today
     setTodaysConsumption(sliderValue[0]);
     
-    // Log ke localStorage (sementara, bisa diganti dengan API call)
     const today = new Date().toISOString().split('T')[0];
-    const consumptionLog = {
-      date: today,
-      amount: sliderValue[0],
-      timestamp: new Date().toISOString()
-    };
+    const pricePerCigarette = 1750;
+    const moneySpent = sliderValue[0] * pricePerCigarette;
     
-    // Save to localStorage
-    const existingLogs = JSON.parse(localStorage.getItem("consumptionLogs") || "[]");
-    const updatedLogs = existingLogs.filter((log: any) => log.date !== today);
-    updatedLogs.push(consumptionLog);
-    localStorage.setItem("consumptionLogs", JSON.stringify(updatedLogs));
-    
-    // Show success message
-    toast({
-      title: "Berhasil!",
-      description: `✓ Berhasil mencatat ${sliderValue[0]} batang rokok hari ini`,
-      variant: "default",
-    });
-    
-    // Reset slider
-    setSliderValue([0]);
+    try {
+      // Save to Supabase
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from("daily_consumption").upsert(
+        {
+          user_id: userId,
+          date: today,
+          cigarette_count: sliderValue[0],
+          money_spent: moneySpent,
+        },
+        { onConflict: "user_id,date" }
+      );
+      
+      // Show success message
+      toast({
+        title: "Berhasil!",
+        description: `✓ Berhasil mencatat ${sliderValue[0]} batang rokok hari ini`,
+        variant: "default",
+      });
+      
+      // Reset slider
+      setSliderValue([0]);
 
-    // Check for phase transition after logging
-    const userId = localStorage.getItem("userId");
-    if (userId) {
+      // Check for phase transition after logging
       await checkPhaseTransition(userId, sliderValue[0]);
+      
+      // Reload consumption data to update charts and stats
+      const logs = await fetchDailyConsumptionLogs(userId);
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+      
+      if (logs.length === 0) {
+        setConsumptionData([0, 0, 0, 0, 0, 0, 0]);
+        setFinancialData([]);
+        setPreQuitStreak(0);
+      } else {
+        const { subDays } = await import('date-fns');
+        const days = Array.from({ length: 7 }).map((_, i) => subDays(todayDate, 6 - i));
+        const perDay: Record<string, number> = {};
+        logs.forEach((l) => {
+          perDay[l.date] = l.cigarette_count || 0;
+        });
+        const consArray = days.map((d) => {
+          const key = d.toISOString().split("T")[0];
+          return perDay[key] ?? 0;
+        });
+        setConsumptionData(consArray);
+
+        // Calculate new streak
+        let streak = 0;
+        for (let i = consArray.length - 1; i >= 0; i--) {
+          const val = consArray[i];
+          if (val === 0 && perDay[days[i].toISOString().split("T")[0]] !== undefined) {
+            streak += 1;
+          } else if (perDay[days[i].toISOString().split("T")[0]] === undefined) {
+            break;
+          } else {
+            break;
+          }
+        }
+        setPreQuitStreak(streak);
+
+        // Update financial data
+        const { format } = await import('date-fns');
+        const { id } = await import('date-fns/locale');
+        const baselineConsumption = 20;
+        const fin = days.map((date, i) => {
+          const key = date.toISOString().split("T")[0];
+          const hasData = perDay[key] !== undefined;
+          const actualConsumption = consArray[i];
+          const spending = hasData ? actualConsumption * pricePerCigarette : 0;
+          const avoided = hasData ? Math.max(0, baselineConsumption - actualConsumption) : 0;
+          const savings = avoided * pricePerCigarette;
+          
+          return {
+            date,
+            spending,
+            savings,
+            label: format(date, "d MMM", { locale: id }),
+          };
+        });
+        setFinancialData(fin);
+      }
+    } catch (error) {
+      console.error('Failed to save consumption:', error);
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan data. Coba lagi.",
+        variant: "destructive",
+      });
     }
   };
 

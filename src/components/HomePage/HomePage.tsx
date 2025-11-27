@@ -147,10 +147,10 @@ const HomePage = () => {
       // Fetch dari database untuk data real-time
       if (userId) {
         try {
-          // Fetch motivations from database
+          // Fetch motivations, journeyStartDate, selectedDays, and actualQuitDate from database
           const { data: profileData } = await supabase
             .from("user_profile")
-            .select("motivations")
+            .select("motivations, journey_start_date, selected_preparation_days, actual_quit_date")
             .eq("user_id", userId)
             .maybeSingle();
           
@@ -162,6 +162,17 @@ const HomePage = () => {
             // Fallback to localStorage
             const storedMotivations = localStorage.getItem("selectedMotivations");
             parsedMotivations = storedMotivations ? JSON.parse(storedMotivations) : [];
+          }
+          
+          // Sync journeyStartDate, selectedDays, and actualQuitDate from database
+          if (profileData?.journey_start_date) {
+            localStorage.setItem("journeyStartDate", profileData.journey_start_date);
+          }
+          if (profileData?.selected_preparation_days) {
+            localStorage.setItem("selectedDays", String(profileData.selected_preparation_days));
+          }
+          if (profileData?.actual_quit_date) {
+            localStorage.setItem("actualQuitDate", profileData.actual_quit_date);
           }
 
           const journey = await fetchJourneyStatus(userId);
@@ -459,17 +470,31 @@ const HomePage = () => {
 
       // Case 1: POST_QUIT user smoked again → Transition back to PRE_QUIT
       if (currentPhase === "POST_QUIT" && todayConsumption > 0) {
-        const today = new Date().toISOString().split('T')[0];
-        await upsertJourneyStatus(userId, today, "PRE_QUIT", 30); // Default 30 days target
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString();
         
-        setUserStatus("PRE_QUIT");
-        setCountdownDays(30);
-        setStreakDays(0);
+        // Use today as new journey start date (reset preparation)
+        const newTargetDays = 30; // Default 30 days preparation
+        await upsertJourneyStatus(userId, todayStr, "PRE_QUIT", newTargetDays);
         
+        // Update user_profile for cross-device sync
+        await supabase
+          .from('user_profile')
+          .update({
+            journey_start_date: todayStr,
+            selected_preparation_days: newTargetDays,
+          })
+          .eq('user_id', userId);
+        
+        // Clear actualQuitDate from localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userPhase", "PRE_QUIT");
-          localStorage.setItem("countdownDays", "30");
+          localStorage.setItem("journeyStartDate", todayStr);
+          localStorage.setItem("selectedDays", String(newTargetDays));
+          localStorage.setItem("countdownDays", String(newTargetDays));
           localStorage.setItem("streakDays", "0");
+          localStorage.removeItem("actualQuitDate"); // Clear old quit date
         }
 
         toast({
@@ -478,8 +503,15 @@ const HomePage = () => {
           variant: "default",
         });
         
-        // Reload to reflect changes
-        setTimeout(() => window.location.reload(), 2000);
+        // Hot-reload: refetch all data without page reload
+        const journey = await fetchJourneyStatus(userId);
+        const stats = await fetchUserJourneyStats(userId);
+        if (journey && stats) {
+          setUserStatus(journey.phase);
+          setCountdownDays(newTargetDays);
+          setStreakDays(0);
+          setMoneySaved(stats.moneySaved || 0);
+        }
         return;
       }
 
@@ -508,13 +540,22 @@ const HomePage = () => {
         
         await upsertJourneyStatus(userId, firstZeroDate, "POST_QUIT");
         
+        // Save actualQuitDate to user_profile for cross-device sync
+        await supabase
+          .from('user_profile')
+          .update({
+            actual_quit_date: firstZeroDate,
+          })
+          .eq('user_id', userId);
+        
         setUserStatus("POST_QUIT");
         setStreakDays(14);
         
         if (typeof window !== "undefined") {
           localStorage.setItem("userPhase", "POST_QUIT");
-          localStorage.setItem("quitDate", firstZeroDate);
+          localStorage.setItem("actualQuitDate", firstZeroDate);
           localStorage.setItem("streakDays", "14");
+          localStorage.setItem("countdownDays", "0");
         }
 
         toast({
@@ -523,8 +564,15 @@ const HomePage = () => {
           variant: "default",
         });
         
-        // Reload to reflect changes
-        setTimeout(() => window.location.reload(), 2000);
+        // Hot-reload: refetch all data without page reload
+        const journey = await fetchJourneyStatus(userId);
+        const stats = await fetchUserJourneyStats(userId);
+        if (journey && stats) {
+          setUserStatus(journey.phase);
+          setStreakDays(14);
+          setCountdownDays(0);
+          setMoneySaved(stats.moneySaved || 0);
+        }
       }
     } catch (e) {
       console.error("checkPhaseTransition error", e);
