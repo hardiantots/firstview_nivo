@@ -6,6 +6,10 @@ import { Loader } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ensureUserProfile } from "@/lib/db/userProfile";
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
