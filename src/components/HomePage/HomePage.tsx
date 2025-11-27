@@ -592,15 +592,35 @@ const HomePage = () => {
         const pricePerCigarette = 1750; // Konsisten dengan TrackerPage
         const moneySpent = sliderValue[0] * pricePerCigarette;
         
-        await supabase.from("daily_consumption").upsert(
-          {
-            user_id: userId,
-            date: today,
-            cigarette_count: sliderValue[0],
-            money_spent: moneySpent,
-          },
-          { onConflict: "user_id,date" }
-        );
+        // Check if entry exists for today first
+        const { data: existing } = await supabase
+          .from("daily_consumption")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("date", today)
+          .maybeSingle();
+        
+        if (existing) {
+          // Update existing record
+          await supabase
+            .from("daily_consumption")
+            .update({
+              cigarette_count: sliderValue[0],
+              money_spent: moneySpent,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existing.id);
+        } else {
+          // Insert new record
+          await supabase
+            .from("daily_consumption")
+            .insert({
+              user_id: userId,
+              date: today,
+              cigarette_count: sliderValue[0],
+              money_spent: moneySpent,
+            });
+        }
       } catch (e) {
         console.error("Gagal menyimpan ke Supabase, fallback ke localStorage", e);
       }
