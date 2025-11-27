@@ -143,21 +143,23 @@ const TrackerPage = () => {
             perDay[l.date] = l.cigarette_count || 0;
           });
           const consArray = days.map((d) => {
-            const key = d.toISOString().split("T")[0];
+            const key = format(d, 'yyyy-MM-dd');
             return perDay[key] ?? 0;
           });
           
           console.log("📊 TrackerPage - Consumption Array:", consArray);
           console.log("📊 TrackerPage - perDay data:", perDay);
+          console.log("📊 TrackerPage - days keys:", days.map(d => format(d, 'yyyy-MM-dd')));
           setConsumptionData(consArray);
 
           // Hitung streak hari berturut-turut dengan konsumsi 0 (hanya dihitung jika ada input dan == 0)
           let streak = 0;
           for (let i = consArray.length - 1; i >= 0; i--) {
             const val = consArray[i];
-            if (val === 0 && perDay[days[i].toISOString().split("T")[0]] !== undefined) {
+            const dayKey = format(days[i], 'yyyy-MM-dd');
+            if (val === 0 && perDay[dayKey] !== undefined) {
               streak += 1;
-            } else if (perDay[days[i].toISOString().split("T")[0]] === undefined) {
+            } else if (perDay[dayKey] === undefined) {
               // tidak ada input hari ini → streak putus
               break;
             } else {
