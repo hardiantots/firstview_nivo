@@ -54,10 +54,18 @@ const nextConfig = {
   skipTrailingSlashRedirect: false,
   // Build configuration
   staticPageGenerationTimeout: 60,
+  // Skip static generation for dynamic routes
+  skipTrailingSlashRedirect: true,
   // Vercel build output
   distDir: '.next',
   // Vercel compatibility
   poweredByHeader: false,
+  // Experimental - optimize for dynamic routes
+  experimental: {
+    optimizePackageImports: ['@radix-ui/*', 'lucide-react'],
+    // Skip static optimization for auth routes
+    skipMiddlewareUrlNormalize: true,
+  },
   // Rewrites untuk SPA-like behavior jika diperlukan
   async rewrites() {
     return {
@@ -69,9 +77,6 @@ const nextConfig = {
   // Environment
   env: {
     NEXT_PUBLIC_APP_NAME: 'NIVO App',
-  },
-  experimental: {
-    optimizePackageImports: ['@radix-ui/*', 'lucide-react'],
   },
 }
 
