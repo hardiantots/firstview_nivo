@@ -66,7 +66,7 @@ export default function AuthCallbackPage() {
               localStorage.setItem("loginMethod", "oauth");
               const now = Date.now();
               localStorage.setItem("lastLoginAt", String(now));
-              localStorage.setItem("sessionMaxAgeDays", "7");
+              localStorage.setItem("sessionMaxAgeDays", "30");
             } catch (storageError) {
               console.warn('localStorage error:', storageError);
             }
@@ -142,7 +142,7 @@ export default function AuthCallbackPage() {
             localStorage.setItem("loginMethod", "oauth");
             const now = Date.now();
             localStorage.setItem("lastLoginAt", String(now));
-            localStorage.setItem("sessionMaxAgeDays", "7");
+            localStorage.setItem("sessionMaxAgeDays", "30");
           } catch (storageError) {
             console.warn('localStorage error:', storageError);
           }

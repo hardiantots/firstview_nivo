@@ -14,6 +14,9 @@ const PROTECTED_ROUTES = [
   '/craving-history',
   '/profile-settings',
   '/notifications',
+  '/community',
+  '/distractions',
+  '/breathing-exercise',
 ];
 
 // Public routes that don't require authentication

@@ -68,12 +68,40 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { icon: Star, label: "Beri Rating Aplikasi", onClick: () => console.log("Rate app") },
   ];
 
-  const handleLogout = () => {
-    console.log("User logged out");
+  const handleLogout = async () => {
     setShowLogoutDialog(false);
     onClose();
-    // Add your logout logic here
-    router.push("/signin");
+    
+    // Call Supabase signOut
+    try {
+      const { signOut } = await import('@/lib/auth');
+      await signOut();
+    } catch (e) {
+      // Silent fail
+    }
+    
+    // Clear all auth data
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('lastLoginAt');
+    localStorage.removeItem('sessionMaxAgeDays');
+    localStorage.removeItem('loginMethod');
+    
+    // Clear user data
+    localStorage.removeItem('userPhase');
+    localStorage.removeItem('selectedMotivations');
+    localStorage.removeItem('countdownDays');
+    localStorage.removeItem('streakDays');
+    localStorage.removeItem('journeyStartDate');
+    localStorage.removeItem('quitDate');
+    localStorage.removeItem('actualQuitDate');
+    localStorage.removeItem('selectedDays');
+    localStorage.removeItem('homeMoneySaved');
+    localStorage.removeItem('rememberMe');
+    localStorage.removeItem('savedEmail');
+    
+    router.replace("/signin");
   };
 
   return (

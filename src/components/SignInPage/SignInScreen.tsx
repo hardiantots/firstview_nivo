@@ -50,6 +50,10 @@ const SignInScreen = () => {
         localStorage.setItem('savedEmail', formData.email);
       }
       
+      // Set persistent session - 30 days
+      localStorage.setItem('sessionMaxAgeDays', '30');
+      localStorage.setItem('lastLoginAt', String(Date.now()));
+      
       // Check if user already has journey data (sudah pernah onboarding)
       const userId = localStorage.getItem("userId");
       console.log("Login success, checking journey data for userId:", userId);
