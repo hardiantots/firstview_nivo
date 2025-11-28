@@ -47,7 +47,13 @@ export function useAuth() {
       const token = localStorage.getItem('userToken');
       const userId = localStorage.getItem('userId');
       const lastLoginAt = localStorage.getItem('lastLoginAt');
-      const sessionMaxAgeDays = Number(localStorage.getItem('sessionMaxAgeDays') || 0);
+      const sessionMaxAgeDays = Number(localStorage.getItem('sessionMaxAgeDays') || 30);
+
+      console.log('🔍 AuthGuard - Checking authentication:');
+      console.log('🔍 token:', token ? 'EXISTS' : 'MISSING');
+      console.log('🔍 userId:', userId ? 'EXISTS' : 'MISSING'); 
+      console.log('🔍 lastLoginAt:', lastLoginAt);
+      console.log('🔍 sessionMaxAgeDays:', sessionMaxAgeDays);
 
       // Check if user has valid session
       const hasValidToken = Boolean(token && userId);
@@ -58,9 +64,15 @@ export function useAuth() {
         const diffMs = Date.now() - Number(lastLoginAt);
         const diffDays = diffMs / (1000 * 60 * 60 * 24);
         isSessionExpired = diffDays > sessionMaxAgeDays;
+        console.log('🔍 Session age (days):', diffDays);
+        console.log('🔍 Session expired:', isSessionExpired);
+      } else {
+        console.log('🔍 No lastLoginAt or sessionMaxAgeDays, treating as not expired');
       }
 
       const authenticated = hasValidToken && !isSessionExpired;
+      console.log('🔍 Final authenticated status:', authenticated);
+      
       setIsAuthenticated(authenticated);
 
       // Determine if current route is protected
@@ -72,8 +84,13 @@ export function useAuth() {
         pathname === route || pathname?.startsWith(`${route}/`)
       );
 
+      console.log('🔍 pathname:', pathname);
+      console.log('🔍 isProtectedRoute:', isProtectedRoute);
+      console.log('🔍 isPublicRoute:', isPublicRoute);
+
       // Skip redirect logic for auth callback (let it handle its own redirects)
       if (pathname?.startsWith('/auth/callback')) {
+        console.log('🔍 Skipping redirect for auth callback');
         setIsLoading(false);
         return;
       }
@@ -81,7 +98,8 @@ export function useAuth() {
       // Redirect logic
       if (isProtectedRoute && !authenticated) {
         // User is not authenticated but trying to access protected route
-
+        console.log('🚨 Access denied: Not authenticated for protected route');
+        console.log('🔍 Clearing stale auth data and redirecting to signin');
         
         // Clear any stale data
         localStorage.removeItem('userToken');
@@ -93,15 +111,19 @@ export function useAuth() {
         router.replace('/signin');
       } else if (authenticated && pathname === '/signin') {
         // User is authenticated but on signin page, redirect to home
+        console.log('✅ Authenticated user on signin page, redirecting to home');
         router.replace('/home');
       } else if (pathname === '/' && authenticated) {
         // Redirect root to home if authenticated
+        console.log('✅ Authenticated user on root, redirecting to home');
         router.replace('/home');
       } else if (pathname === '/' && !authenticated) {
         // Redirect root to welcome if not authenticated
+        console.log('🔍 Unauthenticated user on root, redirecting to welcome');
         router.replace('/welcome');
       }
 
+      console.log('🔍 AuthGuard check complete, setting loading false');
       setIsLoading(false);
     };
 
