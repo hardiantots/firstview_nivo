@@ -1357,7 +1357,7 @@ const TrackerPage = () => {
                   onClick={() => {
                     console.log('Navigating to craving detail:', item);
                     localStorage.setItem('cravingDetail', JSON.stringify(item));
-                    router.push(`/craving-history/${item.id}`);
+                    router.push(`/craving-history?id=${item.id}`);
                   }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, MessageSquare, Activity, Calendar, Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,8 @@ import { id } from "date-fns/locale";
 
 const CravingHistoryDetailPage = () => {
   const router = useRouter();
-  const params = useParams();
-  const cravingId = params?.id as string;
+  const searchParams = useSearchParams();
+  const cravingId = searchParams.get('id');
   const [craving, setCraving] = useState<any>(null);
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

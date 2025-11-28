@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Brain } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -14,8 +14,22 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { fetchRecentCravingLogs } from "@/lib/db/cravingLogs";
+import CravingHistoryDetailPage from "./CravingHistoryDetailPage";
 
 const ITEMS_PER_PAGE = 5;
+
+const CravingHistoryListPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const cravingId = searchParams.get('id');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allCravingHistory, setAllCravingHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Jika ada cravingId di query parameter, tampilkan detail
+  if (cravingId) {
+    return <CravingHistoryDetailPage />;
+  }
 
 const CravingHistoryListPage = () => {
   const router = useRouter();
