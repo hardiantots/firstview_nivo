@@ -82,6 +82,12 @@ export function useAuth() {
       if (isProtectedRoute && !authenticated) {
         // User is not authenticated but trying to access protected route
         console.log('🔒 Access denied: Authentication required');
+        console.log('🔍 Debug - pathname:', pathname);
+        console.log('🔍 Debug - token:', token ? 'EXISTS' : 'MISSING');
+        console.log('🔍 Debug - userId:', userId ? 'EXISTS' : 'MISSING');
+        console.log('🔍 Debug - lastLoginAt:', lastLoginAt);
+        console.log('🔍 Debug - sessionMaxAgeDays:', sessionMaxAgeDays);
+        console.log('🔍 Debug - isSessionExpired:', isSessionExpired);
         
         // Clear any stale data
         localStorage.removeItem('userToken');

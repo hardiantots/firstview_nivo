@@ -418,54 +418,6 @@ const CravingSupportPage = () => {
         >
           Dapatkan Bantuan AI
         </Button>
-
-        <motion.div
-          className="mt-6 bg-white p-5 rounded-2xl shadow-md border border-gray-100"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-gray-800">Catat Konsumsi Hari Ini</h3>
-              <p className="text-xs text-gray-500">
-                Jika hari ini kamu masih merokok, catat jumlahnya di sini.
-              </p>
-            </div>
-            <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
-              <span className="text-base font-bold text-orange-600">{consumptionValue[0]}</span>
-            </div>
-          </div>
-
-            <div className="mb-4 px-1">
-              <Slider
-                value={consumptionValue}
-                onValueChange={setConsumptionValue}
-                max={24}
-                min={0}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                <span>0 batang</span>
-                <span>24 batang</span>
-              </div>
-            </div>
-
-            <Button
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-lg text-sm"
-              onClick={handleLogConsumption}
-            >
-              <Cigarette className="w-4 h-4 mr-1.5" />
-              Catat Konsumsi Hari Ini
-            </Button>
-
-            {todaysConsumption > 0 && (
-              <p className="text-[11px] text-green-600 mt-2 text-center">
-                ✓ Tercatat: {todaysConsumption} batang hari ini
-              </p>
-            )}
-          </motion.div>
       </div>
     </div>
   );

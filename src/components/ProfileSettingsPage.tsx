@@ -78,6 +78,7 @@ const ProfileSettingsPage = () => {
       const currentPhase = journeyData?.phase || journeyData?.status || "";
 
       if (data) {
+        console.log('🔍 ProfileSettings - Raw data from DB:', data);
         const loaded = {
           fullName: (data.full_name as string) || "",
           email: (data.email as string) || "",
@@ -87,8 +88,10 @@ const ProfileSettingsPage = () => {
           smokingPattern: currentPhase || (data.smoking_pattern as string) || "",
           motivasiPilihan: (data.motivations as string[] | null) || [],
         };
+        console.log('🔍 ProfileSettings - Loaded data:', loaded);
         setInitialData(loaded);
-        setFormData(loaded);
+        setFormData(loaded); // Set formData = loaded agar langsung tampil
+        console.log('🔍 ProfileSettings - After setFormData, motivasiPilihan:', loaded.motivasiPilihan);
       }
     };
 
@@ -266,7 +269,7 @@ const ProfileSettingsPage = () => {
           <div className="space-y-2">
             <Label>Motivasi Utama (seperti saat onboarding)</Label>
             <p className="text-xs text-gray-500 mb-1">
-              Pilih kembali 1-3 alasan terkuatmu. Ini akan mempengaruhi pesan di beranda.
+              Pilih kembali maksimal 2 alasan terkuatmu. Ini akan mempengaruhi pesan di beranda.
             </p>
             <div className="grid grid-cols-2 gap-2">
               {motivationOptions.map((m) => {
