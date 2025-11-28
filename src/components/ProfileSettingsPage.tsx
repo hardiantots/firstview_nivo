@@ -321,7 +321,8 @@ const ProfileSettingsPage = () => {
           <div className="space-y-2 pt-2 border-t border-gray-100">
             <Label>Fase yang Sedang Dijalani</Label>
             <Select
-              value={formData.smokingPattern}
+              key={`smoking-pattern-${forceRender}`}
+              value={formData.smokingPattern || ""}
               onValueChange={(value) => {
                 console.log('🔄 Changing fase to:', value);
                 console.log('🔍 Current smokingPattern:', formData.smokingPattern);
@@ -329,11 +330,13 @@ const ProfileSettingsPage = () => {
               }}
             >
               <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                <SelectValue placeholder="Pilih fase" />
+                <SelectValue 
+                  placeholder="Pilih fase"
+                />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                <SelectItem value="PRE-QUIT">PRE-QUIT</SelectItem>
-                <SelectItem value="POST-QUIT">POST-QUIT</SelectItem>
+                <SelectItem value="PRE_QUIT">PRE-QUIT</SelectItem>
+                <SelectItem value="POST_QUIT">POST-QUIT</SelectItem>
               </SelectContent>
             </Select>
           </div>
