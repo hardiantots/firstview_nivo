@@ -31,12 +31,6 @@ const CravingHistoryListPage = () => {
     return <CravingHistoryDetailPage />;
   }
 
-const CravingHistoryListPage = () => {
-  const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [allCravingHistory, setAllCravingHistory] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const loadCravingHistory = async () => {
       const userId = localStorage.getItem("userId");
