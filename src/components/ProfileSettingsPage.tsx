@@ -17,6 +17,8 @@ import AuthGuard from "./AuthGuard";
 const ProfileSettingsPage = () => {
   const router = useRouter();
   const { isLoading, withLoading } = useApiLoading();
+  const [forceRender, setForceRender] = useState(0); // Add force render
+  
   const [initialData, setInitialData] = useState({
     fullName: "",
     email: "",
@@ -26,6 +28,7 @@ const ProfileSettingsPage = () => {
     smokingPattern: "",
     motivasiPilihan: [] as string[],
   });
+  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -37,12 +40,12 @@ const ProfileSettingsPage = () => {
   });
 
   const motivationOptions = [
-    { value: "health", label: "Kesehatan" },
-    { value: "finance", label: "Keuangan" },
-    { value: "family", label: "Keluarga" },
-    { value: "energy", label: "Energi & Stamina" },
-    { value: "cognitive", label: "Fokus & Konsentrasi" },
-    { value: "confidence", label: "Kepercayaan Diri" },
+    { value: "Kesehatan", label: "Kesehatan" },
+    { value: "Keuangan", label: "Keuangan" }, 
+    { value: "Keluarga", label: "Keluarga" },
+    { value: "Energi & Stamina", label: "Energi & Stamina" },
+    { value: "Fokus & Konsentrasi", label: "Fokus & Konsentrasi" },
+    { value: "Kepercayaan Diri", label: "Kepercayaan Diri" },
   ];
 
   const genderOptions = [
@@ -89,9 +92,14 @@ const ProfileSettingsPage = () => {
           motivasiPilihan: (data.motivations as string[] | null) || [],
         };
         console.log('🔍 ProfileSettings - Loaded data:', loaded);
+        console.log('🔍 ProfileSettings - smokingPattern will be:', loaded.smokingPattern);
         setInitialData(loaded);
         setFormData(loaded); // Set formData = loaded agar langsung tampil
         console.log('🔍 ProfileSettings - After setFormData, motivasiPilihan:', loaded.motivasiPilihan);
+        console.log('🔍 ProfileSettings - After setFormData, smokingPattern:', loaded.smokingPattern);
+        
+        // Force re-render after state update
+        setTimeout(() => setForceRender(prev => prev + 1), 100);
       }
     };
 
@@ -103,15 +111,24 @@ const ProfileSettingsPage = () => {
   };
 
   const toggleMotivation = (value: string) => {
+    console.log(`🔄 toggleMotivation called with: ${value}`);
     setFormData(prev => {
-      const exists = prev.motivasiPilihan.includes(value);
+      const exists = prev.motivasiPilihan?.includes(value) || false;
+      console.log(`🔍 Current motivasiPilihan:`, prev.motivasiPilihan);
+      console.log(`🔍 ${value} exists: ${exists}`);
+      
       const next = exists
         ? prev.motivasiPilihan.filter(v => v !== value)
         : prev.motivasiPilihan.length >= 2
         ? prev.motivasiPilihan
         : [...prev.motivasiPilihan, value];
+      
+      console.log(`🔄 New motivasiPilihan:`, next);
       return { ...prev, motivasiPilihan: next };
     });
+    
+    // Force re-render after state change
+    setTimeout(() => setForceRender(prev => prev + 1), 50);
   };
 
   const hasChanges = JSON.stringify(formData) !== JSON.stringify(initialData);
@@ -271,21 +288,21 @@ const ProfileSettingsPage = () => {
             <p className="text-xs text-gray-500 mb-1">
               Pilih kembali maksimal 2 alasan terkuatmu. Ini akan mempengaruhi pesan di beranda.
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2" key={`motivations-${forceRender}`}>
               {motivationOptions.map((m) => {
-                const active = formData.motivasiPilihan.includes(m.value);
+                const active = formData.motivasiPilihan?.includes(m.value) || false;
                 console.log(`🔍 Motivation ${m.value}: active=${active}, formData.motivasiPilihan=`, formData.motivasiPilihan);
                 return (
                   <button
-                    key={m.value}
+                    key={`${m.value}-${forceRender}-${formData.motivasiPilihan?.length || 0}`}
                     type="button"
                     onClick={() => {
                       console.log(`🔄 Clicking motivation: ${m.value}`);
                       toggleMotivation(m.value);
                     }}
-                    className={`text-xs px-3 py-2 rounded-lg border transition-colors text-left flex items-center gap-2 ${
+                    className={`text-xs px-3 py-2 rounded-lg border transition-all duration-200 text-left flex items-center gap-2 ${
                       active
-                        ? "bg-green-700 text-white border-green-700 hover:bg-green-800"
+                        ? "bg-green-700 text-white border-green-700 hover:bg-green-800 shadow-md"
                         : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
