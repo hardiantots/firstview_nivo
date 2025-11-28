@@ -26,11 +26,6 @@ const CravingHistoryListPage = () => {
   const [allCravingHistory, setAllCravingHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Jika ada cravingId di query parameter, tampilkan detail
-  if (cravingId) {
-    return <CravingHistoryDetailPage />;
-  }
-
   useEffect(() => {
     const loadCravingHistory = async () => {
       const userId = localStorage.getItem("userId");
@@ -59,6 +54,11 @@ const CravingHistoryListPage = () => {
 
     loadCravingHistory();
   }, []);
+
+  // Jika ada cravingId di query parameter, tampilkan detail
+  if (cravingId) {
+    return <CravingHistoryDetailPage />;
+  }
 
   const totalPages = Math.ceil(allCravingHistory.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;

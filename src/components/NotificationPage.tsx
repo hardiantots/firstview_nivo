@@ -59,7 +59,7 @@ const NotificationPage = () => {
     };
 
     fetchNotifications();
-  }, []);
+  }, [withLoading]);
 
   // Separate notifications by read status
   const unreadNotifications = notifications.filter(n => !n.isRead);
