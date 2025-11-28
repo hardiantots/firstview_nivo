@@ -37,8 +37,8 @@ const MotivationScreen = () => {
 
   const handleSubmit = async () => {
     if (selectedMotivations.length > 0) {
-      console.log("Selected Motivations:", selectedMotivations);
-      console.log("Selected days:", selectedDays);
+
+
       localStorage.setItem('selectedMotivations', JSON.stringify(selectedMotivations));
       
       // Save motivations to database
@@ -57,7 +57,7 @@ const MotivationScreen = () => {
           if (error) {
             console.error('Failed to save motivations to database:', error);
           } else {
-            console.log('Motivations saved to database successfully');
+
           }
         } catch (error) {
           console.error('Error saving motivations:', error);

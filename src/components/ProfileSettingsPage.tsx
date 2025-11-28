@@ -274,11 +274,15 @@ const ProfileSettingsPage = () => {
             <div className="grid grid-cols-2 gap-2">
               {motivationOptions.map((m) => {
                 const active = formData.motivasiPilihan.includes(m.value);
+                console.log(`🔍 Motivation ${m.value}: active=${active}, formData.motivasiPilihan=`, formData.motivasiPilihan);
                 return (
                   <button
                     key={m.value}
                     type="button"
-                    onClick={() => toggleMotivation(m.value)}
+                    onClick={() => {
+                      console.log(`🔄 Clicking motivation: ${m.value}`);
+                      toggleMotivation(m.value);
+                    }}
                     className={`text-xs px-3 py-2 rounded-lg border transition-colors text-left flex items-center gap-2 ${
                       active
                         ? "bg-green-700 text-white border-green-700 hover:bg-green-800"
@@ -301,7 +305,11 @@ const ProfileSettingsPage = () => {
             <Label>Fase yang Sedang Dijalani</Label>
             <Select
               value={formData.smokingPattern}
-              onValueChange={(value) => handleInputChange("smokingPattern", value)}
+              onValueChange={(value) => {
+                console.log('🔄 Changing fase to:', value);
+                console.log('🔍 Current smokingPattern:', formData.smokingPattern);
+                handleInputChange("smokingPattern", value);
+              }}
             >
               <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 <SelectValue placeholder="Pilih fase" />

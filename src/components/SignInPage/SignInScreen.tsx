@@ -56,7 +56,7 @@ const SignInScreen = () => {
       
       // Check if user already has journey data (sudah pernah onboarding)
       const userId = localStorage.getItem("userId");
-      console.log("Login success, checking journey data for userId:", userId);
+
       
       if (userId) {
         try {
@@ -67,16 +67,16 @@ const SignInScreen = () => {
             .eq("user_id", userId)
             .maybeSingle();
           
-          console.log("Journey query result:", { journeyData, journeyError });
+
           
           // Jika sudah ada journey data, langsung ke home
           if (journeyData && journeyData.user_id) {
-            console.log("User has journey data, redirecting to /home");
+
             router.push("/home");
             setLoading(false);
             return;
           } else {
-            console.log("No journey data found, redirecting to /journey-start");
+
           }
         } catch (e) {
           console.error("Error checking journey data:", e);

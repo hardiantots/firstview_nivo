@@ -129,111 +129,94 @@ const CravingHistoryDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
-      <div className="bg-white px-4 py-4 flex items-center gap-4 border-b border-gray-100 shadow-sm sticky top-0 z-10">
-        <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+      <div className="bg-white/80 backdrop-blur-sm px-4 py-4 flex items-center gap-4 border-b border-gray-100/50 shadow-sm sticky top-0 z-10">
+        <button 
+          onClick={() => router.back()} 
+          className="p-2.5 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+        >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
-        <h1 className="text-lg font-semibold text-gray-800">Detail Riwayat</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Detail Craving</h1>
+          <p className="text-sm text-gray-500">{craving.date}</p>
+        </div>
       </div>
 
-      <main className="p-6 space-y-6">
-        {/* Main Info Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">{craving.emotion}</h2>
-            <Badge variant="outline" className={`text-sm font-semibold ${getIntensityStyle(craving.intensity)}`}>
-              Intensitas: {craving.intensity}
-            </Badge>
+      <main className="p-4 space-y-4 max-w-md mx-auto">
+        {/* Intensity Hero Card */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">{craving.emotion}</h2>
+                <p className="text-indigo-100">Emosi yang dirasakan</p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-2">
+                <Activity className="w-6 h-6 mb-1 mx-auto" />
+                <p className="text-xs font-semibold">Level {craving.intensity}/5</p>
+              </div>
+            </div>
+            {/* Intensity Bar */}
+            <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+              <div 
+                className="bg-white rounded-full h-full transition-all duration-700 ease-out"
+                style={{ width: `${(craving.intensity / 5) * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar className="w-4 h-4" />
-            <span>{craving.date}</span>
-          </div>
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+          <div className="absolute -bottom-2 -left-2 w-16 h-16 bg-white/5 rounded-full blur-lg" />
         </div>
 
-        {/* Location Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 mb-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-gray-800">Lokasi</h3>
+        {/* Info Cards Grid */}
+        <div className="space-y-4">
+          {/* Location Card */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-5 shadow-lg border border-white/50">
+            <div className="flex items-start gap-3">
+              <div className="bg-blue-100 p-2.5 rounded-xl">
+                <MapPin className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-800 mb-1">Lokasi</h3>
+                <p className="text-gray-600 leading-relaxed">{craving.location}</p>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-700">{craving.location}</p>
-        </div>
 
-        {/* Situation Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-gray-800">Situasi</h3>
+          {/* Situation Card */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-5 shadow-lg border border-white/50">
+            <div className="flex items-start gap-3">
+              <div className="bg-amber-100 p-2.5 rounded-xl">
+                <MessageSquare className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-800 mb-1">Situasi</h3>
+                <p className="text-gray-600 leading-relaxed">{craving.situation}</p>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-700">{craving.situation}</p>
         </div>
 
         {/* AI Suggestion */}
         {aiSuggestion && (
-          <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-200">
-            <div className="flex items-center gap-3 mb-3">
-              <Bot className="w-5 h-5 text-teal-600" />
-              <h3 className="text-lg font-semibold text-teal-800">Saran dari NIVO AI</h3>
-            </div>
-            <div className="text-gray-700 text-sm leading-relaxed space-y-3">
-              {(() => {
-                const content = aiSuggestion;
-                const sections: JSX.Element[] = [];
-                
-                // Split by double newlines to get sections
-                const parts = content.split('\n\n').filter((p: string) => p.trim());
-                
-                parts.forEach((part: string, idx: number) => {
-                  const trimmedPart = part.trim();
-                  
-                  // Check if this part contains bullet points (starts with • or has multiple •)
-                  const hasBullets = trimmedPart.includes('•');
-                  
-                  if (hasBullets) {
-                    // Split by bullet points and render as list
-                    const lines = trimmedPart.split('\n').filter((l: string) => l.trim());
-                    const bulletItems: string[] = [];
-                    let intro = '';
-                    
-                    lines.forEach((line: string) => {
-                      const cleaned = line.trim();
-                      if (cleaned.startsWith('•')) {
-                        // Remove the bullet and add to items
-                        bulletItems.push(cleaned.substring(1).trim());
-                      } else if (bulletItems.length === 0 && cleaned) {
-                        // This is intro text before bullets
-                        intro = cleaned;
-                      }
-                    });
-                    
-                    sections.push(
-                      <div key={idx} className="space-y-2">
-                        {intro && <p className="text-gray-700">{intro}</p>}
-                        <div className="space-y-1.5 pl-1">
-                          {bulletItems.map((item: string, bIdx: number) => (
-                            <div key={bIdx} className="flex gap-2">
-                              <span className="text-teal-600 font-bold mt-0.5">•</span>
-                              <span className="flex-1">{item}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    // Regular paragraph without bullets
-                    sections.push(
-                      <p key={idx} className="text-gray-700 leading-relaxed">
-                        {trimmedPart}
-                      </p>
-                    );
-                  }
-                });
-                
-                return sections;
-              })()}
+          <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 backdrop-blur-sm rounded-2xl p-5 border border-emerald-200/50 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="bg-emerald-100 p-2.5 rounded-xl flex-shrink-0">
+                <Bot className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                  Saran AI 
+                  <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                    NIVO
+                  </span>
+                </h3>
+                <div className="prose prose-sm prose-emerald">
+                  <p className="text-emerald-700 leading-relaxed whitespace-pre-wrap">{aiSuggestion}</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -64,8 +64,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { icon: User, label: "Pengaturan Profil", onClick: handleNavigateToProfile },
     { icon: CreditCard, label: "Paket & Harga", onClick: handleNavigateToPricing },
     { icon: Users, label: "Komunitas NIVO", onClick: handleNavigateToCommunity },
-    { icon: Info, label: "Tentang NIVO", onClick: () => console.log("About NIVO") },
-    { icon: Star, label: "Beri Rating Aplikasi", onClick: () => console.log("Rate app") },
+    { icon: Info, label: "Tentang NIVO", onClick: () => {} },
+    { icon: Star, label: "Beri Rating Aplikasi", onClick: () => {} },
   ];
 
   const handleLogout = async () => {
