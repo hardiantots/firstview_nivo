@@ -618,7 +618,7 @@ const HomePage = () => {
           throw checkError;
         }
         
-        console.log("🔍 Existing entry check:", existing);
+
         
         if (existing) {
           // Update existing record
@@ -636,7 +636,7 @@ const HomePage = () => {
             console.error("❌ Update error:", updateError);
             throw updateError;
           }
-          console.log("✅ Update successful:", updateData);
+
         } else {
           // Insert new record
           const { data: insertData, error: insertError } = await supabase
@@ -653,7 +653,7 @@ const HomePage = () => {
             console.error("❌ Insert error:", insertError);
             throw insertError;
           }
-          console.log("✅ Insert successful:", insertData);
+
         }
       } catch (e) {
         console.error("❌ Gagal menyimpan ke Supabase:", e);

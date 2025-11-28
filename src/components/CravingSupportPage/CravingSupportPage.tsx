@@ -147,16 +147,9 @@ const CravingSupportPage = () => {
       }
 
       const aiData = await aiResponse.json();
-      console.log("AI Response:", aiData);
+
 
       // Hanya simpan ke database jika AI berhasil
-      console.log("Saving craving log with data:", {
-        userId,
-        intensity: intensity[0],
-        location: finalLocation,
-        situation: finalSituation,
-        emotions: selectedEmotions,
-      });
 
       // Simpan craving log
       await createCravingLog({
@@ -167,7 +160,7 @@ const CravingSupportPage = () => {
         emotions: selectedEmotions,
       });
 
-      console.log("Craving log saved successfully");
+
 
       // Simpan AI suggestion ke database dengan response dari AI
       const suggestionContent = aiData.suggestion || `Lokasi: ${finalLocation}, Situasi: ${finalSituation}, Emosi: ${selectedEmotions.join(", ")}`;
@@ -179,7 +172,7 @@ const CravingSupportPage = () => {
         triggers: [finalLocation, finalSituation, ...selectedEmotions],
       });
 
-      console.log("AI suggestion save result:", result);
+
 
       // Simpan data lengkap ke localStorage untuk AIResultPage
       const resultData = {

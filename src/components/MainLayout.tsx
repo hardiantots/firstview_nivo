@@ -1,7 +1,8 @@
 'use client'
 
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Heart, BarChart3, Trophy, Phone } from "lucide-react";
+import { Home, Heart, BarChart3, Trophy, Phone, Bell } from "lucide-react";
+import { useState, useEffect } from "react";
 import ScrollToTop from "./ScrollToTop";
 import { ReactNode } from "react";
 import Image from "next/image";
@@ -25,6 +26,19 @@ interface MainLayoutProps {
 const MainLayout = ({ children }: MainLayoutProps) => {
   const router = useRouter();
   const pathname = usePathname();
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
+  // Simulate checking for unread notifications
+  useEffect(() => {
+    // In a real app, this would be an API call to check notification status
+    const checkNotifications = () => {
+      // Example: simulate some notifications being unread
+      const mockHasUnread = Math.random() > 0.5; // 50% chance of having unread notifications
+      setHasUnreadNotifications(mockHasUnread);
+    };
+    
+    checkNotifications();
+  }, []);
 
   return (
     <AuthGuard>
@@ -32,9 +46,25 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col relative">
           <ScrollToTop />
 
-        {/* ✅ Header dengan Logo */}
-        <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-b border-gray-100 px-4 py-3 z-30 flex items-center justify-center shadow-sm">
+        {/* ✅ Header dengan Logo dan Notifikasi */}
+        <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-b border-gray-100 px-4 py-3 z-30 flex items-center justify-between shadow-sm">
+          {/* Spacer for balance */}
+          <div className="w-8 h-8" />
+          
+          {/* Logo - Centered */}
           <Image src={headerlogo} alt="NIVO Logo" className="h-8" height={32} />
+          
+          {/* Notification Icon */}
+          <button 
+            onClick={() => router.push("/notifications")}
+            className="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+            aria-label="Notifikasi"
+          >
+            <Bell className="w-5 h-5 text-gray-600" />
+            {hasUnreadNotifications && (
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+            )}
+          </button>
         </header>
 
         {/* 

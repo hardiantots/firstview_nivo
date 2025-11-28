@@ -208,7 +208,7 @@ const TrackerPage = () => {
       try {
         setIsCravingLoading(true);
         const cravings = await fetchRecentCravingLogs(userId, 20);
-        console.log("Fetched craving logs:", cravings);
+
         const mapped = cravings.map((c) => ({
           id: c.id,
           emotion: c.mood || "Tidak disebutkan",
@@ -217,7 +217,7 @@ const TrackerPage = () => {
           location: c.location || "",
           situation: c.situation || "",
         }));
-        console.log("Mapped craving history:", mapped);
+
         setCravingHistory(mapped);
       } catch (e) {
         console.error("Gagal mengambil craving logs dari Supabase", e);
@@ -570,7 +570,7 @@ const TrackerPage = () => {
         throw checkError;
       }
       
-      console.log("🔍 TrackerPage - Existing entry check:", existing);
+
       
       if (existing) {
         // Update existing record
@@ -588,7 +588,7 @@ const TrackerPage = () => {
           console.error("❌ TrackerPage - Update error:", updateError);
           throw updateError;
         }
-        console.log("✅ TrackerPage - Update successful:", updateData);
+
       } else {
         // Insert new record
         const { data: insertData, error: insertError } = await supabase
@@ -605,7 +605,7 @@ const TrackerPage = () => {
           console.error("❌ TrackerPage - Insert error:", insertError);
           throw insertError;
         }
-        console.log("✅ TrackerPage - Insert successful:", insertData);
+
       }
       
       // Show success message
@@ -642,8 +642,8 @@ const TrackerPage = () => {
           return perDay[key] ?? 0;
         });
         
-        console.log("📊 After Log - Updated Consumption Array:", consArray);
-        console.log("📊 After Log - perDay data:", perDay);
+
+
         setConsumptionData(consArray);
 
         // Calculate new streak
@@ -1355,7 +1355,7 @@ const TrackerPage = () => {
                   key={i}
                   className={`p-4 rounded-lg ${style.color} flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow`}
                   onClick={() => {
-                    console.log('Navigating to craving detail:', item);
+
                     localStorage.setItem('cravingDetail', JSON.stringify(item));
                     router.push(`/craving-history?id=${item.id}`);
                   }}
