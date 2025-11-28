@@ -1,5 +1,10 @@
 import CravingHistoryDetailPage from "@/components/TrackerPage/CravingHistoryDetailPage"
+import AuthGuard from "@/components/AuthGuard"
 
 export default function CravingHistoryDetailPageMain() {
-  return <CravingHistoryDetailPage />
+  return (
+    <AuthGuard>
+      <CravingHistoryDetailPage />
+    </AuthGuard>
+  )
 }

@@ -1355,6 +1355,7 @@ const TrackerPage = () => {
                   key={i}
                   className={`p-4 rounded-lg ${style.color} flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow`}
                   onClick={() => {
+                    console.log('Navigating to craving detail:', item);
                     localStorage.setItem('cravingDetail', JSON.stringify(item));
                     router.push(`/craving-history/${item.id}`);
                   }}
