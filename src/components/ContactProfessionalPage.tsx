@@ -141,11 +141,16 @@ const ContactProfessionalPage = () => {
                 {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    onClick={() => window.open(`tel:${prof.phone}`)}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium py-2 rounded-lg transition-all"
+                    onClick={() => {
+                      // Format nomor untuk WhatsApp: hapus +, spasi, dash
+                      const whatsappNumber = prof.phone.replace(/[\+\s\-]/g, '');
+                      const message = encodeURIComponent(`Halo ${prof.name}, saya ingin konsultasi tentang program berhenti merokok.`);
+                      window.open(`https://wa.me/${whatsappNumber}?text=${message}`);
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 rounded-lg transition-all"
                   >
-                    <Phone className="w-4 h-4 mr-2" />
-                    Telepon
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    WhatsApp
                   </Button>
                   <Button
                     onClick={() => window.open(`mailto:${prof.email}`)}

@@ -33,7 +33,6 @@ const CravingSupportPage = () => {
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [intensity, setIntensity] = useState([3]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userPhase, setUserPhase] = useState<"PRE_QUIT" | "POST_QUIT">("PRE_QUIT");
   const [consumptionValue, setConsumptionValue] = useState([0]);
   const [todaysConsumption, setTodaysConsumption] = useState(0);
 
@@ -128,26 +127,7 @@ const CravingSupportPage = () => {
     });
 
     try {
-      console.log("Saving craving log with data:", {
-        userId,
-        intensity: intensity[0],
-        location: finalLocation,
-        situation: finalSituation,
-        emotions: selectedEmotions,
-      });
-
-      // Simpan craving log
-      await createCravingLog({
-        userId,
-        intensity: intensity[0],
-        location: finalLocation,
-        situation: finalSituation,
-        emotions: selectedEmotions,
-      });
-
-      console.log("Craving log saved successfully");
-
-      // Call AI API
+      // Call AI API first
       const aiResponse = await fetch('/api/ai-support', {
         method: 'POST',
         headers: {
@@ -168,6 +148,26 @@ const CravingSupportPage = () => {
 
       const aiData = await aiResponse.json();
       console.log("AI Response:", aiData);
+
+      // Hanya simpan ke database jika AI berhasil
+      console.log("Saving craving log with data:", {
+        userId,
+        intensity: intensity[0],
+        location: finalLocation,
+        situation: finalSituation,
+        emotions: selectedEmotions,
+      });
+
+      // Simpan craving log
+      await createCravingLog({
+        userId,
+        intensity: intensity[0],
+        location: finalLocation,
+        situation: finalSituation,
+        emotions: selectedEmotions,
+      });
+
+      console.log("Craving log saved successfully");
 
       // Simpan AI suggestion ke database dengan response dari AI
       const suggestionContent = aiData.suggestion || `Lokasi: ${finalLocation}, Situasi: ${finalSituation}, Emosi: ${selectedEmotions.join(", ")}`;
@@ -214,16 +214,6 @@ const CravingSupportPage = () => {
       // Don't navigate if AI fails - let user try again
     }
   };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const phase = localStorage.getItem("userPhase");
-    if (phase === "POST_QUIT") {
-      setUserPhase("POST_QUIT");
-    } else {
-      setUserPhase("PRE_QUIT");
-    }
-  }, []);
 
   const handleLogConsumption = async () => {
     if (consumptionValue[0] === 0) {
@@ -429,24 +419,23 @@ const CravingSupportPage = () => {
           Dapatkan Bantuan AI
         </Button>
 
-        {userPhase === "POST_QUIT" && (
-          <motion.div
-            className="mt-6 bg-white p-5 rounded-2xl shadow-md border border-gray-100"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-gray-800">Catat Konsumsi Hari Ini</h3>
-                <p className="text-xs text-gray-500">
-                  Jika hari ini kamu masih merokok, catat jumlahnya di sini.
-                </p>
-              </div>
-              <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
-                <span className="text-base font-bold text-orange-600">{consumptionValue[0]}</span>
-              </div>
+        <motion.div
+          className="mt-6 bg-white p-5 rounded-2xl shadow-md border border-gray-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-gray-800">Catat Konsumsi Hari Ini</h3>
+              <p className="text-xs text-gray-500">
+                Jika hari ini kamu masih merokok, catat jumlahnya di sini.
+              </p>
             </div>
+            <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
+              <span className="text-base font-bold text-orange-600">{consumptionValue[0]}</span>
+            </div>
+          </div>
 
             <div className="mb-4 px-1">
               <Slider
@@ -477,7 +466,6 @@ const CravingSupportPage = () => {
               </p>
             )}
           </motion.div>
-        )}
       </div>
     </div>
   );

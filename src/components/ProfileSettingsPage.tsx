@@ -118,6 +118,7 @@ const ProfileSettingsPage = () => {
       const userId = localStorage.getItem("userId");
       if (!userId) return;
 
+      // Update user profile
       await supabase.from("user_profile").upsert(
         {
           user_id: userId,
@@ -131,6 +132,18 @@ const ProfileSettingsPage = () => {
         },
         { onConflict: "user_id" }
       );
+
+      // Update fase di smoke_free_journey sebagai source of truth
+      if (formData.smokingPattern) {
+        await supabase.from("smoke_free_journey").upsert(
+          {
+            user_id: userId,
+            phase: formData.smokingPattern,
+            status: formData.smokingPattern,
+          },
+          { onConflict: "user_id" }
+        );
+      }
 
       setInitialData(formData);
     });
@@ -241,7 +254,7 @@ const ProfileSettingsPage = () => {
               type="date"
               value={formData.birthDate}
               onChange={(e) => handleInputChange("birthDate", e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-full min-w-0 text-sm md:text-base"
             />
           </div>
         </div>
@@ -265,8 +278,8 @@ const ProfileSettingsPage = () => {
                     onClick={() => toggleMotivation(m.value)}
                     className={`text-xs px-3 py-2 rounded-lg border transition-colors text-left flex items-center gap-2 ${
                       active
-                        ? "bg-primary text-white border-primary"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+                        ? "bg-green-700 text-white border-green-700 hover:bg-green-800"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
                     {active && (
