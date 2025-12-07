@@ -275,24 +275,24 @@ const PencapaianPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
-        className={`relative rounded-2xl p-4 text-center shadow-md border transition-all duration-300 ${
+        className={`relative rounded-xl p-3 sm:p-4 text-center shadow-md border transition-all duration-300 ${
           isCompleted
             ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
             : isLocked
             ? "bg-gray-700 text-gray-300 border-gray-600"
-            : "bg-gray-100 text-gray-800 border-gray-200"
+            : "bg-white/90 backdrop-blur-sm text-gray-800 border-gray-200"
         }`}
       >
-        <div className="relative w-14 h-14 mx-auto mb-2 rounded-full flex items-center justify-center bg-white/10">
-          <IconComp className={`w-8 h-8 ${isCompleted ? "text-white" : "text-gray-400"}`} />
-          {isLocked && <Lock className="absolute w-6 h-6 text-gray-500" />}
+        <div className="relative w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-2 rounded-full flex items-center justify-center bg-white/10">
+          <IconComp className={`w-6 h-6 sm:w-8 sm:h-8 ${isCompleted ? "text-white" : "text-gray-400"}`} />
+          {isLocked && <Lock className="absolute w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />}
         </div>
-        <h3 className="font-bold text-sm mb-1">{achievement.title}</h3>
-        <p className="text-xs opacity-90">{achievement.description}</p>
-        <div className={`mt-2 text-xs font-semibold ${isCompleted ? "text-yellow-200" : "text-gray-400"}`}>
+        <h3 className="font-bold text-xs sm:text-sm mb-1 leading-tight">{achievement.title}</h3>
+        <p className="text-[10px] sm:text-xs opacity-90 line-clamp-2">{achievement.description}</p>
+        <div className={`mt-1.5 sm:mt-2 text-xs font-semibold ${isCompleted ? "text-yellow-200" : "text-gray-400"}`}>
           +{achievement.xp} XP
         </div>
-        {isCompleted && <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-white" />}
+        {isCompleted && <CheckCircle className="absolute top-2 right-2 sm:top-3 sm:right-3 w-4 h-4 sm:w-5 sm:h-5 text-white" />}
       </motion.div>
     );
   };
@@ -306,40 +306,40 @@ const PencapaianPage = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: index * 0.1 }}
-        className={`rounded-2xl p-4 text-center border-2 transition-all duration-300 ${
+        className={`rounded-xl p-3 sm:p-4 text-center border-2 transition-all duration-300 ${
           reward.unlocked
             ? "bg-gradient-to-br from-yellow-400 to-amber-500 border-yellow-600 shadow-lg"
-            : "bg-gray-100 border-gray-300"
+            : "bg-white/90 backdrop-blur-sm border-gray-300"
         }`}
       >
-        <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+        <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 rounded-full flex items-center justify-center ${
           reward.unlocked ? "bg-white/20" : "bg-gray-300"
         }`}>
-          <RewardIcon className={`w-8 h-8 ${reward.unlocked ? "text-white" : "text-gray-500"}`} />
+          <RewardIcon className={`w-6 h-6 sm:w-8 sm:h-8 ${reward.unlocked ? "text-white" : "text-gray-500"}`} />
         </div>
-        <h3 className={`font-bold text-sm mb-1 ${reward.unlocked ? "text-white" : "text-gray-700"}`}>
+        <h3 className={`font-bold text-xs sm:text-sm mb-1 leading-tight ${reward.unlocked ? "text-white" : "text-gray-700"}`}>
           {reward.name}
         </h3>
-        <p className={`text-xs mb-3 ${reward.unlocked ? "text-white/80" : "text-gray-600"}`}>
+        <p className={`text-[10px] sm:text-xs mb-2 sm:mb-3 line-clamp-2 ${reward.unlocked ? "text-white/80" : "text-gray-600"}`}>
           {reward.description}
         </p>
-        <div className="w-full bg-white/30 rounded-full h-2 mb-2 overflow-hidden">
+        <div className="w-full bg-white/30 rounded-full h-1.5 sm:h-2 mb-1.5 sm:mb-2 overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ${reward.unlocked ? "bg-white" : "bg-gray-400"}`}
             style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
-        <span className={`text-xs font-semibold ${reward.unlocked ? "text-white" : "text-gray-600"}`}>
+        <span className={`text-[10px] sm:text-xs font-semibold ${reward.unlocked ? "text-white" : "text-gray-600"}`}>
           {reward.unlocked ? "✓ Unlocked" : `${totalXp}/${reward.xpRequired} XP`}
         </span>
         {reward.unlocked && (
           <button
-            className="mt-3 w-full text-xs font-semibold bg-yellow-600 hover:bg-yellow-700 text-white py-1.5 rounded-lg transition-colors"
+            className="mt-2 sm:mt-3 w-full text-[10px] sm:text-xs font-semibold bg-yellow-600 hover:bg-yellow-700 text-white py-1.5 rounded-lg transition-colors"
             onClick={() => {
               alert(`Reward "${reward.name}" berhasil diklaim (simulasi).`);
             }}
           >
-            Redeem Reward
+            Redeem
           </button>
         )}
       </motion.div>
@@ -369,10 +369,15 @@ const PencapaianPage = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
-      {/* Konten dengan latar belakang semi-transparan */}
-      <div className="px-4 py-6 bg-white/60 backdrop-blur-sm relative z-10">
+      {/* Konten tanpa background overlay - header sudah punya background */}
+      <div className="px-3 sm:px-4 py-6 pt-20 relative z-10">
         {/* Header Informasi */}
-        <div className="mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm"
+        >
           <h1 className="text-xl font-bold text-green-900 mb-1">
             {userCondition === "PRE_QUIT" ? "Perjalanan Menuju Bebas Rokok" : "Pencapaianmu Sejauh Ini"}
           </h1>
@@ -381,10 +386,15 @@ const PencapaianPage = () => {
               ? "Langkah kecilmu hari ini adalah bagian besar dari perubahan besar ke depan."
               : "Setiap hari yang kamu lalui tanpa rokok adalah bukti nyata kekuatan dirimu."}
           </p>
-        </div>
+        </motion.div>
 
         {/* CTA NIVO Diffuser */}
-        <div className="mb-6 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 text-white shadow-xl border-2 border-white/20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-6 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 text-white shadow-xl border-2 border-white/20"
+        >
           <div className="text-center mb-4">
             <h3 className="text-lg font-bold mb-2">🎁 Tukarkan Poin dengan Potongan Harga!</h3>
             <p className="text-sm text-white/90 leading-relaxed">
@@ -421,10 +431,15 @@ const PencapaianPage = () => {
               Belanja di Tokopedia
             </a>
           </div>
-        </div>
+        </motion.div>
 
         {/* Reward Points System */}
-        <div className="mb-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg"
+        >
           <div className="flex justify-between items-center mb-3">
             <div>
               <p className="text-sm opacity-90 flex items-center gap-1">
@@ -468,10 +483,15 @@ const PencapaianPage = () => {
               {isRedeeming ? "Menukar..." : `Tukar ${POINTS_FOR_VOUCHER} Poin untuk Voucher`}
             </Button>
           )}
-        </div>
+        </motion.div>
 
         {/* XP & Badge Section */}
-        <div className="mb-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-lg">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-lg"
+        >
           <div className="flex justify-between items-center mb-3">
             <div>
               <p className="text-sm opacity-90">Total XP Terkumpul</p>
@@ -488,21 +508,31 @@ const PencapaianPage = () => {
               <p className="text-xs opacity-90">{nextReward.xpRequired - totalXp} XP remaining</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Rewards Grid */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Reward Badges</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mb-8"
+        >
+          <h2 className="text-lg font-bold text-gray-800 mb-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm">Reward Badges</h2>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {rewardMilestones.map((reward, index) => (
               <RewardCard key={`reward-${reward.id}`} reward={reward} index={index} />
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-full overflow-x-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mb-6"
+        >
+          <div className="flex space-x-1 bg-white/90 backdrop-blur-sm shadow-sm p-1 rounded-full overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
                 key={`tab-${tab.id}`}
@@ -515,17 +545,22 @@ const PencapaianPage = () => {
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Content Area */}
         {activeTab === "rewards" ? (
           /* Rewards Tab Content */
-          <div className="space-y-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4 pb-4"
+          >
             {/* Active Vouchers */}
             {vouchers.filter(v => v.status === 'active').length > 0 && (
               <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-3">Voucher Aktif</h3>
-                <div className="space-y-3">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm">Voucher Aktif</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {vouchers.filter(v => v.status === 'active').map((voucher) => (
                     <div key={voucher.id} className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4">
                       <div className="flex items-start justify-between mb-2">
@@ -570,31 +605,31 @@ const PencapaianPage = () => {
 
             {/* Reward History */}
             <div>
-              <h3 className="text-lg font-bold text-gray-800 mb-3">Riwayat Reward</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm">Riwayat Reward</h3>
               {rewardHistory.length > 0 ? (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   {rewardHistory.slice(0, 10).map((history) => (
-                    <div key={history.id} className="bg-white rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div key={history.id} className="bg-white/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border border-gray-200 shadow-sm">
+                      <div className="flex items-start justify-between gap-2 mb-2">
                         {history.type === 'earned' ? (
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <Coins className="w-4 h-4 text-green-600" />
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
                           </div>
                         ) : (
-                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                            <Gift className="w-4 h-4 text-purple-600" />
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
                           </div>
                         )}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{history.reason}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(history.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </p>
-                        </div>
+                        <p className={`text-sm sm:text-base font-bold ${history.type === 'earned' ? 'text-green-600' : 'text-purple-600'}`}>
+                          {history.type === 'earned' ? '+' : ''}{history.points}
+                        </p>
                       </div>
-                      <p className={`text-sm font-bold ${history.type === 'earned' ? 'text-green-600' : 'text-purple-600'}`}>
-                        {history.type === 'earned' ? '+' : ''}{history.points}
-                      </p>
+                      <div>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900 leading-tight mb-1">{history.reason}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">
+                          {new Date(history.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -628,14 +663,19 @@ const PencapaianPage = () => {
                 </li>
               </ul>
             </div>
-          </div>
+          </motion.div>
         ) : (
           /* Achievement Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-2 gap-3 sm:gap-4 pb-4"
+          >
             {achievementsToShow.map((achievement, i) => (
               <AchievementCard key={`achievement-${achievement.id}`} achievement={achievement} index={i} />
             ))}
-          </div>
+          </motion.div>
         )}
 
         {/* Reward Unlock Modal - Fullscreen Overlay */}
