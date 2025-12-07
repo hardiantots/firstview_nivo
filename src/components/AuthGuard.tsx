@@ -43,8 +43,33 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = AuthStorage.isSessionValid();
+    const checkAuth = async () => {
+      // Check both localStorage and Supabase session
+      const localAuth = AuthStorage.isSessionValid();
+      
+      // Also check Supabase session
+      let supabaseAuth = false;
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        supabaseAuth = !!session;
+        
+        // If Supabase has session but localStorage doesn't, sync them
+        if (supabaseAuth && !localAuth && session) {
+          AuthStorage.saveSession({
+            userToken: session.access_token,
+            userId: session.user.id,
+            userEmail: session.user.email || '',
+            lastLoginAt: Date.now(),
+            sessionMaxAgeDays: 30,
+            loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
+          });
+        }
+      } catch (e) {
+        console.error('Error checking Supabase session:', e);
+      }
+      
+      const authenticated = localAuth || supabaseAuth;
       setIsAuthenticated(authenticated);
 
       const isProtectedRoute = PROTECTED_ROUTES.some(route => 
