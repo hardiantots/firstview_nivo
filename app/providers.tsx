@@ -10,46 +10,64 @@ import React from "react"
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
 
-  // Restore Supabase session from localStorage on app load
+  // Setup Supabase auth listener and restore session
   useEffect(() => {
-    const restoreSession = async () => {
-      const userToken = localStorage.getItem('userToken');
-      const userId = localStorage.getItem('userId');
-      const lastLoginAt = localStorage.getItem('lastLoginAt');
-      const sessionMaxAgeDays = Number(localStorage.getItem('sessionMaxAgeDays') || 30);
+    const initAuth = async () => {
+      const { supabase } = await import('@/lib/supabase');
+      const { AuthStorage } = await import('@/lib/auth-storage');
       
-      // Check if session is still valid
-      if (userToken && userId && lastLoginAt) {
-        const diffMs = Date.now() - Number(lastLoginAt);
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        
-        if (diffDays <= sessionMaxAgeDays) {
-          // Session is valid - verify with Supabase
-          try {
-            const { supabase } = await import('@/lib/supabase');
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (error || !session) {
-              // Session expired or invalid - clear localStorage
-              localStorage.removeItem('userToken');
-              localStorage.removeItem('userId');
-              localStorage.removeItem('userEmail');
-              localStorage.removeItem('lastLoginAt');
-            }
-          } catch (e) {
-            // Silent fail - AuthGuard will handle redirect
-          }
-        } else {
-          // Session expired - clear localStorage
-          localStorage.removeItem('userToken');
-          localStorage.removeItem('userId');
-          localStorage.removeItem('userEmail');
-          localStorage.removeItem('lastLoginAt');
-        }
+      // Get current session from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Sync Supabase session to our custom AuthStorage
+        AuthStorage.saveSession({
+          userToken: session.access_token,
+          userId: session.user.id,
+          userEmail: session.user.email || '',
+          lastLoginAt: Date.now(),
+          sessionMaxAgeDays: 30,
+          loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
+        });
       }
+      
+      // Listen for auth changes (login, logout, token refresh)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state changed:', event);
+        
+        if (event === 'SIGNED_IN' && session) {
+          // User signed in - save to AuthStorage
+          AuthStorage.saveSession({
+            userToken: session.access_token,
+            userId: session.user.id,
+            userEmail: session.user.email || '',
+            lastLoginAt: Date.now(),
+            sessionMaxAgeDays: 30,
+            loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
+          });
+        } else if (event === 'SIGNED_OUT') {
+          // User signed out - clear AuthStorage
+          AuthStorage.clearSession();
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          // Token refreshed - update AuthStorage
+          AuthStorage.saveSession({
+            userToken: session.access_token,
+            userId: session.user.id,
+            userEmail: session.user.email || '',
+            lastLoginAt: Date.now(),
+            sessionMaxAgeDays: 30,
+            loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
+          });
+          AuthStorage.updateLastLogin();
+        }
+      });
+      
+      return () => {
+        subscription.unsubscribe();
+      };
     };
 
-    restoreSession();
+    initAuth();
   }, []);
 
   return (

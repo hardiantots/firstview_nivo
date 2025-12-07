@@ -9,21 +9,27 @@
     "id": 11449,
     "files": [
       "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/1449.72b0fdd12bf66645.js"
+      "static/chunks/1449.78ebb3ce62e42f4a.js"
     ]
   },
   "..\\app\\auth\\callback\\page.tsx -> @/lib/supabase": {
     "id": 62890,
     "files": [
       "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.9c884db74e82f81e.js"
+      "static/chunks/2890.76cdd1917f6f1843.js"
+    ]
+  },
+  "..\\app\\providers.tsx -> @/lib/auth-storage": {
+    "id": 68954,
+    "files": [
+      "static/chunks/8954.209e91e58a98ca62.js"
     ]
   },
   "..\\app\\providers.tsx -> @/lib/supabase": {
     "id": 62890,
     "files": [
       "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.9c884db74e82f81e.js"
+      "static/chunks/2890.76cdd1917f6f1843.js"
     ]
   },
   "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
@@ -36,6 +42,13 @@
     "id": 31646,
     "files": [
       "static/chunks/1646.a93085a0445ba909.js"
+    ]
+  },
+  "components\\AuthGuard.tsx -> @/lib/supabase": {
+    "id": 62890,
+    "files": [
+      "static/chunks/3503-8efbb6533b7c2c39.js",
+      "static/chunks/2890.76cdd1917f6f1843.js"
     ]
   },
   "components\\ProfileSettingsPage.tsx -> @/lib/auth": {
@@ -54,7 +67,7 @@
     "id": 62890,
     "files": [
       "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.9c884db74e82f81e.js"
+      "static/chunks/2890.76cdd1917f6f1843.js"
     ]
   },
   "components\\SignInPage\\SignInScreen.tsx -> @/lib/supabase": {
