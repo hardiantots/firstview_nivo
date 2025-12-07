@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAISuggestions } from "@/lib/db/userJourneyStats";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { AuthStorage } from "@/lib/auth-storage";
 
 const CravingHistoryDetailPage = () => {
   const router = useRouter();
@@ -33,7 +34,7 @@ const CravingHistoryDetailPage = () => {
       }
 
       // Fallback: fetch from database using ID
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (!userId || !cravingId) {
         setIsLoading(false);
         return;
@@ -71,7 +72,7 @@ const CravingHistoryDetailPage = () => {
     };
 
     const fetchAISuggestionForCraving = async (logId: string) => {
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (!userId) return;
 
       try {

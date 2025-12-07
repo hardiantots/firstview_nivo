@@ -53,23 +53,18 @@ export default function AuthCallbackPage() {
           }
 
           if (data.session && data.user) {
+            const { AuthStorage } = await import("@/lib/auth-storage");
             const user = data.user;
             const session = data.session;
-            
-            console.log('OAuth session established:', { userId: user.id, email: user.email });
 
-            // Store session info in localStorage
-            try {
-              localStorage.setItem("userToken", session.access_token);
-              localStorage.setItem("userId", user.id);
-              localStorage.setItem("userEmail", user.email || "");
-              localStorage.setItem("loginMethod", "oauth");
-              const now = Date.now();
-              localStorage.setItem("lastLoginAt", String(now));
-              localStorage.setItem("sessionMaxAgeDays", "30");
-            } catch (storageError) {
-              console.warn('localStorage error:', storageError);
-            }
+            AuthStorage.saveSession({
+              userToken: session.access_token,
+              userId: user.id,
+              userEmail: user.email || "",
+              lastLoginAt: Date.now(),
+              sessionMaxAgeDays: 30,
+              loginMethod: "oauth",
+            });
 
             // Ensure user profile exists
             await ensureUserProfile({
@@ -79,9 +74,6 @@ export default function AuthCallbackPage() {
               phoneNumber: (user.user_metadata?.phone as string) || null,
             });
 
-            // Check if user has completed onboarding
-            console.log("Checking journey data for userId:", user.id);
-            
             try {
               const { data: journeyData, error: journeyError } = await supabase
                 .from("smoke_free_journey")
@@ -93,11 +85,8 @@ export default function AuthCallbackPage() {
                 console.error("Journey query error:", journeyError);
               }
               
-              console.log("Journey data:", journeyData);
-              
               // If journey data exists, user has completed onboarding
               if (journeyData && journeyData.user_id) {
-                console.log("Existing user - redirecting to /home");
                 router.replace("/home");
                 return;
               }
@@ -105,8 +94,6 @@ export default function AuthCallbackPage() {
               console.error("Error checking journey data:", e);
             }
 
-            // New user - needs onboarding
-            console.log("New user - redirecting to /journey-start");
             router.replace("/journey-start");
             return;
           }
@@ -133,7 +120,7 @@ export default function AuthCallbackPage() {
           }
           
           const user = userData.user;
-          console.log('Existing session found:', { userId: user.id });
+
           
           try {
             localStorage.setItem("userToken", sessionData.session.access_token);
@@ -169,7 +156,7 @@ export default function AuthCallbackPage() {
         }
 
         // No session - redirect to sign in
-        console.log('No session found - redirecting to signin');
+
         router.replace('/signin');
         
       } catch (err: any) {

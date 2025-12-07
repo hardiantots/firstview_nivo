@@ -16,6 +16,11 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchJourneyStatus, upsertJourneyStatus } from "@/lib/db/journey";
 import { getOrCreateUserStats } from "@/lib/db/userStats";
 import { fetchUserJourneyStats, getUserStats } from "@/lib/db/userJourneyStats";
+import { AuthStorage } from "@/lib/auth-storage";
+import { useUser } from "@/hooks/useUser";
+import { useJourney } from "@/hooks/useJourney";
+import { calculateDaysSince, calculateDaysUntil, formatDateIndonesian } from "@/lib/date-utils";
+import { formatRupiah } from "@/lib/money-utils";
 import { 
   getAchievementsForPhase, 
   getRewardMilestones, 
@@ -114,9 +119,10 @@ const HomePage = () => {
   // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem("userToken");
-      const lastLoginAt = Number(localStorage.getItem("lastLoginAt") || 0);
-      const maxAgeDays = Number(localStorage.getItem("sessionMaxAgeDays") || 0);
+      const session = AuthStorage.getSession();
+      const token = session?.userToken;
+      const lastLoginAt = session?.lastLoginAt || 0;
+      const maxAgeDays = session?.sessionMaxAgeDays || 30;
 
       if (!token || !lastLoginAt || !maxAgeDays) {
         router.push("/signin");
@@ -127,17 +133,14 @@ const HomePage = () => {
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
       if (diffDays > maxAgeDays) {
         localStorage.removeItem("userToken");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("lastLoginAt");
-        localStorage.removeItem("sessionMaxAgeDays");
+        AuthStorage.clearSession();
         router.push("/signin");
         return;
       } else {
-        localStorage.setItem("lastLoginAt", String(Date.now()));
+        AuthStorage.updateLastLogin();
       }
 
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       let userCondition: "PRE_QUIT" | "POST_QUIT" = "PRE_QUIT";
       let countdown = 0;
       let streak = 0;
@@ -241,16 +244,15 @@ const HomePage = () => {
               .join(", ")}`
           : "Ingat alasan terkuatmu untuk berhenti hari ini.";
 
-      const userEmail = localStorage.getItem("userEmail") || undefined;
+      const authSession = AuthStorage.getSession();
+      const userEmail = authSession?.userEmail || undefined;
       
-      // Fetch full name from user_profile
       let fullName = "Budi";
-      const userIdForName = localStorage.getItem("userId");
-      if (userIdForName) {
+      if (userId) {
         const { data: profileData } = await supabase
           .from("user_profile")
           .select("full_name")
-          .eq("user_id", userIdForName)
+          .eq("user_id", userId)
           .maybeSingle();
         
         if (profileData?.full_name && String(profileData.full_name).trim() !== "") {
@@ -307,13 +309,11 @@ const HomePage = () => {
         await checkAndAutoTransitionPhase(userId);
       }
 
-      // Cek profil di Supabase untuk nomor WhatsApp dan gender
-      const userIdForProfile = localStorage.getItem("userId");
-      if (userIdForProfile) {
+      if (userId) {
         const { data: profile } = await supabase
           .from("user_profile")
           .select("full_name, date_of_birth, phone_number, gender")
-          .eq("user_id", userIdForProfile)
+          .eq("user_id", userId)
           .maybeSingle();
 
         const needsFullName = !profile?.full_name || String(profile.full_name).trim() === "";
@@ -382,10 +382,9 @@ const HomePage = () => {
     fetchUserData();
   }, [router, setUserName, setMoneySaved, setUserStatus, setCountdownDays, setStreakDays, setUserMotivation, setTimeProgress, setNivoCoachContent]);
 
-  // Load achievements from JSON and compute status
   useEffect(() => {
     const loadAchievements = async () => {
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       const phase = userStatus;
 
       // Get achievements structure from JSON
@@ -587,7 +586,7 @@ const HomePage = () => {
     
     // Verify userId matches auth user
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || localStorage.getItem("userId");
+    const userId = user?.id || AuthStorage.getUserId();
     
     if (user?.id) {
       localStorage.setItem("userId", user.id);
@@ -696,7 +695,7 @@ const HomePage = () => {
     if (!profileFullName.trim() || !profileDob || !profilePhone.trim() || !profileGender) {
       return;
     }
-    const userId = localStorage.getItem("userId");
+    const userId = AuthStorage.getUserId();
     if (!userId) return;
 
     setSavingProfile(true);

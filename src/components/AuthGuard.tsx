@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { AuthStorage } from '@/lib/auth-storage';
 
 // Protected routes that require authentication
 const PROTECTED_ROUTES = [
@@ -43,93 +44,34 @@ export function useAuth() {
 
   useEffect(() => {
     const checkAuth = () => {
-      // Get auth token from localStorage
-      const token = localStorage.getItem('userToken');
-      const userId = localStorage.getItem('userId');
-      const lastLoginAt = localStorage.getItem('lastLoginAt');
-      const sessionMaxAgeDays = Number(localStorage.getItem('sessionMaxAgeDays') || 30);
-
-      console.log('🔍 AuthGuard - Checking authentication:');
-      console.log('🔍 token:', token ? 'EXISTS' : 'MISSING');
-      console.log('🔍 userId:', userId ? 'EXISTS' : 'MISSING'); 
-      console.log('🔍 lastLoginAt:', lastLoginAt);
-      console.log('🔍 sessionMaxAgeDays:', sessionMaxAgeDays);
-
-      // Check if user has valid session
-      const hasValidToken = Boolean(token && userId);
-      
-      // Check if session is expired
-      let isSessionExpired = false;
-      if (lastLoginAt && sessionMaxAgeDays > 0) {
-        const diffMs = Date.now() - Number(lastLoginAt);
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        isSessionExpired = diffDays > sessionMaxAgeDays;
-        console.log('🔍 Session age (days):', diffDays);
-        console.log('🔍 Session expired:', isSessionExpired);
-      } else {
-        console.log('🔍 No lastLoginAt or sessionMaxAgeDays, treating as not expired');
-      }
-
-      const authenticated = hasValidToken && !isSessionExpired;
-      console.log('🔍 Final authenticated status:', authenticated);
-      
+      const authenticated = AuthStorage.isSessionValid();
       setIsAuthenticated(authenticated);
 
-      // Determine if current route is protected
       const isProtectedRoute = PROTECTED_ROUTES.some(route => 
         pathname === route || pathname?.startsWith(`${route}/`)
       );
-      
-      const isPublicRoute = PUBLIC_ROUTES.some(route => 
-        pathname === route || pathname?.startsWith(`${route}/`)
-      );
 
-      console.log('🔍 pathname:', pathname);
-      console.log('🔍 isProtectedRoute:', isProtectedRoute);
-      console.log('🔍 isPublicRoute:', isPublicRoute);
-
-      // Skip redirect logic for auth callback (let it handle its own redirects)
       if (pathname?.startsWith('/auth/callback')) {
-        console.log('🔍 Skipping redirect for auth callback');
         setIsLoading(false);
         return;
       }
 
-      // Redirect logic
       if (isProtectedRoute && !authenticated) {
-        // User is not authenticated but trying to access protected route
-        console.log('🚨 Access denied: Not authenticated for protected route');
-        console.log('🔍 Clearing stale auth data and redirecting to signin');
-        
-        // Clear any stale data
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('lastLoginAt');
-        
-        // Redirect to signin
+        AuthStorage.clearSession();
         router.replace('/signin');
       } else if (authenticated && pathname === '/signin') {
-        // User is authenticated but on signin page, redirect to home
-        console.log('✅ Authenticated user on signin page, redirecting to home');
         router.replace('/home');
       } else if (pathname === '/' && authenticated) {
-        // Redirect root to home if authenticated
-        console.log('✅ Authenticated user on root, redirecting to home');
         router.replace('/home');
       } else if (pathname === '/' && !authenticated) {
-        // Redirect root to welcome if not authenticated
-        console.log('🔍 Unauthenticated user on root, redirecting to welcome');
         router.replace('/welcome');
       }
 
-      console.log('🔍 AuthGuard check complete, setting loading false');
       setIsLoading(false);
     };
 
     checkAuth();
 
-    // Re-check auth on storage changes (e.g., logout in another tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'userToken' || e.key === 'userId') {
         checkAuth();
@@ -137,10 +79,7 @@ export function useAuth() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [pathname, router]);
 
   return { isAuthenticated, isLoading };

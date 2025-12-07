@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
 import abstractHeader from "@/assets/abstract-header.jpg";
+import { AuthStorage } from "@/lib/auth-storage";
 
 const SignInScreen = () => {
   const router = useRouter();
@@ -50,12 +51,10 @@ const SignInScreen = () => {
         localStorage.setItem('savedEmail', formData.email);
       }
       
-      // Set persistent session - 30 days
-      localStorage.setItem('sessionMaxAgeDays', '30');
-      localStorage.setItem('lastLoginAt', String(Date.now()));
+      // Session is already saved by AuthStorage in signInWithEmail
       
       // Check if user already has journey data (sudah pernah onboarding)
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
 
       
       if (userId) {
