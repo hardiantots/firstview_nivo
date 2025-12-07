@@ -21,6 +21,7 @@ import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
 import { upsertJourneyStatus } from "@/lib/db/journey";
+import { AuthStorage } from "@/lib/auth-storage";
 
 // --- Komponen Kustom untuk Caption Kalender ---
 function CustomCaption({ displayMonth }: CaptionProps) {
@@ -100,7 +101,7 @@ const SetQuitDatePastScreen = () => {
         localStorage.setItem('userPhase', 'POST_QUIT');
 
         // Simpan juga ke database (smoke_free_journey)
-        const userId = localStorage.getItem('userId');
+        const userId = AuthStorage.getUserId();
         if (userId) {
           await upsertJourneyStatus(userId, quitDateIso, 'POST_QUIT');
         }

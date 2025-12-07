@@ -14,6 +14,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { fetchRecentCravingLogs } from "@/lib/db/cravingLogs";
+import { AuthStorage } from "@/lib/auth-storage";
 import CravingHistoryDetailPage from "./CravingHistoryDetailPage";
 
 const ITEMS_PER_PAGE = 5;
@@ -28,7 +29,7 @@ const CravingHistoryListPage = () => {
 
   useEffect(() => {
     const loadCravingHistory = async () => {
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (!userId) {
         setIsLoading(false);
         return;

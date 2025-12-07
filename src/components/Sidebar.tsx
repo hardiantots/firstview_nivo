@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X, User, Info, Star, LogOut, Users, CreditCard } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
-import headerlogo from "@/assets/logo-with-text-horizontal.png";
 import { supabase } from "@/lib/supabase";
+import { AuthStorage } from "@/lib/auth-storage";
+import headerlogo from "@/assets/logo-with-text-horizontal.png";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,8 +22,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
   useEffect(() => {
     const load = async () => {
-      const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
-      const emailLocal = typeof window !== "undefined" ? localStorage.getItem("userEmail") : "";
+      const userId = AuthStorage.getUserId();
+      const session = AuthStorage.getSession();
+      const emailLocal = session?.userEmail || "";
 
       if (userId) {
         const { data } = await supabase
@@ -72,34 +74,12 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     setShowLogoutDialog(false);
     onClose();
     
-    // Call Supabase signOut
     try {
       const { signOut } = await import('@/lib/auth');
       await signOut();
     } catch (e) {
-      // Silent fail
+      console.error('Logout error:', e);
     }
-    
-    // Clear all auth data
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('lastLoginAt');
-    localStorage.removeItem('sessionMaxAgeDays');
-    localStorage.removeItem('loginMethod');
-    
-    // Clear user data
-    localStorage.removeItem('userPhase');
-    localStorage.removeItem('selectedMotivations');
-    localStorage.removeItem('countdownDays');
-    localStorage.removeItem('streakDays');
-    localStorage.removeItem('journeyStartDate');
-    localStorage.removeItem('quitDate');
-    localStorage.removeItem('actualQuitDate');
-    localStorage.removeItem('selectedDays');
-    localStorage.removeItem('homeMoneySaved');
-    localStorage.removeItem('rememberMe');
-    localStorage.removeItem('savedEmail');
     
     router.replace("/signin");
   };

@@ -9,6 +9,7 @@ import Image from "next/image";
 import logo from '@/assets/logo-with-text-horizontal.png';
 import assetsfirstpage from '@/assets/assetsfirstpage.png';
 import { upsertJourneyStatus } from "@/lib/db/journey";
+import { AuthStorage } from "@/lib/auth-storage";
 
 const TimeSelectionScreen = () => {
   const router = useRouter();
@@ -45,7 +46,7 @@ const TimeSelectionScreen = () => {
         localStorage.setItem('userPhase', 'PRE_QUIT');
 
         // Simpan ke database (smoke_free_journey & user_profile)
-        const userId = localStorage.getItem('userId');
+        const userId = AuthStorage.getUserId();
         if (userId) {
           try {
             // Save to smoke_free_journey

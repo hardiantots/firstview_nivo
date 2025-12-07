@@ -1,8 +1,9 @@
 import { supabase } from './supabase';
 import { ensureUserProfile } from '@/lib/db/userProfile';
+import { AuthStorage } from './auth-storage';
 
 /**
- * Sign in dengan email dan password
+ * Sign in with email and password
  */
 export const signInWithEmail = async (email: string, password: string) => {
   try {
@@ -15,16 +16,15 @@ export const signInWithEmail = async (email: string, password: string) => {
       throw error;
     }
 
-    // Store user info
-    if (data.user) {
-      localStorage.setItem('userToken', data.session?.access_token || '');
-      localStorage.setItem('userId', data.user.id);
-      localStorage.setItem('userEmail', data.user.email || '');
-      const now = Date.now();
-      localStorage.setItem('lastLoginAt', String(now));
-      // Default 30 hari untuk persistent login - bisa di-override oleh form
-      localStorage.setItem('sessionMaxAgeDays', '30');
-      localStorage.setItem('loginMethod', 'password');
+    if (data.user && data.session) {
+      AuthStorage.saveSession({
+        userToken: data.session.access_token,
+        userId: data.user.id,
+        userEmail: data.user.email || '',
+        lastLoginAt: Date.now(),
+        sessionMaxAgeDays: 30,
+        loginMethod: 'password',
+      });
     }
 
     return { success: true, data };
@@ -200,7 +200,7 @@ export const resendPasswordResetEmail = async (email: string) => {
 };
 
 /**
- * Sign out
+ * Sign out and clear all session data
  */
 export const signOut = async () => {
   try {
@@ -210,11 +210,7 @@ export const signOut = async () => {
       throw error;
     }
 
-    // Clear stored user data
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('resetEmail');
+    AuthStorage.clearSession();
 
     return { success: true };
   } catch (error: any) {

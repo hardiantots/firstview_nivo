@@ -21,6 +21,7 @@ import { createCravingLog } from "@/lib/db/cravingLogs";
 import { saveAISuggestion } from "@/lib/db/userJourneyStats";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { AuthStorage } from "@/lib/auth-storage";
 import { Cigarette } from "lucide-react";
 
 const CravingSupportPage = () => {
@@ -110,7 +111,7 @@ const CravingSupportPage = () => {
       motivations: motivations
     };
 
-    const userId = localStorage.getItem("userId");
+    const userId = AuthStorage.getUserId();
     if (!userId) {
       toast({
         title: "User tidak ditemukan",
@@ -217,7 +218,7 @@ const CravingSupportPage = () => {
     setTodaysConsumption(consumptionValue[0]);
 
     const today = new Date().toISOString().split("T")[0];
-    const userId = localStorage.getItem("userId");
+    const userId = AuthStorage.getUserId();
 
     if (userId) {
       try {

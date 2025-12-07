@@ -34,6 +34,7 @@ import { fetchDailyConsumptionLogs } from "@/lib/db/dailyConsumption";
 import { fetchRecentCravingLogs } from "@/lib/db/cravingLogs";
 import { fetchJourneyStatus, upsertJourneyStatus } from "@/lib/db/journey";
 import { fetchUserJourneyStats } from "@/lib/db/userJourneyStats";
+import { AuthStorage } from "@/lib/auth-storage";
 import healthMilestonesData from "@/data/health-milestones.json";
 
 const TrackerPage = () => {
@@ -61,16 +62,18 @@ const TrackerPage = () => {
   useEffect(() => {
     const init = async () => {
       // Get userId from localStorage first
-      let userId = localStorage.getItem("userId");
+      let userId = AuthStorage.getUserId();
       
       // Verify with Supabase auth - ensure they match
       const { supabase } = await import('@/lib/supabase');
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user && user.id !== userId) {
-        // Sync localStorage with actual auth user
         userId = user.id;
-        localStorage.setItem("userId", user.id);
+        const session = AuthStorage.getSession();
+        if (session) {
+          AuthStorage.saveSession({ ...session, userId: user.id });
+        }
       }
       
       if (!userId) {
@@ -246,7 +249,7 @@ const TrackerPage = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (!userId) return;
 
       try {
@@ -536,7 +539,7 @@ const TrackerPage = () => {
   };
 
   const handleLogConsumption = async () => {
-    const userId = localStorage.getItem("userId");
+    const userId = AuthStorage.getUserId();
     if (!userId) return;
     
     // Allow 0 cigarettes - it means user didn't smoke today

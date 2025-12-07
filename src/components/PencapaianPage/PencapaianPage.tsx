@@ -24,6 +24,7 @@ import {
   type Achievement,
   type Reward
 } from "@/lib/achievementUtils";
+import { AuthStorage } from "@/lib/auth-storage";
 
 // Types are imported from achievementUtils
 
@@ -43,7 +44,7 @@ const PencapaianPage = () => {
   // Load and compute achievements based on user data
   useEffect(() => {
     const fetchAndComputeAchievements = async () => {
-      const storedUserId = localStorage.getItem("userId");
+      const storedUserId = AuthStorage.getUserId();
       const phase = (localStorage.getItem("userPhase") as "PRE_QUIT" | "POST_QUIT") || "PRE_QUIT";
       
       setUserId(storedUserId);

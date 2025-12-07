@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LoadingScreen } from "./ui/loading";
 import { supabase } from "@/lib/supabase";
 import { useApiLoading } from "@/hooks/useApiLoading";
+import { AuthStorage } from "@/lib/auth-storage";
 import logo from "@/assets/logo-with-text-horizontal.png";
 import AuthGuard from "./AuthGuard";
 
@@ -53,10 +54,9 @@ const ProfileSettingsPage = () => {
     { value: "Perempuan", label: "Perempuan" }
   ];
 
-  // Sinkronisasi awal dengan data dari onboarding / HomePage
   useEffect(() => {
     const loadProfile = async () => {
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (!userId) return;
 
       // Ambil data user_profile
@@ -81,7 +81,6 @@ const ProfileSettingsPage = () => {
       const currentPhase = journeyData?.phase || journeyData?.status || "";
 
       if (data) {
-        console.log('🔍 ProfileSettings - Raw data from DB:', data);
         const loaded = {
           fullName: (data.full_name as string) || "",
           email: (data.email as string) || "",
@@ -91,14 +90,9 @@ const ProfileSettingsPage = () => {
           smokingPattern: currentPhase || (data.smoking_pattern as string) || "",
           motivasiPilihan: (data.motivations as string[] | null) || [],
         };
-        console.log('🔍 ProfileSettings - Loaded data:', loaded);
-        console.log('🔍 ProfileSettings - smokingPattern will be:', loaded.smokingPattern);
-        setInitialData(loaded);
-        setFormData(loaded); // Set formData = loaded agar langsung tampil
-        console.log('🔍 ProfileSettings - After setFormData, motivasiPilihan:', loaded.motivasiPilihan);
-        console.log('🔍 ProfileSettings - After setFormData, smokingPattern:', loaded.smokingPattern);
         
-        // Force re-render after state update
+        setInitialData(loaded);
+        setFormData(loaded);
         setTimeout(() => setForceRender(prev => prev + 1), 100);
       }
     };
@@ -111,23 +105,17 @@ const ProfileSettingsPage = () => {
   };
 
   const toggleMotivation = (value: string) => {
-    console.log(`🔄 toggleMotivation called with: ${value}`);
     setFormData(prev => {
       const exists = prev.motivasiPilihan?.includes(value) || false;
-      console.log(`🔍 Current motivasiPilihan:`, prev.motivasiPilihan);
-      console.log(`🔍 ${value} exists: ${exists}`);
-      
       const next = exists
         ? prev.motivasiPilihan.filter(v => v !== value)
         : prev.motivasiPilihan.length >= 2
         ? prev.motivasiPilihan
         : [...prev.motivasiPilihan, value];
       
-      console.log(`🔄 New motivasiPilihan:`, next);
       return { ...prev, motivasiPilihan: next };
     });
     
-    // Force re-render after state change
     setTimeout(() => setForceRender(prev => prev + 1), 50);
   };
 
@@ -135,7 +123,7 @@ const ProfileSettingsPage = () => {
 
   const handleSaveChanges = async () => {
     await withLoading(async () => {
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (!userId) return;
 
       // Update user profile
@@ -291,15 +279,11 @@ const ProfileSettingsPage = () => {
             <div className="grid grid-cols-2 gap-2" key={`motivations-${forceRender}`}>
               {motivationOptions.map((m) => {
                 const active = formData.motivasiPilihan?.includes(m.value) || false;
-                console.log(`🔍 Motivation ${m.value}: active=${active}, formData.motivasiPilihan=`, formData.motivasiPilihan);
                 return (
                   <button
                     key={`${m.value}-${forceRender}-${formData.motivasiPilihan?.length || 0}`}
                     type="button"
-                    onClick={() => {
-                      console.log(`🔄 Clicking motivation: ${m.value}`);
-                      toggleMotivation(m.value);
-                    }}
+                    onClick={() => toggleMotivation(m.value)}
                     className={`text-xs px-3 py-2 rounded-lg border transition-all duration-200 text-left flex items-center gap-2 ${
                       active
                         ? "bg-green-700 text-white border-green-700 hover:bg-green-800 shadow-md"
@@ -323,11 +307,7 @@ const ProfileSettingsPage = () => {
             <Select
               key={`smoking-pattern-${forceRender}`}
               value={formData.smokingPattern || ""}
-              onValueChange={(value) => {
-                console.log('🔄 Changing fase to:', value);
-                console.log('🔍 Current smokingPattern:', formData.smokingPattern);
-                handleInputChange("smokingPattern", value);
-              }}
+              onValueChange={(value) => handleInputChange("smokingPattern", value)}
             >
               <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 <SelectValue 
@@ -367,37 +347,13 @@ const ProfileSettingsPage = () => {
           <div className="pt-6 border-t border-gray-200">
             <Button 
               onClick={async () => {
-                // Call Supabase signOut
                 try {
                   const { signOut } = await import('@/lib/auth');
                   await signOut();
+                  router.replace('/signin');
                 } catch (e) {
-                  // Silent fail
+                  console.error('Logout error:', e);
                 }
-                
-                // Clear all authentication data
-                localStorage.removeItem('userToken');
-                localStorage.removeItem('userId');
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('lastLoginAt');
-                localStorage.removeItem('sessionMaxAgeDays');
-                localStorage.removeItem('loginMethod');
-                
-                // Clear user data
-                localStorage.removeItem('userPhase');
-                localStorage.removeItem('selectedMotivations');
-                localStorage.removeItem('countdownDays');
-                localStorage.removeItem('streakDays');
-                localStorage.removeItem('journeyStartDate');
-                localStorage.removeItem('quitDate');
-                localStorage.removeItem('actualQuitDate');
-                localStorage.removeItem('selectedDays');
-                localStorage.removeItem('homeMoneySaved');
-                localStorage.removeItem('rememberMe');
-                localStorage.removeItem('savedEmail');
-                
-                // Redirect to signin
-                router.replace('/signin');
               }}
               variant="outline"
               className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500 py-3 rounded-lg shadow-sm"

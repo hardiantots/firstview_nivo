@@ -7,6 +7,7 @@ import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/ui/app-header";
 import { fetchAISuggestions } from "@/lib/db/userJourneyStats";
+import { AuthStorage } from "@/lib/auth-storage";
 
 const AIResultPage = () => {
   const router = useRouter();
@@ -30,7 +31,7 @@ const AIResultPage = () => {
       }
 
       // Fallback: coba ambil dari database
-      const userId = localStorage.getItem("userId");
+      const userId = AuthStorage.getUserId();
       if (userId) {
         try {
           const suggestions = await fetchAISuggestions(userId, 1);
@@ -104,7 +105,7 @@ const AIResultPage = () => {
                   <div className="text-gray-700 text-sm leading-relaxed space-y-3">
                     {(() => {
                       const content = aiData.aiSuggestion;
-                      const sections: JSX.Element[] = [];
+                      const sections: React.ReactElement[] = [];
                       
                       // Split by double newlines to get sections
                       const parts = content.split('\n\n').filter((p: string) => p.trim());
