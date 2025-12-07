@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   CheckCircle, Lock, Leaf, Shield, Award, Target,
-  Zap, Heart, LucideIcon, Trophy, X
+  Zap, Heart, LucideIcon, Trophy, X, Gift, ExternalLink, Coins, Star
 } from "lucide-react";
 import Sidebar from "../Sidebar";
 import { AppHeader } from "@/components/ui/app-header";
@@ -25,13 +25,29 @@ import {
   type Reward
 } from "@/lib/achievementUtils";
 import { AuthStorage } from "@/lib/auth-storage";
+import {
+  getOrCreateUserRewards,
+  getRewardHistory,
+  getUserVouchers,
+  redeemVoucher,
+  MILESTONES,
+  POINTS_FOR_VOUCHER,
+  VOUCHER_DISCOUNT,
+  MARKETPLACE_LINKS,
+  type UserReward,
+  type RewardHistory as RewardHistoryType,
+  type Voucher
+} from "@/lib/db/rewards";
+import { useToast } from "@/hooks/use-toast";
+import { formatRupiah } from "@/lib/money-utils";
 
 // Types are imported from achievementUtils
 
 const PencapaianPage = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "milestone" | "behavior">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "milestone" | "behavior" | "rewards">("all");
   const [userCondition, setUserCondition] = useState<"PRE_QUIT" | "POST_QUIT">("PRE_QUIT");
   const [totalXp, setTotalXp] = useState(0);
   const [lastUnlockedReward, setLastUnlockedReward] = useState<Reward | null>(null);
@@ -40,6 +56,14 @@ const PencapaianPage = () => {
   const [milestoneData, setMilestoneData] = useState<Achievement[]>([]);
   const [behaviorData, setBehaviorData] = useState<Achievement[]>([]);
   const [rewardMilestones, setRewardMilestones] = useState<Reward[]>([]);
+  
+  // Reward system states
+  const [userRewards, setUserRewards] = useState<UserReward | null>(null);
+  const [rewardHistory, setRewardHistory] = useState<RewardHistoryType[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
 
   // Load and compute achievements based on user data
   useEffect(() => {
@@ -130,6 +154,73 @@ const PencapaianPage = () => {
 
     fetchAndComputeAchievements();
   }, []);
+
+  // Load reward data
+  useEffect(() => {
+    const loadRewardData = async () => {
+      if (!userId) return;
+
+      try {
+        const [rewards, history, userVouchers] = await Promise.all([
+          getOrCreateUserRewards(userId),
+          getRewardHistory(userId),
+          getUserVouchers(userId),
+        ]);
+
+        if (rewards) setUserRewards(rewards);
+        setRewardHistory(history);
+        setVouchers(userVouchers);
+      } catch (error) {
+        console.error('Error loading reward data:', error);
+      }
+    };
+
+    loadRewardData();
+  }, [userId]);
+
+  const handleRedeemVoucher = async () => {
+    if (!userId || !userRewards) return;
+
+    if (userRewards.total_points < POINTS_FOR_VOUCHER) {
+      toast({
+        title: "Poin Tidak Cukup",
+        description: `Kamu membutuhkan ${POINTS_FOR_VOUCHER} poin untuk menukar voucher. Saat ini kamu punya ${userRewards.total_points} poin.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRedeeming(true);
+    const result = await redeemVoucher(userId);
+    setIsRedeeming(false);
+
+    if (result.success && result.voucher) {
+      setSelectedVoucher(result.voucher);
+      setShowVoucherModal(true);
+      
+      // Refresh data
+      const [updatedRewards, updatedHistory, updatedVouchers] = await Promise.all([
+        getOrCreateUserRewards(userId),
+        getRewardHistory(userId),
+        getUserVouchers(userId),
+      ]);
+
+      if (updatedRewards) setUserRewards(updatedRewards);
+      setRewardHistory(updatedHistory);
+      setVouchers(updatedVouchers);
+
+      toast({
+        title: "🎉 Voucher Berhasil Ditukar!",
+        description: `Kamu mendapat voucher diskon ${formatRupiah(VOUCHER_DISCOUNT)}!`,
+      });
+    } else {
+      toast({
+        title: "Gagal Menukar Voucher",
+        description: result.error || "Terjadi kesalahan, silakan coba lagi.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const allAchievements = useMemo(() => [...milestoneData, ...behaviorData], [milestoneData, behaviorData]);
 
@@ -259,6 +350,7 @@ const PencapaianPage = () => {
     { id: "all" as const, label: "Semua" },
     { id: "milestone" as const, label: "Perjalanan" },
     { id: "behavior" as const, label: "Kebiasaan" },
+    { id: "rewards" as const, label: "Reward" },
   ], []);
 
   /* ==== RENDER ==== */
@@ -291,8 +383,55 @@ const PencapaianPage = () => {
           </p>
         </div>
 
-        {/* XP & Reward Section */}
+        {/* Reward Points System */}
         <div className="mb-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg">
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <p className="text-sm opacity-90 flex items-center gap-1">
+                <Coins className="w-4 h-4" />
+                Poin Reward
+              </p>
+              <p className="text-3xl font-bold">{userRewards?.total_points || 0}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm opacity-90">Streak Saat Ini</p>
+              <p className="text-3xl font-bold">{userRewards?.current_streak || 0} hari</p>
+            </div>
+          </div>
+          
+          {/* Milestone Progress */}
+          <div className="bg-white/20 rounded-lg p-3 space-y-2">
+            <p className="text-xs font-semibold mb-2">Milestone Streak:</p>
+            {Object.entries(MILESTONES).map(([days, config]) => {
+              const dayNum = parseInt(days);
+              const achieved = userRewards?.milestones_achieved?.includes(dayNum) || false;
+              return (
+                <div key={days} className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1">
+                    {achieved ? <Star className="w-3 h-3 fill-yellow-300 text-yellow-300" /> : <Star className="w-3 h-3" />}
+                    {config.label}
+                  </span>
+                  <span className="font-semibold">+{config.points} poin</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Redeem Button */}
+          {(userRewards?.total_points || 0) >= POINTS_FOR_VOUCHER && (
+            <Button
+              onClick={handleRedeemVoucher}
+              disabled={isRedeeming}
+              className="w-full mt-3 bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-bold"
+            >
+              <Gift className="w-4 h-4 mr-2" />
+              {isRedeeming ? "Menukar..." : `Tukar ${POINTS_FOR_VOUCHER} Poin untuk Voucher`}
+            </Button>
+          )}
+        </div>
+
+        {/* XP & Badge Section */}
+        <div className="mb-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-lg">
           <div className="flex justify-between items-center mb-3">
             <div>
               <p className="text-sm opacity-90">Total XP Terkumpul</p>
@@ -327,7 +466,7 @@ const PencapaianPage = () => {
             {tabs.map((tab) => (
               <button
                 key={`tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id as "all" | "milestone" | "behavior")}
+                onClick={() => setActiveTab(tab.id as "all" | "milestone" | "behavior" | "rewards")}
                 className={`${
                   activeTab === tab.id ? "bg-white text-primary shadow" : "text-gray-600"
                 } flex-1 py-2 px-3 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap`}
@@ -338,12 +477,114 @@ const PencapaianPage = () => {
           </div>
         </div>
 
-        {/* Achievement Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
-          {achievementsToShow.map((achievement, i) => (
-            <AchievementCard key={`achievement-${achievement.id}`} achievement={achievement} index={i} />
-          ))}
-        </div>
+        {/* Content Area */}
+        {activeTab === "rewards" ? (
+          /* Rewards Tab Content */
+          <div className="space-y-4 pb-4">
+            {/* Active Vouchers */}
+            {vouchers.filter(v => v.status === 'active').length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-3">Voucher Aktif</h3>
+                <div className="space-y-3">
+                  {vouchers.filter(v => v.status === 'active').map((voucher) => (
+                    <div key={voucher.id} className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">Voucher Diskon</p>
+                          <p className="text-2xl font-bold text-orange-600">{formatRupiah(voucher.discount_amount)}</p>
+                        </div>
+                        <Gift className="w-8 h-8 text-yellow-600" />
+                      </div>
+                      <div className="bg-white rounded-lg p-3 mb-3">
+                        <p className="text-xs text-gray-600 mb-1">Kode Voucher:</p>
+                        <p className="text-lg font-mono font-bold text-gray-900 tracking-wider">{voucher.code}</p>
+                      </div>
+                      <div className="flex gap-2 mb-2">
+                        <a
+                          href={MARKETPLACE_LINKS.shopee}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Gunakan di Shopee
+                        </a>
+                        <a
+                          href={MARKETPLACE_LINKS.tokopedia}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Gunakan di Tokopedia
+                        </a>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Berlaku hingga: {new Date(voucher.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reward History */}
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-3">Riwayat Reward</h3>
+              {rewardHistory.length > 0 ? (
+                <div className="space-y-2">
+                  {rewardHistory.slice(0, 10).map((history) => (
+                    <div key={history.id} className="bg-white rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {history.type === 'earned' ? (
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <Coins className="w-4 h-4 text-green-600" />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <Gift className="w-4 h-4 text-purple-600" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{history.reason}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(history.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                      <p className={`text-sm font-bold ${history.type === 'earned' ? 'text-green-600' : 'text-purple-600'}`}>
+                        {history.type === 'earned' ? '+' : ''}{history.points}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-8">Belum ada riwayat reward</p>
+              )}
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <Trophy className="w-4 h-4" />
+                Cara Mendapatkan Poin
+              </h4>
+              <ul className="text-xs text-blue-800 space-y-1">
+                <li>• Capai streak 7 hari: +10 poin</li>
+                <li>• Capai streak 14 hari: +20 poin</li>
+                <li>• Capai streak 30 hari: +40 poin</li>
+                <li>• Tukar {POINTS_FOR_VOUCHER} poin untuk voucher diskon {formatRupiah(VOUCHER_DISCOUNT)}</li>
+              </ul>
+            </div>
+          </div>
+        ) : (
+          /* Achievement Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
+            {achievementsToShow.map((achievement, i) => (
+              <AchievementCard key={`achievement-${achievement.id}`} achievement={achievement} index={i} />
+            ))}
+          </div>
+        )}
 
         {/* Reward Unlock Modal - Fullscreen Overlay */}
         <AnimatePresence>
@@ -459,6 +700,98 @@ const PencapaianPage = () => {
                     Lanjutkan Perjalanan 🚀
                   </Button>
                 </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Voucher Success Modal */}
+        <AnimatePresence>
+          {showVoucherModal && selectedVoucher && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+              onClick={() => setShowVoucherModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.8, y: 50 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.8, y: 50 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl shadow-2xl p-8 w-full max-w-md relative border-4 border-purple-400"
+              >
+                <button
+                  onClick={() => setShowVoucherModal(false)}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+
+                <div className="text-center">
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, -10, 10, -10, 10, 0],
+                      scale: [1, 1.1, 1.1, 1.1, 1.1, 1]
+                    }}
+                    transition={{ duration: 0.6 }}
+                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-xl"
+                  >
+                    <Gift className="w-14 h-14 text-white" />
+                  </motion.div>
+
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    🎉 Selamat!
+                  </h2>
+                  <p className="text-gray-700 mb-6">
+                    Voucher diskon <span className="font-bold text-purple-600">{formatRupiah(selectedVoucher.discount_amount)}</span> berhasil ditukar!
+                  </p>
+
+                  <div className="bg-white rounded-xl p-4 mb-6 border-2 border-dashed border-purple-300">
+                    <p className="text-xs text-gray-600 mb-2">Kode Voucher:</p>
+                    <p className="text-xl font-mono font-bold text-purple-600 tracking-wider break-all">
+                      {selectedVoucher.code}
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-gray-600 mb-4">
+                    Gunakan kode ini saat checkout untuk mendapat diskon. Kode berlaku hingga{' '}
+                    {new Date(selectedVoucher.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+
+                  <div className="flex gap-2 mb-4">
+                    <a
+                      href={MARKETPLACE_LINKS.shopee}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Belanja di Shopee
+                    </a>
+                    <a
+                      href={MARKETPLACE_LINKS.tokopedia}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Belanja di Tokopedia
+                    </a>
+                  </div>
+
+                  <Button
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl"
+                    onClick={() => {
+                      setShowVoucherModal(false);
+                      setActiveTab('rewards');
+                    }}
+                  >
+                    Lihat Voucher Saya
+                  </Button>
+                </div>
               </motion.div>
             </motion.div>
           )}

@@ -3,11 +3,12 @@
 import Sidebar from "@/components/Sidebar";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bot } from "lucide-react";
+import { Bot, ShoppingBag, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/ui/app-header";
 import { fetchAISuggestions } from "@/lib/db/userJourneyStats";
 import { AuthStorage } from "@/lib/auth-storage";
+import { MARKETPLACE_LINKS } from "@/lib/db/rewards";
 
 const AIResultPage = () => {
   const router = useRouter();
@@ -189,6 +190,42 @@ const AIResultPage = () => {
               <li>Minum segelas air pelan-pelan sambil fokus ke rasa di tubuhmu.</li>
               <li>Scroll pencapaianmu di halaman Pencapaian untuk mengingat progresmu.</li>
             </ul>
+          </div>
+
+          {/* NIVO Diffuser Recommendation */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200 shadow-sm mb-4">
+            <div className="flex items-start gap-3">
+              <ShoppingBag className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-purple-900 mb-2">
+                  Bantu Kurangi Keinginan dengan NIVO Diffuser
+                </h4>
+                <p className="text-xs text-gray-700 mb-3 leading-relaxed">
+                  NIVO Diffuser aromaterapi dapat membantu meredakan keinginan merokok dengan aroma menenangkan. 
+                  Banyak pengguna melaporkan keinginan berkurang setelah menggunakan diffuser.
+                </p>
+                <div className="flex gap-2">
+                  <a
+                    href={MARKETPLACE_LINKS.shopee}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Beli di Shopee
+                  </a>
+                  <a
+                    href={MARKETPLACE_LINKS.tokopedia}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Beli di Tokopedia
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}
