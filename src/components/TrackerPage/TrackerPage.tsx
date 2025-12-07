@@ -36,6 +36,7 @@ import { fetchJourneyStatus, upsertJourneyStatus } from "@/lib/db/journey";
 import { fetchUserJourneyStats } from "@/lib/db/userJourneyStats";
 import { AuthStorage } from "@/lib/auth-storage";
 import healthMilestonesData from "@/data/health-milestones.json";
+import { updateStreakAndCheckMilestones } from "@/lib/db/rewards";
 
 const TrackerPage = () => {
   const router = useRouter();
@@ -199,6 +200,16 @@ const TrackerPage = () => {
           const calculatedStreak = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
           setStreakDays(calculatedStreak);
           localStorage.setItem("streakDays", String(calculatedStreak));
+          
+          // Check for milestone achievements and update rewards
+          const rewardResult = await updateStreakAndCheckMilestones(userId, calculatedStreak);
+          if (rewardResult.pointsEarned > 0) {
+            toast({
+              title: "🎉 Milestone Tercapai!",
+              description: `Selamat! Kamu mendapat ${rewardResult.pointsEarned} poin untuk mencapai ${rewardResult.milestonesAchieved.join(', ')} hari bebas rokok!`,
+              duration: 5000,
+            });
+          }
         } else {
           const storedStreak = Number(localStorage.getItem("streakDays") || "0");
           setStreakDays(Number.isNaN(storedStreak) ? 0 : storedStreak);
