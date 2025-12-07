@@ -370,7 +370,7 @@ const PencapaianPage = () => {
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
       {/* Konten tanpa background overlay - header sudah punya background */}
-      <div className="px-3 sm:px-4 py-6 pt-20 relative z-10">
+      <div className="px-3 sm:px-4 py-6 relative z-10">
         {/* Header Informasi */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
