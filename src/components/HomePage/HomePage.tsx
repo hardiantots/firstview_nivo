@@ -722,7 +722,7 @@ const HomePage = () => {
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
       {/* Main Content - with padding for fixed header */}
-      <div className="px-4 py-6 space-y-6"> 
+      <div className="px-3 sm:px-4 py-6 space-y-6"> 
           {/* Hero Section - Greeting + Time Progress Combined */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}

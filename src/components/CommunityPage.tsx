@@ -28,7 +28,7 @@ const CommunityPage = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
-      <main className="px-4 py-6 space-y-6">
+      <main className="px-3 sm:px-4 py-6 space-y-6">
         <motion.h1
           className="text-xl font-bold text-green-900"
           initial={{ opacity: 0, y: -10 }}

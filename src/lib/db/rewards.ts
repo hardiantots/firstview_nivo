@@ -43,7 +43,7 @@ export const MILESTONES = {
   30: { points: 40, label: '30 Hari Bebas Rokok' },
 };
 
-export const POINTS_FOR_VOUCHER = 60;
+export const POINTS_FOR_VOUCHER = 50;
 export const VOUCHER_DISCOUNT = 20000; // Rp 20.000
 
 // Marketplace links
