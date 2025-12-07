@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   CheckCircle, Lock, Leaf, Shield, Award, Target,
-  Zap, Heart, LucideIcon, Trophy, X, Gift, ExternalLink, Coins, Star
+  Zap, Heart, LucideIcon, Trophy, X, Gift, ExternalLink, Coins, Star, ShoppingBag
 } from "lucide-react";
 import Sidebar from "../Sidebar";
 import { AppHeader } from "@/components/ui/app-header";
@@ -383,6 +383,46 @@ const PencapaianPage = () => {
           </p>
         </div>
 
+        {/* CTA NIVO Diffuser */}
+        <div className="mb-6 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 text-white shadow-xl border-2 border-white/20">
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-bold mb-2">🎁 Tukarkan Poin dengan Potongan Harga!</h3>
+            <p className="text-sm text-white/90 leading-relaxed">
+              Kumpulkan <span className="font-bold text-yellow-300">50 poin</span> pertamamu dan tukarkan dengan potongan di pembelian <span className="font-semibold">NIVO Diffuser</span>
+            </p>
+          </div>
+          
+          {/* Diffuser Image Placeholder */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-4 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-6xl mb-2">💨</div>
+              <p className="text-xs text-white/80 font-medium">NIVO Diffuser</p>
+              <p className="text-[10px] text-white/60">Pengalaman menyegarkan tanpa nikotin</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <a
+              href={MARKETPLACE_LINKS.shopee}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold py-2.5 px-3 rounded-lg transition-all hover:shadow-lg hover:scale-[1.02] active:scale-95"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Belanja di Shopee
+            </a>
+            <a
+              href={MARKETPLACE_LINKS.tokopedia}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-2.5 px-3 rounded-lg transition-all hover:shadow-lg hover:scale-[1.02] active:scale-95"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Belanja di Tokopedia
+            </a>
+          </div>
+        </div>
+
         {/* Reward Points System */}
         <div className="mb-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg">
           <div className="flex justify-between items-center mb-3">
@@ -564,16 +604,28 @@ const PencapaianPage = () => {
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4">
               <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
                 <Trophy className="w-4 h-4" />
                 Cara Mendapatkan Poin
               </h4>
-              <ul className="text-xs text-blue-800 space-y-1">
-                <li>• Capai streak 7 hari: +10 poin</li>
-                <li>• Capai streak 14 hari: +20 poin</li>
-                <li>• Capai streak 30 hari: +40 poin</li>
-                <li>• Tukar {POINTS_FOR_VOUCHER} poin untuk voucher diskon {formatRupiah(VOUCHER_DISCOUNT)}</li>
+              <ul className="text-xs text-blue-800 space-y-1.5">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span>Capai streak 7 hari: <span className="font-bold text-green-700">+10 poin</span></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span>Capai streak 14 hari: <span className="font-bold text-green-700">+20 poin</span></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span>Capai streak 30 hari: <span className="font-bold text-green-700">+40 poin</span></span>
+                </li>
+                <li className="flex items-start gap-2 pt-1 border-t border-blue-200 mt-2">
+                  <span className="text-yellow-600 font-bold">🎁</span>
+                  <span>Tukar <span className="font-bold text-purple-700">{POINTS_FOR_VOUCHER} poin</span> untuk voucher diskon <span className="font-bold text-purple-700">{formatRupiah(VOUCHER_DISCOUNT)}</span></span>
+                </li>
               </ul>
             </div>
           </div>

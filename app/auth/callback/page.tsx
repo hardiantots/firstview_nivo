@@ -57,6 +57,7 @@ export default function AuthCallbackPage() {
             const user = data.user;
             const session = data.session;
 
+            // Save session to localStorage
             AuthStorage.saveSession({
               userToken: session.access_token,
               userId: user.id,
@@ -64,6 +65,12 @@ export default function AuthCallbackPage() {
               lastLoginAt: Date.now(),
               sessionMaxAgeDays: 30,
               loginMethod: "oauth",
+            });
+
+            // Set Supabase session explicitly (critical for persisting OAuth login)
+            await supabase.auth.setSession({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
             });
 
             // Ensure user profile exists

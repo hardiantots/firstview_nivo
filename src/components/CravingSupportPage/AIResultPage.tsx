@@ -85,7 +85,7 @@ const AIResultPage = () => {
       {/* Main Content Container */}
       <div className="w-full">
         {/* Content with max-width constraint */}
-        <div className="px-4 py-6 pt-20 mx-auto max-w-2xl">
+        <div className="px-3 sm:px-4 py-6 pt-20 mx-auto max-w-md md:max-w-lg lg:max-w-2xl">
           {/* AI Icon */}
           <div className="flex justify-center mb-8">
             <div className="w-20 h-20 border-2 border-dashed border-teal-600 rounded-full flex items-center justify-center bg-transparent">
