@@ -16,8 +16,8 @@ export const AppHeader = ({ onMenuClick, showNotifications = true }: AppHeaderPr
   const [unreadNotifications] = useState(3); // This would come from your notification state/API
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 bg-white px-3 sm:px-4 py-3 flex items-center justify-center max-w-3xl mx-auto">
-      <div className="w-full max-w-md md:max-w-lg flex items-center justify-between">
+    <div className="fixed top-0 left-0 right-0 z-30 bg-white px-3 sm:px-4 py-3 max-w-md mx-auto md:max-w-lg lg:max-w-xl">
+      <div className="w-full flex items-center justify-between">
       <Menu 
         className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 cursor-pointer flex-shrink-0" 
         onClick={onMenuClick}

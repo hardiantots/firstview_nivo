@@ -549,7 +549,7 @@ const PencapaianPage = () => {
 
         {/* Content Area */}
         {activeTab === "rewards" ? (
-          /* Rewards Tab Content */
+          /* Rewards Tab Content - Only Vouchers and History */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
