@@ -42,30 +42,26 @@ KONTEKS USER:
 
 INSTRUKSI OUTPUT (IKUTI FORMAT INI PERSIS):
 
-**BAGIAN 1: VALIDASI EMOSI**
 [Tulis 1-2 kalimat yang mengakui perasaan user dengan empati. Contoh: "Saya paham bahwa ${situation} bisa memicu keinginan merokok. Perasaan ${emotionsText} yang kamu alami itu wajar."]
 
-**BAGIAN 2: AKSI CEPAT**
 Langkah yang bisa dilakukan sekarang:
 • [Aksi fisik: Contoh - Keluar dari ruangan sekarang, jalan ke tempat lain, atau lakukan 10 push-up]
 • [Teknik coping: ${relevantStrategies || 'Pernapasan 4-7-8 (tarik 4 detik, tahan 7 detik, hembuskan 8 detik)'}]
 • [Strategi mental: Contoh - Hitung mundur dari 100, atau sebutkan 5 hal yang kamu lihat di sekitar]
 
-**BAGIAN 3: NIVO DIFFUSER**
-[1 kalimat transisi. Contoh: "NIVO Diffuser juga bisa membantu mengatasi craving ini dengan kandungan aktif yang terbukti efektif."]
+[1 kalimat transisi. Contoh (hasilkan juga variasi kalimat lainnya): "NIVO Diffuser juga bisa membantu mengatasi craving ini dengan kandungan aktif yang terbukti efektif."]
 
 Kandungan yang cocok untuk kondisi kamu:
-• [Pilih 3 kandungan spesifik dari list ini dengan penjelasan singkat dan bersumber dari jurnal reputasi tinggi & terkenal: Vitamin C (antioksidan untuk radikal bebas rokok), Green Tea Extract (menenangkan dan anti-stress), L-Theanine (merangsang dopamin pengganti nikotin), Blackpapermint (mengurangi kecemasan), atau Menthol (menurunkan hormon kortisol)]
+• [Pilih 3 kandungan spesifik dari list ini dengan penjelasan singkat dan bersumber dari jurnal reputasi tinggi & terkenal (sertakan linknya jika perlu): Vitamin C (antioksidan untuk radikal bebas rokok), Green Tea Extract (menenangkan dan anti-stress), L-Theanine (merangsang dopamin pengganti nikotin), Blackpapermint (mengurangi kecemasan), atau Menthol (menurunkan hormon kortisol)]
 
 Cara pakai: Hirup ${intensity <= 2 ? '2-3' : intensity === 3 ? '4-5' : '6-8'} kali, tahan 3-5 detik, hembuskan perlahan. Ulangi setiap kali craving muncul.
 
-**BAGIAN 4: MOTIVASI PENUTUP**
 [1-2 kalimat yang mengaitkan dengan motivasi user (${motivations?.join(' dan ') || 'kesehatan'}). Contoh: "Ingat motivasimu untuk ${motivations?.[0] || 'kesehatan'}. Craving ini akan lewat dalam 5-10 menit - kamu bisa melewatinya!"]
 
 ATURAN FORMATTING PENTING:
 1. WAJIB gunakan bullet point (•) untuk BAGIAN 2 dan isian kandungan di BAGIAN 3
 2. BAGIAN 1 dan 4 harus paragraf narasi (TIDAK pakai bullet)
-3. Total output maksimal 250 kata
+3. Total output maksimal 300 kata
 4. Gunakan kata "kamu", JANGAN "Anda"
 5. Pisahkan setiap bagian dengan 1 line break kosong
 6. JANGAN tambahkan numbering (1., 2., 3.) atau header tambahan di output
@@ -113,7 +109,7 @@ Bahasa: Indonesia yang natural, hangat, professional. Gunakan "kamu" bukan "Anda
           },
         ],
         temperature: 0.7,
-        max_tokens: 550, // Further reduced for concise, to-the-point responses
+        max_tokens: 500, // Further reduced for concise, to-the-point responses
         top_p: 0.9
       }),
     });
