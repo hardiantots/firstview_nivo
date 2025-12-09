@@ -30,47 +30,50 @@ export async function POST(req: NextRequest) {
     // Get emotion-specific strategies from config
     const relevantStrategies = getStrategiesForEmotions(emotionsArray).join('; atau ');
     
-    // Build context-aware prompt - concise version with bullet points
-    const prompt = `KONTEKS: User di ${location}, situasi: ${situation}. Emosi: ${emotionsText}. Intensitas: ${intensity}/5. Motivasi: ${motivations?.join(', ') || 'kesehatan'}.
+    // Build context-aware prompt optimized for Gemini
+    const prompt = `Kamu adalah NIVO AI Assistant yang membantu user mengatasi craving rokok.
 
-TUGAS: Buat respons singkat dan to the point dalam bahasa Indonesia:
+KONTEKS USER:
+- Lokasi: ${location}
+- Situasi: ${situation}
+- Emosi: ${emotionsText}
+- Intensitas craving: ${intensity}/5
+- Motivasi berhenti: ${motivations?.join(', ') || 'kesehatan'}
 
-1. VALIDASI (1-2 kalimat paragraf): Akui emosi user dengan empati. Jangan bertele-tele.
+INSTRUKSI OUTPUT (IKUTI FORMAT INI PERSIS):
 
-2. AKSI CEPAT (format bullet points):
+**BAGIAN 1: VALIDASI EMOSI**
+[Tulis 1-2 kalimat yang mengakui perasaan user dengan empati. Contoh: "Saya paham bahwa ${situation} bisa memicu keinginan merokok. Perasaan ${emotionsText} yang kamu alami itu wajar."]
+
+**BAGIAN 2: AKSI CEPAT**
 Langkah yang bisa dilakukan sekarang:
-• [Aksi fisik immediate - ganti lingkungan/aktivitas]
-• [Teknik coping - ${relevantStrategies || 'teknik distraksi'}]
-• [Strategi mental - grounding/mindfulness singkat]
+• [Aksi fisik: Contoh - Keluar dari ruangan sekarang, jalan ke tempat lain, atau lakukan 10 push-up]
+• [Teknik coping: ${relevantStrategies || 'Pernapasan 4-7-8 (tarik 4 detik, tahan 7 detik, hembuskan 8 detik)'}]
+• [Strategi mental: Contoh - Hitung mundur dari 100, atau sebutkan 5 hal yang kamu lihat di sekitar]
 
-3. NIVO DIFFUSER (1 kalimat intro + bullet points + saran hisapan):
-[Kalimat transisi singkat tentang NIVO Diffuser sebagai bantuan]
+**BAGIAN 3: NIVO DIFFUSER**
+[1 kalimat transisi. Contoh: "NIVO Diffuser juga bisa membantu mengatasi craving ini dengan kandungan aktif yang terbukti efektif."]
 
-Kandungan yang bekerja untuk kondisi kamu:
-• [Pilih 1-2 kandungan paling relevan dari: Vitamin C (antioksidan & melawan radikal bebas asap rokok), Green Tea Extract (menenangkan & anti-stress), L-Theanine Extract (produksi dopamin pengganti nikotin), Blackpapermint Extract (kurangi kecemasan & tingkatkan relaksasi), Menthol Extract (turunkan hormon stres kortisol & perlambat metabolisme nikotin)]
+Kandungan yang cocok untuk kondisi kamu:
+• [Pilih 3 kandungan spesifik dari list ini dengan penjelasan singkat dan bersumber dari jurnal reputasi tinggi & terkenal: Vitamin C (antioksidan untuk radikal bebas rokok), Green Tea Extract (menenangkan dan anti-stress), L-Theanine (merangsang dopamin pengganti nikotin), Blackpapermint (mengurangi kecemasan), atau Menthol (menurunkan hormon kortisol)]
 
-Cara pakai: Hirup [X] kali (sesuaikan: 2-3 kali untuk intensitas rendah, 4-5 kali untuk sedang, 6-8 kali untuk tinggi), tahan 3-5 detik, hembuskan perlahan. Ulangi saat craving muncul.
+Cara pakai: Hirup ${intensity <= 2 ? '2-3' : intensity === 3 ? '4-5' : '6-8'} kali, tahan 3-5 detik, hembuskan perlahan. Ulangi setiap kali craving muncul.
 
-4. MOTIVASI PENUTUP (1-2 kalimat paragraf): Kaitkan dengan motivasi user. Ingatkan craving lewat 5-10 menit.
+**BAGIAN 4: MOTIVASI PENUTUP**
+[1-2 kalimat yang mengaitkan dengan motivasi user (${motivations?.join(' dan ') || 'kesehatan'}). Contoh: "Ingat motivasimu untuk ${motivations?.[0] || 'kesehatan'}. Craving ini akan lewat dalam 5-10 menit - kamu bisa melewatinya!"]
 
-ATURAN:
-- Paragraf 1 & 4: narasi biasa
-- Paragraf 2 & 3: WAJIB pakai bullet points (•)
-- Maksimal 250 kata total
-- Gunakan "kamu", langsung to the point
-- Tiap bagian pisah dengan 1 line break`;
+ATURAN FORMATTING PENTING:
+1. WAJIB gunakan bullet point (•) untuk BAGIAN 2 dan isian kandungan di BAGIAN 3
+2. BAGIAN 1 dan 4 harus paragraf narasi (TIDAK pakai bullet)
+3. Total output maksimal 250 kata
+4. Gunakan kata "kamu", JANGAN "Anda"
+5. Pisahkan setiap bagian dengan 1 line break kosong
+6. JANGAN tambahkan numbering (1., 2., 3.) atau header tambahan di output
+7. Langsung mulai dengan teks validasi emosi
+8. Gunakan karakter bullet point (•) yang eksplisit, bukan dash (-)`;
 
 
-    // Select AI model based on environment or configuration
-    // FREE MODELS (dengan rate limit):
-    // - 'google/gemini-2.0-flash-exp:free' - Sering 429 error saat traffic tinggi
-    // - 'meta-llama/llama-3.2-3b-instruct:free' - Strict rate limit
-    // 
-    // PAID MODELS (recommended, sangat murah):
-    // - 'openai/gpt-4o-mini' - RECOMMENDED: ~$0.0001/request, sangat murah & stabil
-    // - 'anthropic/claude-3.5-sonnet' - Best quality (~$0.003/request)
-    // - 'google/gemini-flash-1.5' - Balanced (~$0.0001/request)
-    const aiModel = process.env.AI_MODEL || 'openai/gpt-4o-mini';
+    const aiModel = process.env.AI_MODEL || 'google/gemini-2.5-flash-lite';
     
     // System message for consistent behavior
     const systemMessage = `Kamu adalah NIVO AI, asisten kesehatan digital spesialis smoking cessation dengan keahlian dalam:
@@ -110,7 +113,7 @@ Bahasa: Indonesia yang natural, hangat, professional. Gunakan "kamu" bukan "Anda
           },
         ],
         temperature: 0.7,
-        max_tokens: 400, // Further reduced for concise, to-the-point responses
+        max_tokens: 550, // Further reduced for concise, to-the-point responses
         top_p: 0.9
       }),
     });
