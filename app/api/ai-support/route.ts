@@ -47,7 +47,7 @@ Langkah yang bisa dilakukan sekarang:
 [Kalimat transisi singkat tentang NIVO Diffuser sebagai bantuan]
 
 Kandungan yang bekerja untuk kondisi kamu:
-• [Pilih 1-2 kandungan paling relevan dari: Vitamin C (antioksidan & melawan radikal bebas asap rokok), Green Tea Extract (menenangkan & anti-stress), L-Theanine Extract (produksi dopamin pengganti nikotin), Blackpapermint Extract (kurangi kecemasan & tingkatkan relaksasi), Menthol Extract (turunkan hormon stres kortisol & perlambat metabolisme nikotin)]
+• [Pilih 2-3 kandungan paling relevan (cantumkan sumber jurnal terpercaya dan reputasi tinggi): Vitamin C (antioksidan & melawan radikal bebas asap rokok), Green Tea Extract (menenangkan & anti-stress), L-Theanine Extract (produksi dopamin pengganti nikotin), Blackpapermint Extract (kurangi kecemasan & tingkatkan relaksasi), Menthol Extract (turunkan hormon stres kortisol & perlambat metabolisme nikotin)]
 
 Cara pakai: Hirup [X] kali (sesuaikan: 2-3 kali untuk intensitas rendah, 4-5 kali untuk sedang, 6-8 kali untuk tinggi), tahan 3-5 detik, hembuskan perlahan. Ulangi saat craving muncul.
 
@@ -61,16 +61,7 @@ ATURAN:
 - Tiap bagian pisah dengan 1 line break`;
 
 
-    // Select AI model based on environment or configuration
-    // FREE MODELS (dengan rate limit):
-    // - 'google/gemini-2.0-flash-exp:free' - Sering 429 error saat traffic tinggi
-    // - 'meta-llama/llama-3.2-3b-instruct:free' - Strict rate limit
-    // 
-    // PAID MODELS (recommended, sangat murah):
-    // - 'openai/gpt-4o-mini' - RECOMMENDED: ~$0.0001/request, sangat murah & stabil
-    // - 'anthropic/claude-3.5-sonnet' - Best quality (~$0.003/request)
-    // - 'google/gemini-flash-1.5' - Balanced (~$0.0001/request)
-    const aiModel = process.env.AI_MODEL || 'openai/gpt-4o-mini';
+    const aiModel = process.env.AI_MODEL || 'google/gemini-2.0-flash-001';
     
     // System message for consistent behavior
     const systemMessage = `Kamu adalah NIVO AI, asisten kesehatan digital spesialis smoking cessation dengan keahlian dalam:
@@ -110,7 +101,7 @@ Bahasa: Indonesia yang natural, hangat, professional. Gunakan "kamu" bukan "Anda
           },
         ],
         temperature: 0.7,
-        max_tokens: 400, // Further reduced for concise, to-the-point responses
+        max_tokens: 500, // Further reduced for concise, to-the-point responses
         top_p: 0.9
       }),
     });
