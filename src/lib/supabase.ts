@@ -25,9 +25,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
     storageKey: 'supabase.auth.token',
-    flowType: 'implicit', // Use implicit flow for OAuth compatibility
+    flowType: 'pkce',
     debug: process.env.NODE_ENV === 'development', // Enable debug in dev
   },
 });
