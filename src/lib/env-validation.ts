@@ -11,6 +11,7 @@ const requiredEnvVars = {
   // Private variables (server-side only)
   private: [
     'OPENROUTER_API_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
   ],
   // Optional variables
   optional: [

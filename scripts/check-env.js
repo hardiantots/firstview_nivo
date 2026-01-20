@@ -13,6 +13,7 @@ const requiredEnvVars = {
   ],
   private: [
     'OPENROUTER_API_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
   ],
   optional: [
     'AI_MODEL',

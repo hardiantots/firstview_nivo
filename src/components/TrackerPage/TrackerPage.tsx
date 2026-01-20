@@ -242,7 +242,7 @@ const TrackerPage = () => {
     };
 
     init();
-  }, []);
+  }, [toast]);
 
   const today = new Date(); // compute for chart rendering
   const chartData = Array.from({ length: 7 }).map((_, i) => ({
