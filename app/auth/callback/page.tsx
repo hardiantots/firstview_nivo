@@ -25,6 +25,7 @@ export default function AuthCallbackPage() {
       // Lazy import to avoid SSR issues
       const { supabase } = await import("@/lib/supabase");
       const { ensureUserProfile } = await import("@/lib/db/userProfile");
+      const { AuthStorage } = await import("@/lib/auth-storage");
       
       try {
         // Check for error in URL params (Supabase returns errors this way)
@@ -37,134 +38,21 @@ export default function AuthCallbackPage() {
           setTimeout(() => router.replace('/signin'), 3000);
           return;
         }
-
-        // Check if there's already a session (implicit flow)
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        
-        if (existingSession) {
-          // Session already exists from implicit flow
-          const { AuthStorage } = await import("@/lib/auth-storage");
-          
-          AuthStorage.saveSession({
-            userToken: existingSession.access_token,
-            userId: existingSession.user.id,
-            userEmail: existingSession.user.email || "",
-            lastLoginAt: Date.now(),
-            sessionMaxAgeDays: 30,
-            loginMethod: "oauth",
-          });
-          
-          // Ensure user profile exists
-          const { ensureUserProfile } = await import("@/lib/db/userProfile");
-          await ensureUserProfile({
-            userId: existingSession.user.id,
-            email: existingSession.user.email,
-            fullName: (existingSession.user.user_metadata?.full_name as string) || null,
-            phoneNumber: (existingSession.user.user_metadata?.phone as string) || null,
-          });
-          
-          // Check journey status
-          try {
-            const { data: journeyData } = await supabase
-              .from("smoke_free_journey")
-              .select("user_id, phase, start_date")
-              .eq("user_id", existingSession.user.id)
-              .maybeSingle();
-            
-            if (journeyData && journeyData.user_id) {
-              router.replace("/home");
-              return;
-            }
-          } catch (e) {
-            console.error("Journey check error:", e);
-          }
-          
-          router.replace("/journey-start");
-          return;
-        }
-        
-        // Fallback: Try code exchange for backward compatibility
         const code = searchParams.get('code');
-        
+
         if (code) {
-          try {
-            // Try to exchange code for session
-            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (exchangeError) {
-              console.error('Error exchanging code for session:', exchangeError);
-              // If exchange fails, check if session was created anyway
-              const { data: { session: fallbackSession } } = await supabase.auth.getSession();
-              if (fallbackSession) {
-                console.log('Session exists despite exchange error, proceeding...');
-                // Continue with existing session
-                router.replace('/home');
-                return;
-              }
-              setError('Gagal memproses login. Silakan coba lagi.');
-              setTimeout(() => router.replace('/signin'), 3000);
-              return;
-            }
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
-            if (data.session && data.user) {
-              const { AuthStorage } = await import("@/lib/auth-storage");
-              const user = data.user;
-              const session = data.session;
-
-              // Save session to localStorage
-              AuthStorage.saveSession({
-                userToken: session.access_token,
-                userId: user.id,
-                userEmail: user.email || "",
-                lastLoginAt: Date.now(),
-                sessionMaxAgeDays: 30,
-                loginMethod: "oauth",
-              });
-
-              // Note: No need to call setSession again, it's already set by exchangeCodeForSession
-
-              // Ensure user profile exists
-              await ensureUserProfile({
-                userId: user.id,
-                email: user.email,
-                fullName: (user.user_metadata?.full_name as string) || null,
-                phoneNumber: (user.user_metadata?.phone as string) || null,
-              });
-
-              try {
-                const { data: journeyData, error: journeyError } = await supabase
-                  .from("smoke_free_journey")
-                  .select("user_id, phase, start_date")
-                  .eq("user_id", user.id)
-                  .maybeSingle();
-                
-                if (journeyError) {
-                  console.error("Journey query error:", journeyError);
-                }
-                
-                // If journey data exists, user has completed onboarding
-                if (journeyData && journeyData.user_id) {
-                  router.replace("/home");
-                  return;
-                }
-              } catch (e) {
-                console.error("Error checking journey data:", e);
-              }
-
-              router.replace("/journey-start");
-              return;
-            }
-          } catch (codeExchangeError) {
-            console.error('Code exchange failed:', codeExchangeError);
-            setError('Terjadi kesalahan saat login. Silakan coba lagi.');
+          if (exchangeError) {
+            console.error('Error exchanging code for session:', exchangeError);
+            setError('Gagal memproses login. Silakan coba lagi.');
             setTimeout(() => router.replace('/signin'), 3000);
             return;
           }
         }
 
-        // No code in URL - check existing session
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError) {
           console.error('Session error:', sessionError);
           setError(sessionError.message);
@@ -172,55 +60,45 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        if (sessionData.session) {
-          // Session exists, get user info
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          
-          if (userError || !userData.user) {
-            console.error('User error:', userError);
-            router.replace('/signin');
-            return;
-          }
-          
-          const user = userData.user;
-
-          
-          try {
-            localStorage.setItem("userToken", sessionData.session.access_token);
-            localStorage.setItem("userId", user.id);
-            localStorage.setItem("userEmail", user.email || "");
-            localStorage.setItem("loginMethod", "oauth");
-            const now = Date.now();
-            localStorage.setItem("lastLoginAt", String(now));
-            localStorage.setItem("sessionMaxAgeDays", "30");
-          } catch (storageError) {
-            console.warn('localStorage error:', storageError);
-          }
-
-          await ensureUserProfile({
-            userId: user.id,
-            email: user.email,
-            fullName: (user.user_metadata?.full_name as string) || null,
-            phoneNumber: (user.user_metadata?.phone as string) || null,
-          });
-
-          const { data: journeyData } = await supabase
-            .from("smoke_free_journey")
-            .select("user_id")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          
-          if (journeyData?.user_id) {
-            router.replace("/home");
-          } else {
-            router.replace("/journey-start");
-          }
+        const session = sessionData.session;
+        if (!session) {
+          router.replace('/signin');
           return;
         }
 
-        // No session - redirect to sign in
+        const user = session.user;
 
-        router.replace('/signin');
+        AuthStorage.saveSession({
+          userToken: session.access_token,
+          userId: user.id,
+          userEmail: user.email || "",
+          lastLoginAt: Date.now(),
+          sessionMaxAgeDays: 30,
+          loginMethod: user.app_metadata.provider === 'google' ? 'oauth' : 'password',
+        });
+
+        await ensureUserProfile({
+          userId: user.id,
+          email: user.email,
+          fullName: (user.user_metadata?.full_name as string) || null,
+          phoneNumber: (user.user_metadata?.phone as string) || null,
+        });
+
+        const { data: journeyData, error: journeyError } = await supabase
+          .from("smoke_free_journey")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (journeyError) {
+          console.error("Journey query error:", journeyError);
+        }
+
+        if (journeyData?.user_id) {
+          router.replace("/home");
+        } else {
+          router.replace("/journey-start");
+        }
         
       } catch (err: any) {
         console.error('Unexpected error in callback:', err);
