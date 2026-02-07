@@ -165,10 +165,7 @@ Main tables:
 
 ## 🤖 AI Integration
 
-NIVO uses OpenRouter to access multiple AI models:
-
-- **Default:** GPT-4o-mini (~$0.0001/request)
-- **Alternative:** Claude 3.5 Sonnet, Gemini Flash 1.5
+NIVO uses OpenRouter to access multiple AI models
 
 AI provides:
 
