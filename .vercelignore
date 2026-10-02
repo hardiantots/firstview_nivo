@@ -1,0 +1,10 @@
+.git
+.next
+node_modules
+SDD-Script/evidence
+.env*
+.aws
+.agents
+.codex
+tsconfig.tsbuildinfo
+*.log

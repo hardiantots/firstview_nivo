@@ -1,97 +1,67 @@
 {
-  "..\\app\\auth\\callback\\page.tsx -> @/lib/auth-storage": {
-    "id": 68954,
-    "files": [
-      "static/chunks/8954.209e91e58a98ca62.js"
-    ]
-  },
-  "..\\app\\auth\\callback\\page.tsx -> @/lib/db/userProfile": {
-    "id": 11449,
-    "files": [
-      "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/1449.78ebb3ce62e42f4a.js"
-    ]
-  },
-  "..\\app\\auth\\callback\\page.tsx -> @/lib/supabase": {
-    "id": 62890,
-    "files": [
-      "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.76cdd1917f6f1843.js"
-    ]
-  },
-  "..\\app\\providers.tsx -> @/lib/auth-storage": {
-    "id": 68954,
-    "files": [
-      "static/chunks/8954.209e91e58a98ca62.js"
-    ]
-  },
-  "..\\app\\providers.tsx -> @/lib/supabase": {
-    "id": 62890,
-    "files": [
-      "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.76cdd1917f6f1843.js"
-    ]
-  },
   "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
-    "id": 45139,
+    "id": 5139,
     "files": [
-      "static/chunks/5139.e4ff9cc3669129ed.js"
+      "static/chunks/5139.c5e46d26064a85db.js"
     ]
   },
   "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
-    "id": 31646,
+    "id": 1646,
     "files": [
-      "static/chunks/1646.a93085a0445ba909.js"
+      "static/chunks/1646.9123ee47220ed70b.js"
     ]
   },
-  "components\\AuthGuard.tsx -> @/lib/supabase": {
-    "id": 62890,
+  "app\\auth\\callback\\page.tsx -> @/lib/auth-storage": {
+    "id": 2088,
     "files": [
-      "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.76cdd1917f6f1843.js"
+      "static/chunks/2088.75e7a457582f2538.js"
     ]
   },
-  "components\\ProfileSettingsPage.tsx -> @/lib/auth": {
-    "id": 47886,
+  "app\\auth\\callback\\page.tsx -> @/lib/db/userProfile": {
+    "id": 2499,
     "files": [
-      "static/chunks/7886.a9e81c14b6679d65.js"
+      "static/chunks/3503-9ca3b861da33def8.js",
+      "static/chunks/4456.0a01c33fba8523cb.js"
     ]
   },
-  "components\\Sidebar.tsx -> @/lib/auth": {
-    "id": 47886,
+  "app\\auth\\callback\\page.tsx -> @/lib/supabase": {
+    "id": 3452,
     "files": [
-      "static/chunks/7886.a9e81c14b6679d65.js"
+      "static/chunks/3503-9ca3b861da33def8.js",
+      "static/chunks/9005.7fda959a7a7461f5.js"
     ]
   },
-  "components\\SignInPage\\MotivationScreen.tsx -> @/lib/supabase": {
-    "id": 62890,
+  "app\\providers.tsx -> @/lib/auth-storage": {
+    "id": 2088,
     "files": [
-      "static/chunks/3503-8efbb6533b7c2c39.js",
-      "static/chunks/2890.76cdd1917f6f1843.js"
+      "static/chunks/2088.75e7a457582f2538.js"
     ]
   },
-  "components\\SignInPage\\SignInScreen.tsx -> @/lib/supabase": {
-    "id": 62890,
-    "files": []
-  },
-  "components\\SignInPage\\TimeSelectionScreen.tsx -> @/lib/supabase": {
-    "id": 62890,
-    "files": []
-  },
-  "components\\TrackerPage\\TrackerPage.tsx -> @/lib/supabase": {
-    "id": 62890,
-    "files": []
-  },
-  "components\\TrackerPage\\TrackerPage.tsx -> date-fns": {
-    "id": 65706,
+  "app\\providers.tsx -> @/lib/supabase": {
+    "id": 3452,
     "files": [
-      "static/chunks/5706.4ba52e9308c68881.js"
+      "static/chunks/3503-9ca3b861da33def8.js",
+      "static/chunks/9005.7fda959a7a7461f5.js"
     ]
   },
-  "components\\TrackerPage\\TrackerPage.tsx -> date-fns/locale": {
-    "id": 56750,
+  "features\\profile-settings\\ProfileSettingsPage.tsx -> @/lib/auth": {
+    "id": 1052,
     "files": [
-      "static/chunks/6750.6ddcca01cb22e126.js"
+      "static/chunks/8671.548f4c266bde8274.js"
+    ]
+  },
+  "shared\\auth\\AuthGuard.tsx -> @/lib/supabase": {
+    "id": 3452,
+    "files": [
+      "static/chunks/3503-9ca3b861da33def8.js",
+      "static/chunks/3452.e7112d287081fa33.js"
+    ]
+  },
+  "shared\\layout\\Sidebar.tsx -> @/lib/auth": {
+    "id": 1052,
+    "files": [
+      "static/chunks/3503-9ca3b861da33def8.js",
+      "static/chunks/1052.e61b04e55aa95cea.js"
     ]
   }
 }
