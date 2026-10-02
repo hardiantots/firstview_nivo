@@ -2,13 +2,16 @@
   "name": "nivo-nextjs-app",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test": "node --test --test-isolation=none scripts/sdd-api.test.cjs scripts/sdd34.test.cjs scripts/sdd57.test.cjs scripts/sdd-production.test.cjs",
+    "test": "node --test scripts/sdd-api.test.cjs scripts/sdd34.test.cjs scripts/sdd57.test.cjs scripts/sdd-production.test.cjs",
     "supabase:check": "node --env-file=.env.local scripts/supabase-readiness.cjs",
     "check": "npm run type-check && npm run lint && npm test && npm run build",
     "env:check": "node scripts/check-env.js",
