@@ -6,6 +6,99 @@ const data = load('src/features/charts/data.ts');
 const reports = load('src/features/charts/export.ts');
 const domain = load('src/shared/journey/domain.ts');
 const http = load('src/shared/server/http.ts');
+const dashboard = load('src/features/home/dashboard-data.ts');
+
+function dashboardRecord(date, count, baseline = null) {
+  return { date, count, status: count === null ? 'unreported' : 'reported', baseline, createdAt: date + 'T00:00:00Z', updatedAt: date + 'T00:00:00Z' };
+}
+
+test('home charts preserve missing days, zero counts and historical prices across baseline changes', () => {
+  const state = domain.emptyJourney('Asia/Makassar');
+  const baseline = { id: 'old', effectiveFrom: '2026-09-01', cigarettesPerDay: 10, pricePerCigarette: 1000, createdAt: '2026-09-01T00:00:00Z' };
+  const changed = { ...baseline, id: 'new', cigarettesPerDay: 20, pricePerCigarette: 2000 };
+  state.baselines = [changed];
+  state.daily = {
+    '2026-09-01': dashboardRecord('2026-09-01', 0, baseline),
+    '2026-09-02': dashboardRecord('2026-09-02', null, baseline),
+    '2026-09-03': dashboardRecord('2026-09-03', 2, changed),
+    '2026-09-04': dashboardRecord('2026-09-04', 1),
+    '2026-09-05': dashboardRecord('2026-09-05', 30, changed),
+    '2026-09-08': dashboardRecord('2026-09-08', 0, changed),
+  };
+  const result = dashboard.dashboardData(state, '2026-09-07', 7);
+  assert.deepEqual(result.series.map(point => point.cigarettes), [0, null, 2, 1, 30, null, null]);
+  assert.deepEqual(result.savings.map(point => point.cumulative), [10000, null, 46000, null, 46000, null, null]);
+  assert.equal(result.period.saved, 46000);
+  assert.equal(result.period.logged, 4);
+  assert.equal(result.progress.zeroDays, 1);
+  assert.equal(result.weekLogged, 4);
+  assert.equal(result.series[1].baseline_cigs_per_day, null);
+  assert.equal(result.savings[3].saved, null);
+});
+
+test('home ring keeps cumulative smoke-free days, excludes contradictory smoking and advances its milestone', () => {
+  const state = domain.emptyJourney('Asia/Makassar');
+  for (let index = 0; index < 9; index++) {
+    const date = domain.dateBefore('2026-09-07', index);
+    state.daily[date] = dashboardRecord(date, 0);
+  }
+  state.slips = [{ id: 'slip', occurredAt: '2026-09-02T01:00:00Z', count: 1, trigger: '', nextStep: 'Jeda' }];
+  state.cravingEvents = [{ id: 'event', occurredAt: '2026-09-05T23:30:00Z', intensity: 5, trigger: '', outcome: 'smoked', durationSec: 60, note: '' }];
+  const result = dashboard.dashboardData(state, '2026-09-07', 7);
+  assert.equal(result.progress.zeroDays, 7);
+  assert.equal(result.nextMilestone, 14);
+  assert.equal(result.milestonePercentage, 50);
+  assert.equal(result.weekLogged, 7);
+  assert.equal(result.cravingTotal, 1);
+});
+
+test('home craving outcomes use the selected local period and never infer a result from legacy check-ins', () => {
+  const state = domain.emptyJourney('Asia/Makassar');
+  state.checkins = [{ id: 'legacy', occurredAt: '2026-09-07T00:00:00Z', trigger: 'Kopi', intensity: 2, context: '' }];
+  const event = (id, occurredAt, outcome) => ({ id, occurredAt, outcome, intensity: 4, trigger: 'Kopi', durationSec: 30, note: '' });
+  state.cravingEvents = [
+    event('outside', '2026-08-31T15:59:00Z', 'passed'),
+    event('boundary', '2026-08-31T16:00:00Z', 'passed'),
+    event('ongoing', '2026-09-07T00:00:00Z', 'ongoing'),
+    event('future', '2026-09-07T16:00:00Z', 'smoked'),
+  ];
+  const week = dashboard.dashboardData(state, '2026-09-07', 7);
+  assert.deepEqual(week.outcomes.map(point => point.total), [1, 1, 0]);
+  assert.equal(week.cravingTotal, 2);
+  const month = dashboard.dashboardData(state, '2026-09-07', 30);
+  assert.equal(month.cravingTotal, 3);
+  assert.equal(month.series.length, 30);
+});
+
+test('empty home data and valid zero-cost estimates do not become fictitious progress', () => {
+  const state = domain.emptyJourney('Asia/Makassar');
+  const empty = dashboard.dashboardData(state, '2026-09-07', 7);
+  assert.equal(empty.milestonePercentage, 0);
+  assert.equal(empty.nextMilestone, 7);
+  assert.equal(empty.period.saved, null);
+  assert.equal(empty.cravingTotal, 0);
+  assert.ok(empty.savings.every(point => point.cumulative === null));
+  state.daily['2026-09-07'] = dashboardRecord('2026-09-07', 0, { id: 'zero', effectiveFrom: '2026-09-07', cigarettesPerDay: 0, pricePerCigarette: 0, createdAt: '2026-09-07T00:00:00Z' });
+  const zero = dashboard.dashboardData(state, '2026-09-07', 30);
+  assert.equal(zero.period.saved, 0);
+  assert.equal(zero.period.estimateDays, 1);
+  assert.equal(zero.savings.at(-1).cumulative, 0);
+  assert.equal(zero.weekLogged, 1);
+});
+
+test('home milestone remains bounded and continues beyond one year of recorded progress', () => {
+  const state = domain.emptyJourney('Asia/Makassar');
+  for (let index = 0; index < 400; index++) {
+    const date = domain.dateBefore('2026-09-07', index);
+    state.daily[date] = dashboardRecord(date, 0);
+  }
+  const result = dashboard.dashboardData(state, '2026-09-07', 30);
+  assert.equal(result.progress.zeroDays, 400);
+  assert.equal(result.nextMilestone, 420);
+  assert.ok(result.milestonePercentage > 0 && result.milestonePercentage < 100);
+  assert.equal(result.weekLogged, 7);
+  assert.equal(result.period.logged, 30);
+});
 
 test('analytics keeps zero separate from missing and applies historical baseline snapshots', () => {
   const series = [

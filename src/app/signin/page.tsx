@@ -1,5 +1,10 @@
-import SignInScreen from "@/features/auth/SignInPage/SignInScreen"
+import SignInScreen from '@/features/auth/SignInPage/SignInScreen';
+import AuthGuard from '@/shared/auth/AuthGuard';
 
 export default function SignInPage() {
-  return <SignInScreen />
+  return (
+    <AuthGuard>
+      <SignInScreen />
+    </AuthGuard>
+  );
 }

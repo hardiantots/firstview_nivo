@@ -18,14 +18,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     }
 
     if (data.user && data.session) {
-      AuthStorage.saveSession({
-        userToken: data.session.access_token,
-        userId: data.user.id,
-        userEmail: data.user.email || '',
-        lastLoginAt: Date.now(),
-        sessionMaxAgeDays: 30,
-        loginMethod: 'password',
-      });
+      AuthStorage.saveSupabaseSession(data.session, { newLogin: true });
     }
 
     return { success: true, data };
@@ -58,6 +51,7 @@ export const signUpWithEmail = async (
 
     const user = data.user;
     if (user && data.session) {
+      AuthStorage.saveSupabaseSession(data.session, { newLogin: true });
       await ensureUserProfile({
         userId: user.id,
         email: user.email,

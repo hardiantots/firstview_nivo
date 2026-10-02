@@ -63,6 +63,7 @@ out
 /CODE_QUALITY_REVIEW.md
 /SDD_IMPLEMENTATION_00_05.md
 /UI_GLASS_ORANGE.md
+/CI_MERGE_FIX.md
 
 # Superseded deployment helpers; use package.json scripts and .env.example
 /scripts/package-scripts-reference.json

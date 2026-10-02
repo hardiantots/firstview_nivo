@@ -17,6 +17,7 @@ import {
 import LegacyRecords from './LegacyRecords';
 import QuickLog from '@/features/log/QuickLog';
 import { JourneyProgress } from './JourneyProgress';
+import HomeOverview from '@/features/home/HomeOverview';
 import DailyPractice from './DailyPractice';
 import NationalSupport, {
   CrisisSupport,
@@ -38,6 +39,7 @@ const CravingFlow = dynamic(() => import('@/features/craving/CravingFlow'), { lo
 const SlipForm = dynamic(() => import('@/features/craving/SlipForm'), { loading });
 const BuddySettings = dynamic(() => import('@/features/buddy/BuddySettings'), { loading });
 const PushPreferences = dynamic(() => import('@/features/reminders/PushPreferences'), { loading });
+const HomeCharts = dynamic(() => import('@/features/home/HomeCharts'), { loading });
 
 export default function JourneyPage({
   view = 'journey',
@@ -156,12 +158,14 @@ export default function JourneyPage({
         <>
           {view === 'home' && (
             <>
+              <HomeOverview state={state} today={today} />
               <SupportStrip />
               <div className="nivo-dashboard-grid">
                 <QuickLog key={today} state={state} today={today} busy={busy} onSave={j.save} />
                 <WeekOverview state={state} today={today} />
               </div>
               <JourneyProgress state={state} today={today} />
+              <HomeCharts state={state} today={today} />
               <div className="nivo-dashboard-grid">
                 <JourneyStatus state={state} today={today} />
                 <DailyPractice

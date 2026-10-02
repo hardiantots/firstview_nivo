@@ -96,6 +96,10 @@ let browser;
     return route.abort();
   });
   await context.addInitScript(({ user }) => {
+    if (['/', '/welcome', '/signin', '/signup'].includes(location.pathname)) {
+      for (const key of ['supabase.auth.token', 'userToken', 'userId', 'lastLoginAt', 'nivo.auth.session-id']) localStorage.removeItem(key);
+      return;
+    }
     const token = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })) + '.' + btoa(JSON.stringify({ sub: user.id, exp: 9999999999, aud: 'authenticated' })) + '.fixture';
     localStorage.setItem('supabase.auth.token', JSON.stringify({ access_token: token, refresh_token: 'fixture', expires_at: 9999999999, expires_in: 3600, token_type: 'bearer', user }));
     localStorage.setItem('userToken', token);
@@ -136,7 +140,9 @@ let browser;
       if (label === 'buddy') await page.getByRole('button', { name: 'Buat tautan undangan' }).waitFor();
       if (label === 'buddy-join') await page.getByRole('button', { name: 'Terima undangan' }).waitFor();
       const metrics = await page.evaluate(async () => {
-        for (const img of document.images) await img.decode();
+        for (const img of document.images) {
+          if (img.getClientRects().length && img.currentSrc) await img.decode();
+        }
         const root = getComputedStyle(document.documentElement);
         const cards = [...document.querySelectorAll('.nivo-glass, .nivo-panel:not(.nivo-panel-plain), .nivo-link-card, .nivo-empty-service, .nivo-support-strip')];
         return {

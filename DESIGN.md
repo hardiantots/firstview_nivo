@@ -12,8 +12,8 @@ References: https://github.com/voltagent/awesome-design-md, specifically design-
 
 ## Surfaces and hierarchy
 
-- Warm off-white canvas, white cards, muted mint support surfaces. Semantic warning/error colors retain independent meaning.
-- Primary teal signals the main action and selected navigation. Secondary actions use white outlined surfaces; destructive actions use the destructive token.
+- White canvas with softly tinted glass cards, translucent borders, and restrained blur. Preserve an opaque fallback when backdrop filters are unavailable. Semantic warning/error colors retain independent meaning.
+- Primary teal signals the main action and selected navigation. Secondary orange appears on supporting actions, chart series, card accents, and focusable period selections; destructive actions use the destructive token.
 - Each page has one introduction, then its immediate task. Home prioritizes daily entry and access to craving help. Use detail disclosures for explanations and destructive data controls.
 - Use tabs for separate tasks, preserving mounted form contents when switching. Tabs support arrow keys, Home/End, and visible focus.
 - Mobile is one column. Desktop task/content ratio around 1.35:1. Avoid stretching short copy across the entire viewport.
@@ -30,13 +30,15 @@ References: https://github.com/voltagent/awesome-design-md, specifically design-
 
 - Never invent progress or predictions. Distinguish a reported zero (solid dot) from unreported dates (dashed marker).
 - Seven-day charts include text labels and a details table in Tracker. Estimates disclose baseline assumptions.
+- Home has 7/30-day consumption and savings charts, recorded craving outcomes, and a coverage ring. Its main progress ring measures cumulative recorded smoke-free days toward the next milestone; it does not infer a streak from a quit date. Missing estimates create gaps, and historical baselines remain attached to their original records.
+- Reuse the original first-page illustration and abstract header texture within the home glass card. Keep the page canvas white and decorative images out of the accessibility tree.
 - Duration since a selected quit date is not a smoke-free streak; label this explicitly.
 - User messages align right with a soft mint bubble; peer messages align left on neutral surfaces. Sender, delivery/read state and human/system identity remain explicit.
 - Closed services must show honest availability. Do not introduce demo consultant profiles to fill whitespace.
 
 ## Motion and accessibility
 
-- Color/border transitions 140–160ms; no celebratory, punitive, or bounce animations.
+- Color/border transitions 140–180ms, brief 240–280ms surface entrances, and chart animation up to 450ms. No continuous decorative, celebratory, punitive, or bounce animations.
 - Preserve reduced-motion support, focus outline, skip link and labeled mobile navigation.
 - Check 320px mobile through 1440px desktop, 200% root font sizing, keyboard navigation, empty/loading/error/pending states, and visual viewport changes during chat entry.
 

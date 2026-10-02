@@ -449,6 +449,83 @@ All colors MUST be HSL.
     .nivo-profile-content { padding:2rem; }
   }
 }
+/* Shared motion stays brief; charts and controls retain their own dimensions. */
+@keyframes nivo-surface-in {
+  from { opacity:.65; transform:translateY(5px); }
+  to { opacity:1; transform:none; }
+}
+@keyframes nivo-content-in {
+  from { opacity:.75; }
+  to { opacity:1; }
+}
+@layer components {
+  .nivo-glass, .nivo-panel:not(.nivo-panel-plain), .nivo-link-card,
+  .nivo-page-title, .nivo-support-strip, .nivo-empty-service {
+    animation:nivo-surface-in 280ms ease-out both;
+  }
+  .nivo-panel > :is(header, p, dl, figure, form, details, ul, .nivo-stack),
+  .nivo-auth-card > *, .nivo-home-metrics > div, .nivo-outcome-legend > div {
+    animation:nivo-content-in 240ms ease-out;
+  }
+  .nivo-home-chart-grid > :nth-child(2), .nivo-home-metrics > :nth-child(2) { animation-delay:35ms; }
+  .nivo-home-chart-grid > :nth-child(3) { animation-delay:70ms; }
+  .nivo-home-chart-grid > :nth-child(4) { animation-delay:105ms; }
+  .nivo-route-surface :where(button, a, input, select, textarea, summary) {
+    transition:background-color 160ms, border-color 160ms, color 160ms, box-shadow 160ms;
+  }
+  .nivo-panel { transition:border-color 180ms, box-shadow 180ms; }
+  .nivo-panel-heading .nivo-eyebrow { margin-bottom:.35rem; font-size:.6875rem; }
+  .nivo-progress-ring { width:7rem; max-width:100%; overflow:visible; }
+  .nivo-progress-ring-large { width:10rem; }
+  .nivo-progress-ring-value { transition:stroke-dashoffset 550ms ease-out; }
+  .nivo-home-overview { position:relative; isolation:isolate; overflow:hidden; border-color:hsl(var(--secondary) / .25); }
+  .nivo-home-overview > .nivo-panel-heading, .nivo-home-overview-content { position:relative; z-index:1; }
+  .nivo-home-texture { object-fit:cover; opacity:.055; pointer-events:none; }
+  .nivo-home-overview-content { display:grid; align-items:center; gap:1.5rem; }
+  .nivo-home-overview-content > figure { max-width:15rem; justify-self:center; }
+  .nivo-home-highlight { font-size:1.125rem; font-weight:500; line-height:1.5; }
+  .nivo-home-highlight strong { font-size:1.75rem; color:hsl(var(--primary)); }
+  .nivo-home-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+  .nivo-home-metrics > div { padding:.875rem; border-radius:var(--radius-control); border:1px solid hsl(var(--secondary) / .18); background:hsl(0 0% 100% / .65); min-width:0; }
+  .nivo-home-metrics dt { display:flex; align-items:center; gap:.5rem; font-size:var(--text-sm); color:hsl(var(--muted-foreground)); }
+  .nivo-home-metrics dt svg { color:hsl(var(--orange-ink)); flex-shrink:0; }
+  .nivo-home-metrics dd { margin-top:.625rem; font-size:1.125rem; font-weight:600; overflow-wrap:anywhere; }
+  .nivo-home-metrics dd span { font-size:.875rem; font-weight:400; color:hsl(var(--muted-foreground)); }
+  .nivo-home-illustration { display:none; object-fit:contain; width:110px; height:auto; max-height:240px; }
+  .nivo-home-charts-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; }
+  .nivo-home-chart-grid { display:grid; gap:1.5rem; min-width:0; }
+  .nivo-home-chart-grid > * { min-width:0; }
+  .nivo-period-picker { display:inline-flex; padding:.25rem; border:1px solid hsl(var(--secondary) / .2); border-radius:var(--radius-control); background:hsl(var(--orange-soft) / .65); }
+  .nivo-period-picker button { min-height:44px; padding:.5rem 1rem; border-radius:.625rem; font-size:.875rem; font-weight:500; }
+  .nivo-period-picker button[aria-pressed="true"] { box-shadow:0 2px 8px hsl(var(--secondary) / .12); }
+  .nivo-home-chart-value { margin-bottom:1rem; font-size:1.625rem; font-weight:600; letter-spacing:-.025em; overflow-wrap:anywhere; }
+  .nivo-home-chart-value > span { display:block; margin-top:.25rem; font-size:var(--text-sm); font-weight:400; letter-spacing:normal; color:hsl(var(--muted-foreground)); }
+  .nivo-chart-canvas { height:220px; width:100%; min-width:0; }
+  .nivo-chart-details, .nivo-outcome-legend { display:grid; gap:.625rem; font-size:var(--text-sm); }
+  .nivo-chart-details > div, .nivo-outcome-legend > div { display:flex; align-items:start; justify-content:space-between; gap:1rem; padding-bottom:.5rem; border-bottom:1px solid hsl(var(--border) / .6); }
+  .nivo-chart-details dd, .nivo-outcome-legend dd { text-align:right; font-weight:500; }
+  .nivo-outcome-legend dt { display:flex; align-items:center; gap:.625rem; }
+  .nivo-outcome-legend dt > span { width:.625rem; height:.625rem; flex-shrink:0; border-radius:50%; }
+  .nivo-outcome-canvas { position:relative; }
+  .nivo-outcome-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+  .nivo-outcome-center strong { font-size:1.875rem; color:hsl(var(--primary)); }
+  .nivo-outcome-center span { font-size:var(--text-sm); color:hsl(var(--muted-foreground)); }
+  @media(min-width:640px) {
+    .nivo-home-overview-content { grid-template-columns:160px minmax(0,1fr); }
+    .nivo-home-chart-grid { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+  }
+  @media(min-width:1100px) {
+    .nivo-home-overview-content { grid-template-columns:180px minmax(0,1fr) 130px; }
+    .nivo-home-illustration { display:block; justify-self:center; width:130px; }
+    .nivo-chart-canvas { height:240px; }
+  }
+  @media(hover:hover) {
+    .nivo-panel:not(.nivo-panel-plain):hover { border-color:hsl(var(--secondary) / .3); box-shadow:0 12px 32px hsl(174 30% 14% / .07), inset 0 1px 0 hsl(0 0% 100% / .95); }
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .nivo-progress-ring-value { transition:none; }
+}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   .nivo-glass, .nivo-panel:not(.nivo-panel-plain), .nivo-link-card { background-color:hsl(0 0% 100%); }
 }

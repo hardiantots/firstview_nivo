@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
 import { signInReturnPath } from '@/shared/auth/return-path';
 import AuthFrame from '@/features/auth/AuthFrame';
-import { AuthStorage } from "@/lib/auth-storage";
 
 const SignInScreen = () => {
   const router = useRouter();

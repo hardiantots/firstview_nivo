@@ -1,5 +1,10 @@
-import SignUpScreen from "@/features/auth/SignInPage/SignUpScreen"
+import SignUpScreen from '@/features/auth/SignInPage/SignUpScreen';
+import AuthGuard from '@/shared/auth/AuthGuard';
 
 export default function SignUpPage() {
-  return <SignUpScreen />
+  return (
+    <AuthGuard>
+      <SignUpScreen />
+    </AuthGuard>
+  );
 }

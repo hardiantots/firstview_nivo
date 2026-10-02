@@ -52,10 +52,12 @@ test('profile: atomic conflicts do not fall back to basic profile writes or fals
   const unavailable = await profileFixture(true).route.PUT(request('/api/profile', input));
   assert.equal(unavailable.status, 503); assert.doesNotMatch(await unavailable.text(), /PRIVATE/);
 });
-test('signin return path accepts only same-app buddy token paths', () => {
+test('signin return path preserves strict buddy tokens and accepts known app destinations', () => {
   const { signInReturnPath } = load('src/shared/auth/return-path.ts');
   const valid = '/buddy/' + 'a'.repeat(43);
   assert.equal(signInReturnPath(valid), valid);
+  assert.equal(signInReturnPath('/tracker'), '/tracker');
+  assert.equal(signInReturnPath('/craving-support?mode=talk'), '/craving-support?mode=talk');
   for (const bad of [null, 'https://example.invalid', '//example.invalid', '/buddy/' + 'a'.repeat(42), valid + '?next=elsewhere', valid + '#fragment', '/home']) assert.equal(signInReturnPath(bad), '/home');
 });
 test('Indonesian formatting preserves calendar dates and uses 24-hour zone time', () => {

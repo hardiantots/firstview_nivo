@@ -1,6 +1,6 @@
 # NIVO
 
-Website pendamping perjalanan berhenti merokok: catatan harian, bantuan craving, rencana pribadi, grafik, ekspor data, pengingat, pendamping, dan konsultasi manusia bila layanan diaktifkan. UI memakai primary teal, secondary orange, latar putih, card glass, dan animasi ringan. Logo serta aset gambar asli dipertahankan.
+Website pendamping perjalanan berhenti merokok dengan catatan harian, bantuan Craving SOS, rencana pribadi, grafik, ekspor data, pengingat, pendamping, dan konsultasi manusia bila layanan diaktifkan. UI memakai primary teal, secondary orange, latar putih, card glass, dan animasi ringan. Logo serta aset gambar asli dipertahankan.
 
 ## Menjalankan lokal
 
@@ -10,7 +10,7 @@ Gunakan **Node.js 22.x** dan npm. Stack: Next.js 15, React 19, TypeScript, Tailw
 npm ci
 ```
 
-Salin `.env.example` menjadi `.env.local` dan isi konfigurasi project. `SUPABASE_SERVICE_ROLE_KEY` hanya untuk backend; jangan memakai prefix `NEXT_PUBLIC_` untuk secret.
+Salin `.env.example` menjadi `.env.local` dan isi konfigurasi project. `NEXT_PUBLIC_SUPABASE_URL` harus menunjuk layanan Supabase project, sedangkan `NEXT_PUBLIC_SITE_URL` menunjuk URL aplikasi. `SUPABASE_SERVICE_ROLE_KEY` hanya untuk backend; jangan memakai prefix `NEXT_PUBLIC_` untuk secret.
 
 ```sh
 npm run dev
@@ -30,122 +30,49 @@ Buka `http://localhost:3000`. Konfigurasi database dijelaskan di [supabase/RESET
 
 Perjalanan memakai API/RPC dengan revision dan operation ID untuk konflik antar perangkat serta retry idempoten. Draft perangkat dan API memakai kontrak validasi yang sama. Helper HTTP berada di `src/shared/api/client.ts`; konsultasi dipisah menjadi pemilihan layanan, sesi, dan moderasi.
 
+## Grafik dan bantuan
+
+Beranda menampilkan ring capaian hari bebas rokok tercatat, tren konsumsi, akumulasi estimasi hemat, hasil Craving SOS, dan cakupan catatan pada periode 7/30 hari. Semua grafik berasal dari snapshot perjalanan server; hari kosong tetap kosong dan estimasi memakai baseline historis. Ring menghitung hari bebas rokok yang tercatat, bukan streak yang disimpulkan dari tanggal berhenti. Penambahan grafik ini tidak membutuhkan migrasi database.
+
+Craving SOS menyediakan pencatatan, latihan napas, distraksi, dan panduan otomatis umum. Endpoint bantuan saat ini tidak mengirim konteks kesehatan ke penyedia model atau membuat panggilan model berbayar. Panduan otomatis dibedakan dari konsultasi manusia.
+
+Pengingat push, konsultasi, dan audio tetap nonaktif sampai konfigurasi serta ketersediaan layanannya diverifikasi. Tidak ada integrasi WhatsApp. Aktivasi push dijelaskan di [PUSH_ACTIVATION.md](PUSH_ACTIVATION.md).
+
+## Autentikasi
+
+Login email dan Google menyimpan sesi pada browser yang sama dengan masa aplikasi **14 hari sejak login**, tanpa memperpanjang masa tersebut pada refresh token atau pergantian halaman. Supabase tetap memakai access token pendek dan refresh token, dan route tetap memverifikasi identitas melalui `getUser()`. Sesi aktif melewati signin/signup/welcome dan kembali ke route internal yang diminta, atau `/home`.
+
+Logout manual menghapus sesi. Saat sesi kedaluwarsa, draft retry milik akun tetap tersimpan agar bisa ditinjau setelah login ulang. Gangguan verifikasi sementara tidak membuka halaman terlindungi atau menghapus draft.
+
+Batas 14 hari ini berlaku pada aplikasi/browser. Untuk turut membatasi lifetime sesi di sisi server Supabase, atur **Time-box user sessions = 336 jam** bila paket project mendukungnya; jangan memperpanjang expiry JWT menjadi 14 hari. Pengaturan dashboard tersebut belum diubah dari repository. Lihat [Supabase User sessions](https://supabase.com/docs/guides/auth/sessions).
+
 ## Pemeriksaan kualitas
 
 ```sh
 npm run check
 npm run format:features
+npm audit --audit-level=high
 ```
 
-`check` mencakup pemeriksaan format modul yang sudah dirapikan, typecheck, lint, tes, dan production build. Tes arsitektur menjaga batas modul bersama dan graf import tanpa siklus. Konfigurasi TypeScript legacy belum sepenuhnya strict.
-## 🔐 Security
+`check` mencakup pemeriksaan format modul yang sudah dirapikan, typecheck, lint, tes, dan production build. Tes arsitektur menjaga batas modul bersama dan graf import tanpa siklus. Konfigurasi TypeScript legacy belum sepenuhnya strict. Tes SQL dijelaskan dalam panduan database.
 
-- ✅ Environment variables are NOT committed (see `.gitignore`)
-- ✅ Supabase Row Level Security (RLS) enabled
-- ✅ API keys are server-side only
-- ✅ HTTPS enforced in production
-- ✅ Security headers configured
+Regresi browser beranda dan sesi tersedia melalui:
 
-**Never commit `.env.local` or any file containing secrets!**
-
-See [SECURITY.md](SECURITY.md) for detailed security guidelines.
-
-## 📊 Database Schema
-
-Main tables:
-
-- `user_profile` - User information
-- `smoke_free_journey` - User journey status (PRE_QUIT/POST_QUIT)
-- `daily_consumption_logs` - Daily cigarette consumption
-- `craving_logs` - Craving events with context
-- `ai_suggestions` - AI-generated advice history
-- `user_journey_stats` - Aggregated statistics
-
-## 🤖 AI Integration
-
-NIVO uses OpenRouter to access multiple AI models
-
-AI provides:
-
-- Personalized craving support
-- Context-aware coping strategies
-- NIVO Diffuser usage recommendations
-- Motivational messaging
-
-## 🧪 Testing
-
-```bash
-# Run type checking
-npm run type-check
-
-# Run linter
-npm run lint
-
-# Check environment variables
-node scripts/check-env.js
-
-# Test build
-npm run build
-npm start
+```sh
+npm run test:ui:home
+npm run test:ui:auth
 ```
 
-## 📝 Development Scripts
-
-```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm start                # Start production server
-npm run lint             # Run ESLint
-npm run type-check       # TypeScript type checking
-node scripts/check-env.js # Verify environment variables
-```
-
-## 🌟 Key Features Explained
-
-### AI-Powered Craving Support
-
-- Real-time response generation
-- Emotion and situation analysis
-- Personalized coping strategies
-- NIVO Diffuser recommendations with dosage
-
-### Progress Tracking
-
-- **PRE-QUIT:** Countdown to quit date, daily consumption reduction
-- **POST-QUIT:** Streak counter, cigarettes avoided, money saved
-
-### Health Milestones
-
-- 20 minutes: Heart rate normalizes
-- 12 hours: Carbon monoxide levels drop
-- 2 weeks: Circulation improves
-- 1 month: Lung function increases
-- And more...
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-## 📄 License
-
-Regresi browser memerlukan Playwright/Edge terpisah; tes SQL memakai PGlite sesuai panduan database. Fixture lokal tidak menggantikan smoke test integrasi produksi.
+Jalankan server lokal terlebih dahulu, sediakan Playwright dengan browser Edge (atau tunjuk modulnya melalui `PLAYWRIGHT_MODULE`), dan gunakan `UI_ORIGIN` bila port berbeda dari `http://127.0.0.1:3000`. Pengujian memakai sesi dan data sintetis serta mencegat permintaan auth/data sehingga tidak mengubah Supabase production. Screenshot dan hasil uji disimpan di folder lokal `SDD-Script/evidence` yang tidak ikut Git. Fixture lokal tidak menggantikan smoke test integrasi produksi.
 
 ## Deployment
 
-Hubungkan GitHub ke Vercel, pilih Node 22, isi environment variables dari `.env.example` lewat Dashboard Vercel, dan atur URL aplikasi serta redirect Auth di Supabase. Konfigurasi Vercel menjalankan `npm run check` saat build. Pastikan preflight database dan alur login/penyimpanan berhasil sebelum membuka layanan.
+Hubungkan GitHub ke Vercel, pilih Node 22, dan isi environment variables dari `.env.example` lewat Dashboard Vercel. Gunakan origin HTTPS aplikasi yang konsisten untuk `NEXT_PUBLIC_SITE_URL` serta URL redirect Auth di Supabase. Environment `NEXT_PUBLIC_*` disertakan saat build; perubahan nilainya memerlukan build dan deployment baru.
 
-Push bersifat opsional: [PUSH_ACTIVATION.md](PUSH_ACTIVATION.md). Pengingat push, konsultasi, dan audio tetap nonaktif sampai konfigurasi serta ketersediaan layanannya diverifikasi. Tidak ada integrasi WhatsApp.
+Konfigurasi Vercel menjalankan `npm run check` saat build. Pastikan preflight database dan alur login/penyimpanan berhasil sebelum membuka layanan. Push atau merge kode tidak menjalankan skrip reset database.
 
 ## File untuk GitHub
 
-Source, aset, lockfile dependency, konfigurasi build/CI, tes, `.env.example`, SQL, dan panduan operasional tetap masuk Git. Environment asli, dependency lokal, hasil build/cache, konfigurasi akun lokal, laporan progres, serta bukti pengujian diabaikan. Dokumen SDD asli tetap lokal.
+Source, aset, lockfile dependency, konfigurasi build/CI, tes, `.env.example`, SQL, dan panduan operasional tetap masuk Git. Environment asli, dependency lokal, hasil build/cache, konfigurasi akun lokal, laporan diagnosis/progres, serta bukti pengujian diabaikan. Dokumen SDD asli tetap lokal.
 
-Skrip deployment lama dan cache TypeScript dikeluarkan dari Git; salinan lokal tetap tersedia. Gunakan perintah di `package.json` dan konfigurasi `.env.example` yang terbaru.
-
-Panduan tambahan: [DESIGN.md](DESIGN.md), [SECURITY.md](SECURITY.md), dan [CI_MERGE_FIX.md](CI_MERGE_FIX.md). Catatan CI membahas temuan riwayat Git yang terpisah dari pembersihan file sekarang; menghapus file terbaru tidak menghapus commit lama.
+Gunakan perintah di `package.json` dan konfigurasi `.env.example` yang terbaru. Catatan commit menjelaskan perubahan, validasi, dan batas penerapan. Panduan tambahan: [DESIGN.md](DESIGN.md), [SECURITY.md](SECURITY.md), dan [supabase/RESET_AND_SCHEMA.md](supabase/RESET_AND_SCHEMA.md).
