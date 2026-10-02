@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { ensureUserProfile } from '@/lib/db/userProfile';
 import { AuthStorage } from './auth-storage';
+import { errorMessage } from './errors';
 
 /**
  * Sign in with email and password
@@ -17,19 +18,12 @@ export const signInWithEmail = async (email: string, password: string) => {
     }
 
     if (data.user && data.session) {
-      AuthStorage.saveSession({
-        userToken: data.session.access_token,
-        userId: data.user.id,
-        userEmail: data.user.email || '',
-        lastLoginAt: Date.now(),
-        sessionMaxAgeDays: 30,
-        loginMethod: 'password',
-      });
+      AuthStorage.saveSupabaseSession(data.session, { newLogin: true });
     }
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
@@ -39,7 +33,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signUpWithEmail = async (
   email: string,
   password: string,
-  metadata: { full_name?: string; phone?: string; motivations?: string[] } = {}
+  metadata: { full_name?: string; phone?: string; motivations?: string[] } = {},
 ) => {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -57,6 +51,7 @@ export const signUpWithEmail = async (
 
     const user = data.user;
     if (user && data.session) {
+      AuthStorage.saveSupabaseSession(data.session, { newLogin: true });
       await ensureUserProfile({
         userId: user.id,
         email: user.email,
@@ -67,58 +62,27 @@ export const signUpWithEmail = async (
     }
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
-/**
- * Sign in dengan Google
- */
-export const signInWithGoogle = async () => {
+async function signInWithProvider(provider: 'google' | 'facebook') {
   try {
-    // Use site URL from environment variable for consistent OAuth redirect
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      },
+      provider,
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
-
-    if (error) {
-      throw error;
-    }
-
+    if (error) throw error;
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
-};
+}
 
-/**
- * Sign in dengan Facebook
- */
-export const signInWithFacebook = async () => {
-  try {
-    // Use site URL from environment variable for consistent OAuth redirect
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-};
+export const signInWithGoogle = () => signInWithProvider('google');
+export const signInWithFacebook = () => signInWithProvider('facebook');
 
 /**
  * Reset password - send OTP to email
@@ -139,8 +103,8 @@ export const sendPasswordResetEmail = async (email: string) => {
     localStorage.setItem('resetEmail', email);
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
@@ -150,7 +114,7 @@ export const sendPasswordResetEmail = async (email: string) => {
 export const verifyOTPAndResetPassword = async (
   email: string,
   token: string,
-  newPassword: string
+  newPassword: string,
 ) => {
   try {
     // Verify OTP token
@@ -174,8 +138,8 @@ export const verifyOTPAndResetPassword = async (
     }
 
     return { success: true, data: updateData };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
@@ -195,8 +159,8 @@ export const resendPasswordResetEmail = async (email: string) => {
     }
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
@@ -214,8 +178,8 @@ export const signOut = async () => {
     AuthStorage.clearSession();
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
@@ -231,8 +195,8 @@ export const getCurrentSession = async () => {
     }
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };
 
@@ -248,7 +212,7 @@ export const getCurrentUser = async () => {
     }
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error) };
   }
 };

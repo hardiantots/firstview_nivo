@@ -5,13 +5,12 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Mail, Loader } from "lucide-react";
+import { Mail, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { sendPasswordResetEmail } from "@/lib/auth";
-import Image from "next/image";
-import abstractHeader from "@/assets/abstract-header.jpg";
+import AuthFrame from '@/features/auth/AuthFrame';
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email({ message: "Masukkan email yang valid." }),
@@ -34,38 +33,21 @@ const ForgotPasswordScreen = () => {
     if (result.success) {
       router.push("/otp-verification");
     } else {
-      setError(result.error || "Gagal mengirim kode reset. Silakan coba lagi.");
+      setError('Kode belum berhasil dikirim. Periksa koneksi, lalu coba lagi.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header with back button */}
-      <div className="h-48 relative overflow-hidden">
-        <Image
-          src={abstractHeader}
-          alt="Abstract colorful background"
-          className="w-full h-full object-cover"
-          fill
-        />
-        <button
-          onClick={() => router.back()}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-sm mx-auto px-6 py-8">
+    <AuthFrame onBack={() => router.back()}>
+      <div>
         <div className="animate-fade-in">
-          <h1 className="text-2xl font-bold mb-2">Lupa Password</h1>
+          <h1 className="text-2xl font-bold mb-2">Lupa kata sandi</h1>
           <p className="text-muted-foreground mb-8">
-            Masukkan email terdaftar Anda di bawah ini. Kami akan mengirimkan kode verifikasi untuk mengatur ulang kata sandi Anda.
+            Masukkan email akunmu. Kami akan mengirimkan kode verifikasi untuk membuat kata sandi baru.
           </p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-sm text-red-800">
+            <div role="alert" className="mb-4 p-3 bg-destructive/10 border border-destructive/25 rounded-control text-sm text-destructive">
               {error}
             </div>
           )}
@@ -90,17 +72,17 @@ const ForgotPasswordScreen = () => {
                 {form.formState.isSubmitting ? (
                   <>
                     <Loader className="w-4 h-4 mr-2 animate-spin" />
-                    Sending...
+                    Mengirim kode…
                   </>
                 ) : (
-                  "Send Code"
+                  "Kirim kode"
                 )}
               </Button>
             </form>
           </Form>
         </div>
       </div>
-    </div>
+    </AuthFrame>
   );
 };
 

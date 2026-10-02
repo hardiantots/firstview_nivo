@@ -56,4 +56,4 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Scan history with redacted findings
-        run: docker run --rm -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo -v "$GITHUB_WORKSPACE:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.24.2 git /repo --redact --no-banner
+        run: docker run --rm -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo -v "$GITHUB_WORKSPACE:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.24.2 git /repo --redact=100 --verbose --no-banner

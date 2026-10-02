@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 90 14% 97%;
+    --background: 0 0% 100%;
     --foreground: 174 30% 14%;
 
     --card: 0 0% 100%;
@@ -19,9 +19,14 @@ All colors MUST be HSL.
 
     --primary: 178 85% 18%;
     --primary-foreground: 0 0% 100%;
+    --primary-hover: 178 85% 14%;
+    --chart-1: var(--primary);
+    --chart-2: 170 40% 42%;
+    --chart-3: 165 40% 75%;
+    --success: 142 72% 29%;
 
-    --secondary: 150 14% 95%;
-    --secondary-foreground: 178 85% 18%;
+    --secondary: 25 95% 53%;
+    --secondary-foreground: 20 80% 16%;
 
     --muted: 150 14% 95%;
     --muted-foreground: 215.4 16.3% 43%;
@@ -40,6 +45,10 @@ All colors MUST be HSL.
     --green-primary: 178 85% 18%;
     --green-light: 160 29% 94%;
     --orange-accent: 25 95% 53%;
+    --orange-soft: 28 100% 96%;
+    --orange-ink: 24 85% 30%;
+    --glass-tint: 178 85% 18%;
+    --glass-shadow: 0 10px 32px hsl(174 30% 14% / .055), inset 0 1px 0 hsl(0 0% 100% / .95);
     --gray-text: 215.4 16.3% 43%;
     --gray-border: 220 13% 91%;
     
@@ -50,14 +59,18 @@ All colors MUST be HSL.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
+    --radius-control: 0.75rem;
     --radius-card: 1rem;
     --radius-feature: 1.5rem;
     --space-1: 0.5rem;
     --space-2: 1rem;
     --space-3: 1.5rem;
     --space-4: 2rem;
-    --content-width: 80rem;
+    --content-width: 75rem;
+    --text-sm: clamp(.8125rem, .79rem + .1vw, .875rem);
+    --text-base: clamp(.9375rem, .92rem + .15vw, 1rem);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
     --screen-title: clamp(1.75rem, 2.5vw, 2.25rem);
 
     --sidebar-background: 0 0% 98%;
@@ -149,12 +162,12 @@ All colors MUST be HSL.
   .nivo-shell { min-height: 100dvh; background: hsl(var(--background)); }
   .nivo-header { height: 72px; padding-inline: max(1rem, calc((100vw - var(--content-width)) / 2)); display:flex; align-items:center; justify-content:space-between; background:hsl(var(--card)); border-bottom:1px solid hsl(var(--border)); }
   .nivo-icon-button { display:inline-flex; width:44px; height:44px; align-items:center; justify-content:center; border-radius:var(--radius); }
-  .nivo-icon-button:hover { background:hsl(var(--secondary)); }
+  .nivo-icon-button:hover { background:hsl(var(--orange-soft)); }
   .nivo-shell-body { max-width:var(--content-width); margin-inline:auto; }
   .nivo-main { min-width:0; padding-bottom:calc(6.5rem + env(safe-area-inset-bottom)); }
   .nivo-shell .legacy-header { display:none; }
   .nivo-nav { position:fixed; inset:auto 0 0; z-index:30; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); padding:.5rem .25rem calc(.5rem + env(safe-area-inset-bottom)); background:hsl(var(--card)); border-top:1px solid hsl(var(--border)); }
-  .nivo-nav a { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.25rem; min-width:0; min-height:60px; padding:.25rem; font-size:.6875rem; line-height:1.3; text-align:center; color:hsl(var(--muted-foreground)); border-radius:var(--radius); }
+  .nivo-nav a { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.25rem; min-width:0; min-height:60px; padding:.25rem; font-size:var(--text-sm); line-height:1.3; text-align:center; color:hsl(var(--muted-foreground)); border-radius:var(--radius-control); }
   .nivo-nav a span { max-width:100%; overflow-wrap:anywhere; }
   .nivo-nav a[aria-current] { background:hsl(var(--green-light)); color:hsl(var(--primary)); font-weight:700; text-decoration:underline; text-underline-offset:4px; }
   .nivo-skip { position:fixed; top:.5rem; left:1rem; clip-path:inset(50%); width:1px; height:1px; overflow:hidden; white-space:nowrap; z-index:100; background:hsl(var(--card)); }
@@ -184,12 +197,14 @@ All colors MUST be HSL.
   .nivo-steps li > span { color:hsl(var(--primary)); font-weight:700; }
   .nivo-steps h2 { font-weight:600; }
   .nivo-steps p { color:hsl(var(--muted-foreground)); font-size:.875rem; }
-  @media(min-width:768px) {
+  @media(min-width:1024px) {
     .nivo-shell-body { display:grid; grid-template-columns:180px minmax(0,1fr); }
     .nivo-nav { position:sticky; inset:auto; top:1rem; height:fit-content; display:flex; flex-direction:column; border:0; background:transparent; padding:1.5rem .75rem; }
     .nivo-nav a { flex-direction:row; justify-content:flex-start; text-align:left; gap:.75rem; min-height:52px; padding:.75rem; font-size:.875rem; }
     .nivo-main { padding-bottom:2rem; }
     .nivo-page { padding:2rem 1.5rem; }
+  }
+  @media(min-width:768px) {
     .nivo-welcome { grid-template-columns:1.15fr 1fr; }
     .nivo-welcome-story { padding:4rem 2.5rem; }
     .nivo-welcome-form { padding:2rem; }
@@ -209,11 +224,11 @@ All colors MUST be HSL.
   .nivo-page > *, .nivo-form-grid > *, .nivo-dashboard-grid > * { min-width:0; }
   .nivo-page-title { margin-bottom:.25rem; }
   .nivo-page-title h1 { letter-spacing:-.025em; margin:.4rem 0 .65rem; font-weight:600; }
-  .nivo-eyebrow { font-size:.6875rem; letter-spacing:.13em; font-weight:600; }
+  .nivo-eyebrow { font-size:var(--text-sm); letter-spacing:.08em; font-weight:600; }
   .nivo-description { font-size:.9375rem; line-height:1.65; }
   .nivo-nav { box-shadow:0 -4px 20px hsl(174 30% 14% / .035); }
   .nivo-nav a { transition:background-color 160ms, color 160ms; }
-  .nivo-nav a:hover { background:hsl(var(--secondary)); color:hsl(var(--primary)); }
+  .nivo-nav a:hover { background:hsl(var(--orange-soft)); color:hsl(var(--orange-ink)); }
   .nivo-nav a[aria-current] { text-decoration:none; font-weight:600; }
   .nivo-nav a[aria-current] svg { stroke-width:2.2; }
   .nivo-nav-caption, .nivo-nav-note { display:none; }
@@ -222,8 +237,8 @@ All colors MUST be HSL.
   .nivo-panel-heading { display:grid; gap:.35rem; }
   .nivo-panel-soft { background:hsl(var(--green-light)); border-color:transparent; box-shadow:none; }
   .nivo-panel-plain { padding-inline:0; background:transparent; border:0; box-shadow:none; }
-  .nivo-action { display:inline-flex; gap:.6rem; font-size:.9375rem; border:1px solid transparent; border-radius:.625rem; min-height:48px; transition:background-color 160ms, border-color 160ms, opacity 160ms; }
-  .nivo-action:hover { filter:none; background:hsl(178 85% 14%); }
+  .nivo-action { display:inline-flex; gap:.6rem; font-size:.9375rem; border:1px solid transparent; border-radius:var(--radius-control); min-height:48px; transition:background-color 160ms, border-color 160ms, opacity 160ms; }
+  .nivo-action:hover { filter:none; background:hsl(var(--primary-hover)); }
   .nivo-action-secondary { background:hsl(var(--card)); border-color:hsl(var(--border)); color:hsl(var(--primary)); }
   .nivo-action-secondary:hover { background:hsl(var(--green-light)); border-color:hsl(178 25% 60%); }
   .nivo-action-danger { background:hsl(var(--destructive)); color:hsl(var(--destructive-foreground)); }
@@ -239,7 +254,7 @@ All colors MUST be HSL.
   .nivo-form-grid { display:grid; gap:1rem; }
   .nivo-field { gap:.5rem; font-size:.875rem; font-weight:500; }
   .nivo-field input, .nivo-field select, .nivo-page textarea, .nivo-page form input:not([type="checkbox"]):not([type="radio"]), .nivo-page form select {
-    display:block; width:100%; min-width:0; max-width:100%; min-height:48px; border:1px solid hsl(var(--input)); border-radius:.625rem; padding:.7rem .875rem; background:hsl(var(--card)); color:hsl(var(--foreground)); font-size:1rem; font-weight:400; line-height:1.5; transition:border-color 140ms, box-shadow 140ms;
+    display:block; width:100%; min-width:0; max-width:100%; min-height:48px; border:1px solid hsl(var(--input)); border-radius:var(--radius-control); padding:.7rem .875rem; background:hsl(var(--card)); color:hsl(var(--foreground)); font-size:1rem; font-weight:400; line-height:1.5; transition:border-color 140ms, box-shadow 140ms;
   }
   .nivo-page textarea { resize:vertical; min-height:100px; margin-top:.5rem; }
   .nivo-field input:hover, .nivo-field select:hover, .nivo-page textarea:hover { border-color:hsl(178 24% 48%); }
@@ -261,7 +276,7 @@ All colors MUST be HSL.
   .nivo-link-card > div { flex:1; min-width:0; }
   .nivo-link-card h2 { font-size:.9375rem; }
   .nivo-link-card p { font-size:.8125rem; color:hsl(var(--muted-foreground)); margin-top:.3rem; }
-  .nivo-badge { display:inline-flex; align-items:center; width:fit-content; border:1px solid hsl(var(--border)); border-radius:999px; padding:.25rem .625rem; font-size:.6875rem; font-weight:500; color:hsl(var(--primary)); background:hsl(var(--card)); }
+  .nivo-badge { display:inline-flex; align-items:center; width:fit-content; border:1px solid hsl(var(--border)); border-radius:999px; padding:.25rem .625rem; font-size:var(--text-sm); font-weight:500; color:hsl(var(--primary)); background:hsl(var(--card)); }
   .nivo-status-orb { display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:hsl(var(--card) / .75); color:hsl(var(--primary)); }
   .nivo-status-value { font-size:1.75rem; line-height:1.2; font-weight:500; letter-spacing:-.025em; }
   .nivo-metric-row { display:flex; justify-content:space-between; align-items:center; gap:.75rem; }
@@ -309,7 +324,7 @@ All colors MUST be HSL.
   .nivo-data-note { display:flex; align-items:flex-start; justify-content:center; gap:.5rem; color:hsl(var(--muted-foreground)); font-size:.75rem; padding-top:.5rem; }
   .nivo-data-note svg { flex-shrink:0; margin-top:.2rem; }
   .nivo-skeleton { display:grid; gap:1rem; padding-block:1rem; }
-  .nivo-skeleton span { height:1rem; border-radius:5px; background:hsl(var(--secondary)); }
+  .nivo-skeleton span { height:1rem; border-radius:5px; background:hsl(var(--muted)); }
   .nivo-skeleton span:first-child { height:3rem; width:60%; }
   .nivo-skeleton span:last-child { width:80%; }
   .nivo-welcome-story { background:hsl(var(--green-light)); }
@@ -321,24 +336,24 @@ All colors MUST be HSL.
   .nivo-empty-service h2 { font-size:1.5rem; font-weight:500; letter-spacing:-.025em; }
   .nivo-empty-service p { max-width:42rem; }
   .nivo-chat-log { display:flex; flex-direction:column; gap:1rem; min-height:180px; max-height:50dvh; overflow-y:auto; padding:.5rem; }
-  .nivo-chat-bubble { align-self:flex-start; max-width:90%; padding:.875rem 1rem; background:hsl(var(--secondary)); border-radius:1rem 1rem 1rem .25rem; overflow-wrap:anywhere; font-size:.9375rem; }
+  .nivo-chat-bubble { align-self:flex-start; max-width:90%; padding:.875rem 1rem; background:hsl(var(--orange-soft)); border-radius:1rem 1rem 1rem .25rem; overflow-wrap:anywhere; font-size:.9375rem; }
   .nivo-chat-bubble-own { align-self:flex-end; background:hsl(var(--green-light)); border-radius:1rem 1rem .25rem 1rem; }
   .nivo-chat-author { font-size:.75rem; font-weight:600; color:hsl(var(--primary)); margin-bottom:.3rem; }
-  .nivo-chat-bubble small { display:block; margin-top:.5rem; font-size:.625rem; color:hsl(var(--muted-foreground)); }
+  .nivo-chat-bubble small { display:block; margin-top:.5rem; font-size:var(--text-sm); color:hsl(var(--muted-foreground)); }
   .nivo-chat-composer { display:grid; gap:.75rem; padding-top:1rem; border-top:1px solid hsl(var(--border)); }
   .nivo-chat-composer label { font-size:.8125rem; font-weight:500; }
   .nivo-chat-empty { display:grid; gap:.5rem; margin:auto; padding:1.5rem .5rem; text-align:center; font-size:.875rem; color:hsl(var(--muted-foreground)); }
-  @media(min-width:480px) {
+  @media(min-width:640px) {
     .nivo-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
     .nivo-support-strip .nivo-action { flex:0 0 auto; }
     .nivo-panel { padding:1.5rem; }
     .nivo-tabs button { flex:0 1 auto; padding-inline:1.25rem; }
   }
-  @media(min-width:768px) {
+  @media(min-width:1024px) {
     .nivo-brand > span { display:block; }
     .nivo-shell-body { grid-template-columns:200px minmax(0,1fr); }
     .nivo-nav { padding:2rem 1rem; gap:.5rem; box-shadow:none; }
-    .nivo-nav-caption { display:block; font-size:.6875rem; color:hsl(var(--muted-foreground)); padding:.25rem .75rem .75rem; letter-spacing:.08em; text-transform:uppercase; }
+    .nivo-nav-caption { display:block; font-size:var(--text-sm); color:hsl(var(--muted-foreground)); padding:.25rem .75rem .75rem; }
     .nivo-nav-note { display:grid; gap:.75rem; margin-top:3rem; border-top:1px solid hsl(var(--border)); padding:1.5rem .75rem; color:hsl(var(--muted-foreground)); font-size:.8125rem; line-height:1.65; }
     .nivo-nav-note svg { color:hsl(var(--primary)); }
     .nivo-page { padding:2rem 1.5rem; gap:1.75rem; }
@@ -349,4 +364,168 @@ All colors MUST be HSL.
     .nivo-dashboard-grid { grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); }
     .nivo-page { padding:2.5rem 2rem; }
   }
+}
+
+/* White canvas, softly tinted glass surfaces, and brief interaction feedback. */
+@layer components {
+  .nivo-route-surface { min-height:100dvh; min-width:0; background:hsl(var(--background)); }
+  .nivo-glass, .nivo-panel:not(.nivo-panel-plain), .nivo-link-card,
+  .nivo-support-strip, .nivo-choice-surface, .nivo-empty-service, .nivo-coping-step {
+    --glass-tint:var(--primary);
+    background:linear-gradient(135deg, hsl(var(--glass-tint) / .10), hsl(var(--glass-tint) / .025) 55%, hsl(0 0% 100% / .8)), hsl(0 0% 100% / .84);
+    border:1px solid hsl(var(--glass-tint) / .15);
+    box-shadow:var(--glass-shadow);
+    -webkit-backdrop-filter:blur(14px) saturate(115%);
+    backdrop-filter:blur(14px) saturate(115%);
+    border-radius:var(--radius-card);
+  }
+  .nivo-glass-warm, .nivo-panel.nivo-panel-soft, .nivo-support-strip, .nivo-empty-service {
+    --glass-tint:var(--secondary);
+  }
+  .nivo-panel-plain { background:transparent; border:0; box-shadow:none; }
+  .nivo-panel.nivo-panel-soft { border-color:hsl(var(--secondary) / .24); }
+  .nivo-panel-heading .nivo-eyebrow, .nivo-welcome .nivo-eyebrow { color:hsl(var(--orange-ink)); }
+  .nivo-week-chart figcaption, .nivo-chart-day, .nivo-chart-track small,
+  .nivo-table th, .nivo-data-note, .nivo-metric-row p > span,
+  .nivo-timeline time, .nivo-chat-author { font-size:var(--text-sm); }
+  .nivo-profile-content textarea { display:block; width:100%; min-width:0; resize:vertical; border:1px solid hsl(var(--input)); border-radius:var(--radius-control); padding:.75rem; background:hsl(var(--card) / .8); font-size:1rem; }
+  .nivo-profile-content select { width:100%; min-width:0; min-height:48px; border:1px solid hsl(var(--input)); border-radius:var(--radius-control); padding:.75rem; background:hsl(var(--card) / .8); font-size:1rem; }
+  .nivo-panel-heading { position:relative; padding-left:.875rem; }
+  .nivo-panel-heading::before { content:""; position:absolute; inset:.2rem auto .2rem 0; width:3px; border-radius:99px; background:hsl(var(--secondary)); }
+  .nivo-panel-plain .nivo-panel-heading { padding-left:0; }
+  .nivo-panel-plain .nivo-panel-heading::before { display:none; }
+  .nivo-action-secondary { background:hsl(var(--orange-soft)); border-color:hsl(var(--secondary) / .3); color:hsl(var(--orange-ink)); }
+  .nivo-action-secondary:hover { background:hsl(var(--secondary) / .16); border-color:hsl(var(--secondary) / .55); }
+  .nivo-page button[aria-pressed="true"] { background:hsl(var(--orange-soft)); border-color:hsl(var(--secondary)); color:hsl(var(--orange-ink)); }
+  .nivo-support-icon { color:hsl(var(--orange-ink)); }
+  .nivo-badge { color:hsl(var(--orange-ink)); background:hsl(var(--orange-soft)); border-color:hsl(var(--secondary) / .25); }
+  .nivo-nav a[aria-current] { background:hsl(var(--primary) / .07); box-shadow:inset 3px 0 0 hsl(var(--secondary)); }
+  .nivo-nav-note svg { color:hsl(var(--orange-ink)); }
+  .nivo-tabs button:hover:not([aria-selected="true"]) { background:hsl(var(--orange-soft)); color:hsl(var(--orange-ink)); }
+  .nivo-tabs button[aria-selected="true"] { box-shadow:inset 0 -3px 0 hsl(var(--secondary)); }
+  .nivo-button, .nivo-action, .nivo-icon-button, .nivo-link-card, .nivo-history-card {
+    transition:background-color 160ms, border-color 160ms, color 160ms, box-shadow 160ms, transform 160ms;
+  }
+  .nivo-button:active:not(:disabled), .nivo-action:active:not(:disabled), .nivo-icon-button:active { transform:translateY(1px); }
+  .nivo-welcome { padding:1rem; gap:1.5rem; background:hsl(var(--background)); align-items:center; }
+  .nivo-welcome-story { background:transparent; padding:1rem .5rem; }
+  .nivo-welcome-form { padding:0; }
+  .nivo-setup { align-items:start; }
+  .nivo-setup .nivo-welcome-form { align-self:start; }
+  .nivo-setup .nivo-page { padding:0 0 1.5rem; }
+  .nivo-setup .nivo-dashboard-grid, .nivo-setup .nivo-columns { grid-template-columns:minmax(0,1fr); }
+  .nivo-steps li { --glass-tint:var(--secondary); padding:1rem; border:1px solid hsl(var(--secondary) / .17); border-radius:var(--radius-card); background:linear-gradient(120deg, hsl(var(--orange-soft) / .8), hsl(0 0% 100% / .8)); box-shadow:inset 0 1px 0 hsl(0 0% 100%); }
+  .nivo-steps li > span { color:hsl(var(--orange-ink)); border-color:hsl(var(--secondary) / .25); background:hsl(0 0% 100% / .8); }
+  .nivo-auth-page { min-height:100dvh; padding:1rem; background:hsl(var(--background)); }
+  .nivo-auth-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; max-width:68rem; margin:0 auto 1.5rem; min-height:48px; }
+  .nivo-auth-body { display:grid; align-items:center; gap:1.5rem; max-width:68rem; margin:auto; }
+  .nivo-auth-card { min-width:0; width:100%; padding:1.25rem; }
+  .nivo-auth-card h1 { color:hsl(var(--primary)); letter-spacing:-.025em; }
+  .nivo-password-toggle { position:absolute; right:.25rem; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:var(--radius); color:hsl(var(--muted-foreground)); transition:color 160ms, background-color 160ms; }
+  .nivo-password-toggle:hover { color:hsl(var(--orange-ink)); background:hsl(var(--orange-soft)); }
+  .nivo-auth-art { position:relative; overflow:hidden; min-height:160px; display:flex; align-items:flex-end; padding:1.25rem; }
+  .nivo-auth-art > img { opacity:.5; }
+  .nivo-auth-art::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,hsl(0 0% 100% / .25),hsl(0 0% 100% / .94)); pointer-events:none; }
+  .nivo-auth-art-copy { position:relative; z-index:1; display:grid; gap:.625rem; max-width:28rem; }
+  .nivo-auth-art h2 { font-size:clamp(1.4rem,2.8vw,2.5rem); line-height:1.15; letter-spacing:-.03em; color:hsl(var(--primary)); font-weight:600; }
+  .nivo-auth-art p { font-size:.875rem; color:hsl(var(--muted-foreground)); }
+  .nivo-standalone { min-height:100dvh; max-width:64rem; margin:auto; background:hsl(var(--background)); }
+  .nivo-standalone-header { min-height:72px; padding:1rem; border-bottom:1px solid hsl(var(--border)); background:hsl(var(--background)); }
+  .nivo-profile-content { max-width:42rem; margin:auto; padding:1.25rem; }
+  .nivo-error-card { max-width:28rem; width:100%; padding:2rem; text-align:center; }
+  @media(hover:hover) {
+    .nivo-link-card:hover, .nivo-history-card:hover { transform:translateY(-2px); border-color:hsl(var(--secondary) / .5); box-shadow:0 12px 30px hsl(174 30% 14% / .08); }
+  }
+  @media(min-width:768px) {
+    .nivo-welcome { padding:2.5rem; gap:2.5rem; }
+    .nivo-welcome-story { padding:1.5rem 0; }
+    .nivo-setup .nivo-welcome-story { position:sticky; top:2rem; }
+    .nivo-auth-page { padding:1.5rem 2rem 3rem; }
+    .nivo-auth-header { margin-bottom:2.5rem; }
+    .nivo-auth-body { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:2.5rem; }
+    .nivo-auth-art { min-height:540px; padding:2.5rem; align-self:stretch; }
+    .nivo-auth-art p { font-size:1rem; }
+    .nivo-auth-card { padding:2rem; }
+    .nivo-profile-content { padding:2rem; }
+  }
+}
+/* Shared motion stays brief; charts and controls retain their own dimensions. */
+@keyframes nivo-surface-in {
+  from { opacity:.65; transform:translateY(5px); }
+  to { opacity:1; transform:none; }
+}
+@keyframes nivo-content-in {
+  from { opacity:.75; }
+  to { opacity:1; }
+}
+@layer components {
+  .nivo-glass, .nivo-panel:not(.nivo-panel-plain), .nivo-link-card,
+  .nivo-page-title, .nivo-support-strip, .nivo-empty-service {
+    animation:nivo-surface-in 280ms ease-out both;
+  }
+  .nivo-panel > :is(header, p, dl, figure, form, details, ul, .nivo-stack),
+  .nivo-auth-card > *, .nivo-home-metrics > div, .nivo-outcome-legend > div {
+    animation:nivo-content-in 240ms ease-out;
+  }
+  .nivo-home-chart-grid > :nth-child(2), .nivo-home-metrics > :nth-child(2) { animation-delay:35ms; }
+  .nivo-home-chart-grid > :nth-child(3) { animation-delay:70ms; }
+  .nivo-home-chart-grid > :nth-child(4) { animation-delay:105ms; }
+  .nivo-route-surface :where(button, a, input, select, textarea, summary) {
+    transition:background-color 160ms, border-color 160ms, color 160ms, box-shadow 160ms;
+  }
+  .nivo-panel { transition:border-color 180ms, box-shadow 180ms; }
+  .nivo-panel-heading .nivo-eyebrow { margin-bottom:.35rem; font-size:.6875rem; }
+  .nivo-progress-ring { width:7rem; max-width:100%; overflow:visible; }
+  .nivo-progress-ring-large { width:10rem; }
+  .nivo-progress-ring-value { transition:stroke-dashoffset 550ms ease-out; }
+  .nivo-home-overview { position:relative; isolation:isolate; overflow:hidden; border-color:hsl(var(--secondary) / .25); }
+  .nivo-home-overview > .nivo-panel-heading, .nivo-home-overview-content { position:relative; z-index:1; }
+  .nivo-home-texture { object-fit:cover; opacity:.055; pointer-events:none; }
+  .nivo-home-overview-content { display:grid; align-items:center; gap:1.5rem; }
+  .nivo-home-overview-content > figure { max-width:15rem; justify-self:center; }
+  .nivo-home-highlight { font-size:1.125rem; font-weight:500; line-height:1.5; }
+  .nivo-home-highlight strong { font-size:1.75rem; color:hsl(var(--primary)); }
+  .nivo-home-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+  .nivo-home-metrics > div { padding:.875rem; border-radius:var(--radius-control); border:1px solid hsl(var(--secondary) / .18); background:hsl(0 0% 100% / .65); min-width:0; }
+  .nivo-home-metrics dt { display:flex; align-items:center; gap:.5rem; font-size:var(--text-sm); color:hsl(var(--muted-foreground)); }
+  .nivo-home-metrics dt svg { color:hsl(var(--orange-ink)); flex-shrink:0; }
+  .nivo-home-metrics dd { margin-top:.625rem; font-size:1.125rem; font-weight:600; overflow-wrap:anywhere; }
+  .nivo-home-metrics dd span { font-size:.875rem; font-weight:400; color:hsl(var(--muted-foreground)); }
+  .nivo-home-illustration { display:none; object-fit:contain; width:110px; height:auto; max-height:240px; }
+  .nivo-home-charts-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; }
+  .nivo-home-chart-grid { display:grid; gap:1.5rem; min-width:0; }
+  .nivo-home-chart-grid > * { min-width:0; }
+  .nivo-period-picker { display:inline-flex; padding:.25rem; border:1px solid hsl(var(--secondary) / .2); border-radius:var(--radius-control); background:hsl(var(--orange-soft) / .65); }
+  .nivo-period-picker button { min-height:44px; padding:.5rem 1rem; border-radius:.625rem; font-size:.875rem; font-weight:500; }
+  .nivo-period-picker button[aria-pressed="true"] { box-shadow:0 2px 8px hsl(var(--secondary) / .12); }
+  .nivo-home-chart-value { margin-bottom:1rem; font-size:1.625rem; font-weight:600; letter-spacing:-.025em; overflow-wrap:anywhere; }
+  .nivo-home-chart-value > span { display:block; margin-top:.25rem; font-size:var(--text-sm); font-weight:400; letter-spacing:normal; color:hsl(var(--muted-foreground)); }
+  .nivo-chart-canvas { height:220px; width:100%; min-width:0; }
+  .nivo-chart-details, .nivo-outcome-legend { display:grid; gap:.625rem; font-size:var(--text-sm); }
+  .nivo-chart-details > div, .nivo-outcome-legend > div { display:flex; align-items:start; justify-content:space-between; gap:1rem; padding-bottom:.5rem; border-bottom:1px solid hsl(var(--border) / .6); }
+  .nivo-chart-details dd, .nivo-outcome-legend dd { text-align:right; font-weight:500; }
+  .nivo-outcome-legend dt { display:flex; align-items:center; gap:.625rem; }
+  .nivo-outcome-legend dt > span { width:.625rem; height:.625rem; flex-shrink:0; border-radius:50%; }
+  .nivo-outcome-canvas { position:relative; }
+  .nivo-outcome-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+  .nivo-outcome-center strong { font-size:1.875rem; color:hsl(var(--primary)); }
+  .nivo-outcome-center span { font-size:var(--text-sm); color:hsl(var(--muted-foreground)); }
+  @media(min-width:640px) {
+    .nivo-home-overview-content { grid-template-columns:160px minmax(0,1fr); }
+    .nivo-home-chart-grid { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+  }
+  @media(min-width:1100px) {
+    .nivo-home-overview-content { grid-template-columns:180px minmax(0,1fr) 130px; }
+    .nivo-home-illustration { display:block; justify-self:center; width:130px; }
+    .nivo-chart-canvas { height:240px; }
+  }
+  @media(hover:hover) {
+    .nivo-panel:not(.nivo-panel-plain):hover { border-color:hsl(var(--secondary) / .3); box-shadow:0 12px 32px hsl(174 30% 14% / .07), inset 0 1px 0 hsl(0 0% 100% / .95); }
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .nivo-progress-ring-value { transition:none; }
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .nivo-glass, .nivo-panel:not(.nivo-panel-plain), .nivo-link-card { background-color:hsl(0 0% 100%); }
 }

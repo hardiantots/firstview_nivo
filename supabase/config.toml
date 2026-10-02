@@ -1,0 +1,2 @@
+[functions.nivo-push]
+verify_jwt = false

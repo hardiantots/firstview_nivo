@@ -1,5 +1,10 @@
-import OnboardingScreen from "@/features/onboarding/OnboardingScreen"
+import OnboardingScreen from '@/features/onboarding/OnboardingScreen';
+import AuthGuard from '@/shared/auth/AuthGuard';
 
 export default function HomePage() {
-  return <OnboardingScreen />
+  return (
+    <AuthGuard>
+      <OnboardingScreen />
+    </AuthGuard>
+  );
 }

@@ -1,257 +1,78 @@
-# 🚭 NIVO App - Smoking Cessation Support Application
+# NIVO
 
-NIVO is a comprehensive digital health application designed to help users quit smoking through AI-powered support, progress tracking, and behavioral insights.
+Website pendamping perjalanan berhenti merokok dengan catatan harian, bantuan Craving SOS, rencana pribadi, grafik, ekspor data, pengingat, pendamping, dan konsultasi manusia bila layanan diaktifkan. UI memakai primary teal, secondary orange, latar putih, card glass, dan animasi ringan. Logo serta aset gambar asli dipertahankan.
 
-## ✨ Features
+## Menjalankan lokal
 
-- 🤖 **AI-Powered Craving Support** - Real-time personalized advice using GPT-4o-mini
-- 📊 **Progress Tracking** - Visual dashboards for consumption, savings, and health milestones
-- 🎯 **Goal Setting** - Pre-quit preparation and post-quit maintenance tracking
-- 📈 **Analytics** - Daily consumption logs, financial savings calculator, streak tracking
-- 🏆 **Achievements** - Unlock badges and rewards for milestones
-- 🧠 **Craving History** - Log and review past cravings with AI suggestions
-- 💊 **NIVO Diffuser Integration** - Recommendations for nicotine-free alternatives
+Gunakan **Node.js 22.x** dan npm. Stack: Next.js 15, React 19, TypeScript, Tailwind/shadcn, Supabase, Recharts, dan Framer Motion.
 
-## 🛠️ Tech Stack
-
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS + shadcn/ui
-- **Database:** Supabase (PostgreSQL)
-- **Authentication:** Supabase Auth
-- **AI:** OpenRouter (GPT-4o-mini)
-- **Deployment:** Vercel
-- **Charts:** Recharts
-- **Animations:** Framer Motion
-
-## 📋 Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Supabase account
-- OpenRouter API key
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/hardiantots/firstview_nivo.git
-cd firstview_nivo/client
+```sh
+npm ci
 ```
 
-### 2. Install Dependencies
+Salin `.env.example` menjadi `.env.local` dan isi konfigurasi project. `NEXT_PUBLIC_SUPABASE_URL` harus menunjuk layanan Supabase project, sedangkan `NEXT_PUBLIC_SITE_URL` menunjuk URL aplikasi. `SUPABASE_SERVICE_ROLE_KEY` hanya untuk backend; jangan memakai prefix `NEXT_PUBLIC_` untuk secret.
 
-```bash
-npm install
-```
-
-### 3. Set Up Environment Variables
-
-```bash
-# Copy the example file
-cp .env.example .env.local
-
-# Edit .env.local with your actual values
-```
-
-Required variables:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-OPENROUTER_API_KEY=your_openrouter_api_key
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-AI_MODEL=openai/gpt-4o-mini
-```
-
-### 4. Set Up Supabase Database
-
-Run the SQL scripts in `database/` folder in your Supabase SQL Editor:
-
-```sql
--- 1. Create tables
--- 2. Set up Row Level Security (RLS)
--- 3. Create necessary indexes
-```
-
-### 5. Run Development Server
-
-```bash
+```sh
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+Buka `http://localhost:3000`. Konfigurasi database dijelaskan di [supabase/RESET_AND_SCHEMA.md](supabase/RESET_AND_SCHEMA.md). Gunakan urutan migrasi dari panduan tersebut; reset adalah pilihan destruktif yang terpisah. Jangan menjalankan semua migrasi lama secara acak.
 
-## 📦 Project Structure
+## Struktur
 
-```
-client/
-├── app/                      # Next.js App Router pages
-│   ├── api/                  # API routes
-│   │   └── ai-support/      # AI suggestion endpoint
-│   ├── (main)/              # Main app pages (with layout)
-│   │   ├── home/
-│   │   ├── tracker/
-│   │   ├── craving-support/
-│   │   ├── pencapaian/
-│   │   └── contact-professional/
-│   ├── signin/              # Authentication pages
-│   └── layout.tsx           # Root layout
-├── src/
-│   ├── components/          # React components
-│   │   ├── HomePage/
-│   │   ├── TrackerPage/
-│   │   ├── CravingSupportPage/
-│   │   └── ui/              # shadcn/ui components
-│   ├── lib/                 # Utilities
-│   │   ├── db/              # Database queries
-│   │   ├── supabase.ts      # Supabase client
-│   │   └── utils.ts         # Helper functions
-│   └── config/              # Configuration files
-├── public/                  # Static assets
-├── database/                # SQL schemas and migrations
-└── scripts/                 # Deployment and utility scripts
-```
+- `src/app`: halaman dan API.
+- `src/features`: komponen serta alur fitur.
+- `src/shared`: autentikasi, helper HTTP, domain perjalanan/konsultasi, dan utilitas bersama.
+- `src/components/ui`: komponen antarmuka.
+- `src/shared/assets` dan `public`: logo, gambar, service worker, serta aset publik.
+- `supabase`: migrasi, reset, preflight, tes SQL, dan Edge Function push.
+- `scripts`: pemeriksaan kualitas, regresi, dan utilitas yang masih digunakan.
 
-## 🚀 Deployment
+Perjalanan memakai API/RPC dengan revision dan operation ID untuk konflik antar perangkat serta retry idempoten. Draft perangkat dan API memakai kontrak validasi yang sama. Helper HTTP berada di `src/shared/api/client.ts`; konsultasi dipisah menjadi pemilihan layanan, sesi, dan moderasi.
 
-### Quick Deploy to Vercel
+## Grafik dan bantuan
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+Beranda menampilkan ring capaian hari bebas rokok tercatat, tren konsumsi, akumulasi estimasi hemat, hasil Craving SOS, dan cakupan catatan pada periode 7/30 hari. Semua grafik berasal dari snapshot perjalanan server; hari kosong tetap kosong dan estimasi memakai baseline historis. Ring menghitung hari bebas rokok yang tercatat, bukan streak yang disimpulkan dari tanggal berhenti. Penambahan grafik ini tidak membutuhkan migrasi database.
 
-### Manual Deployment
+Craving SOS menyediakan pencatatan, latihan napas, distraksi, dan panduan otomatis umum. Endpoint bantuan saat ini tidak mengirim konteks kesehatan ke penyedia model atau membuat panggilan model berbayar. Panduan otomatis dibedakan dari konsultasi manusia.
 
-See detailed guides:
+Pengingat push, konsultasi, dan audio tetap nonaktif sampai konfigurasi serta ketersediaan layanannya diverifikasi. Tidak ada integrasi WhatsApp. Aktivasi push dijelaskan di [PUSH_ACTIVATION.md](PUSH_ACTIVATION.md).
 
-- 📖 **[QUICK_DEPLOY.md](QUICK_DEPLOY.md)** - Quick deployment checklist
-- 📖 **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment guide
-- 🔒 **[SECURITY.md](SECURITY.md)** - Security best practices
+## Autentikasi
 
-### Steps Summary:
+Login email dan Google menyimpan sesi pada browser yang sama dengan masa aplikasi **14 hari sejak login**, tanpa memperpanjang masa tersebut pada refresh token atau pergantian halaman. Supabase tetap memakai access token pendek dan refresh token, dan route tetap memverifikasi identitas melalui `getUser()`. Sesi aktif melewati signin/signup/welcome dan kembali ke route internal yang diminta, atau `/home`.
 
-1. **Connect GitHub to Vercel**
-2. **Set Environment Variables in Vercel**
-3. **Update Supabase Redirect URLs**
-4. **Deploy**
+Logout manual menghapus sesi. Saat sesi kedaluwarsa, draft retry milik akun tetap tersimpan agar bisa ditinjau setelah login ulang. Gangguan verifikasi sementara tidak membuka halaman terlindungi atau menghapus draft.
 
-```bash
-# Or use Vercel CLI
-vercel --prod
+Batas 14 hari ini berlaku pada aplikasi/browser. Untuk turut membatasi lifetime sesi di sisi server Supabase, atur **Time-box user sessions = 336 jam** bila paket project mendukungnya; jangan memperpanjang expiry JWT menjadi 14 hari. Pengaturan dashboard tersebut belum diubah dari repository. Lihat [Supabase User sessions](https://supabase.com/docs/guides/auth/sessions).
+
+## Pemeriksaan kualitas
+
+```sh
+npm run check
+npm run format:features
+npm audit --audit-level=high
 ```
 
-## 🔐 Security
+`check` mencakup pemeriksaan format modul yang sudah dirapikan, typecheck, lint, tes, dan production build. Tes arsitektur menjaga batas modul bersama dan graf import tanpa siklus. Konfigurasi TypeScript legacy belum sepenuhnya strict. Tes SQL dijelaskan dalam panduan database.
 
-- ✅ Environment variables are NOT committed (see `.gitignore`)
-- ✅ Supabase Row Level Security (RLS) enabled
-- ✅ API keys are server-side only
-- ✅ HTTPS enforced in production
-- ✅ Security headers configured
+Regresi browser beranda dan sesi tersedia melalui:
 
-**Never commit `.env.local` or any file containing secrets!**
-
-See [SECURITY.md](SECURITY.md) for detailed security guidelines.
-
-## 📊 Database Schema
-
-Main tables:
-
-- `user_profile` - User information
-- `smoke_free_journey` - User journey status (PRE_QUIT/POST_QUIT)
-- `daily_consumption_logs` - Daily cigarette consumption
-- `craving_logs` - Craving events with context
-- `ai_suggestions` - AI-generated advice history
-- `user_journey_stats` - Aggregated statistics
-
-## 🤖 AI Integration
-
-NIVO uses OpenRouter to access multiple AI models
-
-AI provides:
-
-- Personalized craving support
-- Context-aware coping strategies
-- NIVO Diffuser usage recommendations
-- Motivational messaging
-
-## 🧪 Testing
-
-```bash
-# Run type checking
-npm run type-check
-
-# Run linter
-npm run lint
-
-# Check environment variables
-node scripts/check-env.js
-
-# Test build
-npm run build
-npm start
+```sh
+npm run test:ui:home
+npm run test:ui:auth
 ```
 
-## 📝 Development Scripts
+Jalankan server lokal terlebih dahulu, sediakan Playwright dengan browser Edge (atau tunjuk modulnya melalui `PLAYWRIGHT_MODULE`), dan gunakan `UI_ORIGIN` bila port berbeda dari `http://127.0.0.1:3000`. Pengujian memakai sesi dan data sintetis serta mencegat permintaan auth/data sehingga tidak mengubah Supabase production. Screenshot dan hasil uji disimpan di folder lokal `SDD-Script/evidence` yang tidak ikut Git. Fixture lokal tidak menggantikan smoke test integrasi produksi.
 
-```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm start                # Start production server
-npm run lint             # Run ESLint
-npm run type-check       # TypeScript type checking
-node scripts/check-env.js # Verify environment variables
-```
+## Deployment
 
-## 🌟 Key Features Explained
+Hubungkan GitHub ke Vercel, pilih Node 22, dan isi environment variables dari `.env.example` lewat Dashboard Vercel. Gunakan origin HTTPS aplikasi yang konsisten untuk `NEXT_PUBLIC_SITE_URL` serta URL redirect Auth di Supabase. Environment `NEXT_PUBLIC_*` disertakan saat build; perubahan nilainya memerlukan build dan deployment baru.
 
-### AI-Powered Craving Support
+Konfigurasi Vercel menjalankan `npm run check` saat build. Pastikan preflight database dan alur login/penyimpanan berhasil sebelum membuka layanan. Push atau merge kode tidak menjalankan skrip reset database.
 
-- Real-time response generation
-- Emotion and situation analysis
-- Personalized coping strategies
-- NIVO Diffuser recommendations with dosage
+## File untuk GitHub
 
-### Progress Tracking
+Source, aset, lockfile dependency, konfigurasi build/CI, tes, `.env.example`, SQL, dan panduan operasional tetap masuk Git. Environment asli, dependency lokal, hasil build/cache, konfigurasi akun lokal, laporan diagnosis/progres, serta bukti pengujian diabaikan. Dokumen SDD asli tetap lokal.
 
-- **PRE-QUIT:** Countdown to quit date, daily consumption reduction
-- **POST-QUIT:** Streak counter, cigarettes avoided, money saved
-
-### Health Milestones
-
-- 20 minutes: Heart rate normalizes
-- 12 hours: Carbon monoxide levels drop
-- 2 weeks: Circulation improves
-- 1 month: Lung function increases
-- And more...
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-## 📄 License
-
-This project is private and proprietary.
-
-## 📞 Support
-
-For issues or questions:
-
-- Create an issue on GitHub
-- Contact: [your-email@example.com]
-
-## 🙏 Acknowledgments
-
-- **Supabase** - Backend infrastructure
-- **Vercel** - Hosting and deployment
-- **OpenRouter** - AI model access
-- **shadcn/ui** - UI component library
-
----
-
-**Built with ❤️ for a smoke-free future**
+Gunakan perintah di `package.json` dan konfigurasi `.env.example` yang terbaru. Catatan commit menjelaskan perubahan, validasi, dan batas penerapan. Panduan tambahan: [DESIGN.md](DESIGN.md), [SECURITY.md](SECURITY.md), dan [supabase/RESET_AND_SCHEMA.md](supabase/RESET_AND_SCHEMA.md).

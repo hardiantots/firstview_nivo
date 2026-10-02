@@ -1,86 +1,82 @@
-'use client'
+'use client';
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { Toaster } from "@/components/ui/toaster"
-import { Toaster as Sonner } from "@/components/ui/sonner"
-import { useState, useEffect } from "react"
-import React from "react"
-import { MotionConfig } from "framer-motion"
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { useState, useEffect } from 'react';
+import React from 'react';
+import { MotionConfig } from 'framer-motion';
+import PageTransition from '@/shared/layout/PageTransition';
+import ServiceWorkerRegistration from '@/shared/push/ServiceWorkerRegistration';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient())
+  const [queryClient] = useState(() => new QueryClient());
 
-  // Setup Supabase auth listener and restore session
   useEffect(() => {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
     const initAuth = async () => {
       const { supabase } = await import('@/lib/supabase');
       const { AuthStorage } = await import('@/lib/auth-storage');
+      const { expireBrowserSession } = await import('@/shared/auth/expire-session');
       if (disposed) return;
-      
-      // Get current session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      if (disposed) return;
-      
-      if (session) {
-        // Sync Supabase session to our custom AuthStorage
-        AuthStorage.saveSession({
-          userToken: session.access_token,
-          userId: session.user.id,
-          userEmail: session.user.email || '',
-          lastLoginAt: Date.now(),
-          sessionMaxAgeDays: 30,
-          loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
-        });
-      }
-      
-      // Listen for auth changes (login, logout, token refresh)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const expireWhenDue = () => {
         if (disposed) return;
-        
-        if (event === 'SIGNED_IN' && session) {
-          // User signed in - save to AuthStorage
-          AuthStorage.saveSession({
-            userToken: session.access_token,
-            userId: session.user.id,
-            userEmail: session.user.email || '',
-            lastLoginAt: Date.now(),
-            sessionMaxAgeDays: 30,
-            loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
+        const expiry = AuthStorage.expiresAt();
+        if (expiry === null) return;
+        if (expiry > Date.now()) {
+          expiryTimer = setTimeout(expireWhenDue, expiry - Date.now());
+        } else {
+          void expireBrowserSession().catch(() => {
+            /* Local cleanup still runs. */
           });
-        } else if (event === 'SIGNED_OUT') {
-          // User signed out - clear AuthStorage
-          AuthStorage.clearSession();
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          // Token refreshed - update AuthStorage
-          AuthStorage.saveSession({
-            userToken: session.access_token,
-            userId: session.user.id,
-            userEmail: session.user.email || '',
-            lastLoginAt: Date.now(),
-            sessionMaxAgeDays: 30,
-            loginMethod: session.user.app_metadata.provider === 'google' ? 'oauth' : 'password',
-          });
-          AuthStorage.updateLastLogin();
         }
+      };
+      const syncSession = (session: import('@supabase/supabase-js').Session) => {
+        AuthStorage.saveSupabaseSession(session);
+        clearTimeout(expiryTimer);
+        const expiresAt = AuthStorage.expiresAt(session);
+        if (expiresAt !== null)
+          expiryTimer = setTimeout(expireWhenDue, Math.max(0, expiresAt - Date.now()));
+      };
+      // Keep the callback synchronous; Supabase holds its auth lock while notifying.
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, session) => {
+        if (disposed) return;
+        if (event === 'SIGNED_OUT') {
+          clearTimeout(expiryTimer);
+          AuthStorage.clearSession({ preserveDrafts: true });
+        } else if (session) syncSession(session);
       });
-      
       unsubscribe = () => subscription.unsubscribe();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!disposed && session) syncSession(session);
     };
-
-    void initAuth().catch(() => { /* AuthGuard handles session availability. */ });
-    return () => { disposed = true; unsubscribe?.(); };
+    void initAuth().catch(() => {
+      /* AuthGuard handles session availability. */
+    });
+    return () => {
+      disposed = true;
+      unsubscribe?.();
+      clearTimeout(expiryTimer);
+    };
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider><MotionConfig reducedMotion="user">
-        {children}
-        <Toaster />
-        <Sonner />
-      </MotionConfig></TooltipProvider>
+      <TooltipProvider>
+        <MotionConfig reducedMotion="user" transition={{ duration: 0.24, ease: 'easeOut' }}>
+          <ServiceWorkerRegistration />
+          <PageTransition>{children}</PageTransition>
+          <Toaster />
+          <Sonner />
+        </MotionConfig>
+      </TooltipProvider>
     </QueryClientProvider>
-  )
+  );
 }

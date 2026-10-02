@@ -2,18 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader, AlertCircle } from "lucide-react";
+import { Loader, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OTPInput, SlotProps } from "input-otp";
 import { cn } from "@/lib/utils"; // Assuming you have a cn utility
-import Image from "next/image";
-import abstractHeader from "@/assets/abstract-header.jpg";
+import AuthFrame from '@/features/auth/AuthFrame';
 import { resendPasswordResetEmail } from "@/lib/auth";
 import { verifyRecoveryOtp } from '@/lib/recovery';
 
 const OtpVerificationScreen = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("your email");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,32 +60,15 @@ const OtpVerificationScreen = () => {
       setResendMessage("Kode telah dikirim ulang ke email Anda");
       setTimeout(() => setResendMessage(""), 5000);
     } else {
-      setError(result.error || "Gagal mengirim ulang kode");
+      setError('Kode belum berhasil dikirim ulang. Periksa koneksi, lalu coba lagi.');
     }
     
     setResendLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="h-48 relative overflow-hidden">
-        <Image
-          src={abstractHeader}
-          alt="Abstract colorful background"
-          className="w-full h-full object-cover"
-          fill
-        />
-        <button
-          onClick={() => router.back()}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-sm mx-auto px-6 py-8">
+    <AuthFrame onBack={() => router.back()}>
+      <div>
         <div className="animate-fade-in text-center">
           <h1 className="text-2xl font-bold mb-2">Masukkan Kode</h1>
           <p className="text-muted-foreground mb-8">
@@ -95,20 +77,21 @@ const OtpVerificationScreen = () => {
           </p>
 
           {error && (
-            <div className="flex gap-3 items-start p-3 bg-red-50 border border-red-200 rounded-lg mb-6 text-left">
+            <div role="alert" className="flex gap-3 items-start p-3 bg-destructive/10 border border-destructive/25 rounded-control mb-6 text-left">
               <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
           {resendMessage && (
-            <div className="flex gap-3 items-start p-3 bg-green-50 border border-green-200 rounded-lg mb-6 text-left">
+            <div role="status" className="flex gap-3 items-start p-3 bg-green-50 border border-green-200 rounded-control mb-6 text-left">
               <p className="text-sm text-green-800">{resendMessage}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
             <OTPInput
+              aria-label="Kode verifikasi enam digit"
               maxLength={6}
               value={otp}
               onChange={setOtp}
@@ -131,7 +114,7 @@ const OtpVerificationScreen = () => {
               {loading ? (
                 <>
                   <Loader className="w-4 h-4 mr-2 animate-spin" />
-                  Verifying...
+                  Memeriksa kode…
                 </>
               ) : (
                 "Verifikasi"
@@ -145,14 +128,14 @@ const OtpVerificationScreen = () => {
               type="button"
               onClick={handleResendCode}
               disabled={resendLoading}
-              className="font-medium text-accent hover:text-accent/80 disabled:opacity-50"
+              className="min-h-11 font-medium text-accent hover:text-accent/80 disabled:opacity-50"
             >
               {resendLoading ? "Mengirim..." : "Kirim Ulang"}
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </AuthFrame>
   );
 };
 
@@ -161,13 +144,13 @@ function Slot(props: SlotProps) {
   return (
     <div
       className={cn(
-        "relative w-10 h-14 text-[2rem] mx-1",
+        "relative w-9 sm:w-10 h-12 sm:h-14 text-xl sm:text-2xl mx-0.5",
         "flex items-center justify-center",
         "transition-all duration-300",
         "border-border border-y border-r first:border-l first:rounded-l-md last:rounded-r-md",
-        "group-hover:border-accent-foreground/20 group-focus-within:border-accent-foreground/20",
-        "outline outline-0 outline-accent-foreground/20",
-        { "outline-4 outline-accent-foreground": props.isActive }
+        "bg-white/80 group-hover:border-primary/40 group-focus-within:border-primary/40",
+        "outline outline-0 outline-primary",
+        { "outline-2": props.isActive }
       )}
     >
       {props.char !== null && <div>{props.char}</div>}

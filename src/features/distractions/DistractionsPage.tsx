@@ -48,22 +48,22 @@ const DistractionsPage = () => {
   const selected = DISTRACTIONS.find((d) => d.id === selectedId) ?? DISTRACTIONS[0];
 
   return (
-    <div className="relative max-w-md mx-auto md:max-w-lg lg:max-w-xl">
+    <div className="nivo-standalone relative">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
-      <main className="px-3 sm:px-4 py-6 space-y-6">
+      <main className="nivo-page">
         <motion.h1
-          className="text-xl font-bold text-green-900"
-          initial={{ opacity: 0, y: -10 }}
+          className="text-2xl font-semibold text-primary"
+          initial={{ opacity: .65, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
         >
           Distraksi 5 Menit
         </motion.h1>
 
         <motion.section
-          className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 space-y-3"
-          initial={{ opacity: 0, y: 10 }}
+          className="nivo-glass p-5 space-y-3"
+          initial={{ opacity: .65, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <p className="text-sm text-gray-700">
@@ -83,9 +83,10 @@ const DistractionsPage = () => {
               <button
                 key={item.id}
                 onClick={() => setSelectedId(item.id)}
-                className={`flex-shrink-0 px-3 py-2 rounded-full text-xs border transition-colors whitespace-nowrap ${{
-                  true: "bg-teal-600 text-white border-teal-600",
-                  false: "bg-white text-gray-700 border-gray-200 hover:bg-gray-50",
+                aria-pressed={selected.id === item.id}
+                className={`nivo-button min-h-11 flex-shrink-0 px-3 py-2 rounded-full text-xs border whitespace-nowrap ${{
+                  true: "bg-primary text-white border-primary",
+                  false: "bg-secondary/10 text-accent border-secondary/25 hover:bg-secondary/20",
                 }[String(selected.id === item.id) as "true" | "false"]}`}
               >
                 {item.title}
@@ -95,13 +96,13 @@ const DistractionsPage = () => {
 
           <motion.div
             key={selected.id}
-            className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl p-6 text-white space-y-3"
-            initial={{ opacity: 0, y: 10 }}
+            className="nivo-glass nivo-glass-warm p-6 text-foreground space-y-3"
+            initial={{ opacity: .65, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <h2 className="text-lg font-semibold">{selected.title}</h2>
-            <p className="text-sm text-white/90">{selected.description}</p>
-            <p className="text-[11px] text-white/80">
+            <p className="text-sm text-foreground">{selected.description}</p>
+            <p className="text-xs text-muted-foreground">
               Setelah selesai, perhatikan apakah intensitas keinginan merokok
               menurun. Jika masih kuat, Anda bisa mencoba latihan napas 4-7-8
               atau menghubungi tenaga profesional.
@@ -110,8 +111,8 @@ const DistractionsPage = () => {
         </section>
 
         <Button
-          variant="outline"
-          className="w-full border-teal-600 text-teal-700"
+          variant="secondary"
+          className="w-full"
           onClick={() => router.push("/craving-support")}
         >
           Kembali ke Craving Support
