@@ -25,6 +25,18 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/lib/*": [
+        "./src/shared/lib/*"
+      ],
+      "@/hooks/*": [
+        "./src/shared/hooks/*"
+      ],
+      "@/data/*": [
+        "./src/shared/data/*"
+      ],
+      "@/assets/*": [
+        "./src/shared/assets/*"
       ]
     },
     "noImplicitAny": false,
@@ -37,12 +49,13 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "app/**/*",
     "next-env.d.ts",
-    "src/**/*"
+    "src/**/*",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    ".next"
+    ".next",
+    "SDD-Script/evidence/source-before"
   ]
 }

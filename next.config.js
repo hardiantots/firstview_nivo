@@ -4,7 +4,6 @@
 const requiredEnvVars = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'OPENROUTER_API_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'NEXT_PUBLIC_SITE_URL',
 ];
@@ -29,12 +28,10 @@ if (missingEnvVars.length > 0) {
 
 const nextConfig = {
   typescript: {
-    // Temporarily set to true for Next.js 15 type validation issue
-    // tsc --noEmit passes, but Next.js 15 validator has false positives
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    dirs: ['app', 'components', 'lib', 'src'],
+    dirs: ['src'],
   },
   images: {
     remotePatterns: [

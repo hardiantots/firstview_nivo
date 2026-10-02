@@ -1,0 +1,3 @@
+const fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+function load(file,mocks={}) { const resolved=path.resolve(file); const code=ts.transpileModule(fs.readFileSync(resolved,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText; const module={exports:{}};new Function('require','module','exports',code)(name=>{if(mocks[name])return mocks[name];if(name.startsWith('@/'))return load('src/'+name.slice(2)+'.ts',mocks);if(name.startsWith('.'))return load(path.resolve(path.dirname(resolved),name)+'.ts',mocks);return require(name);},module,module.exports);return module.exports; }
+module.exports={load};
