@@ -33,13 +33,20 @@ jobs:
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/setup-node@v7
         with:
-          fail-on-severity: high
+          node-version: '22'
+          cache: npm
+      # Audit the full locked tree, including development dependencies. This
+      # gate also works when the repository's Dependency graph is disabled.
+      - run: npm ci --ignore-scripts
+      - name: Audit locked dependencies
+        run: npm audit --audit-level=high
   secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 10
