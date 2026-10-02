@@ -1,5 +1,18 @@
 # Diagnosis kegagalan merge PR #2
 
+## Update pemeriksaan 2 Oktober 2026
+
+Error secrets yang berulang disebabkan riwayat, bukan kegagalan mengunduh Docker. Pemindaian ulang repository lokal menemukan 13 temuan: sembilan manifest build `.next`, dua JWT anon Supabase, serta dua temuan API key OpenRouter dalam `.env.production` dan `.env.development` pada commit lama. Workflow tetap memindai riwayat; logging ditambah `--verbose --redact=100` agar file/rule/commit terlihat tanpa menampilkan nilai credential.
+
+Mirror terpisah dari GitHub terkini sudah disiapkan di `.security-remediation/github-prepared.git`. Ketiga branch `main`, `newversion/v2`, dan `newversion/v2.1` dibersihkan dari tiga path tersebut menggunakan git-filter-repo. Gitleaks 8.24.2 dengan `--log-opts=--all` pada mirror ini menghasilkan **0 temuan**. Hash isi file aplikasi/aset pada ketiga branch identik dengan sebelum pembersihan; yang berubah adalah riwayat commit dan file yang memang dikeluarkan. Ringkasan lokal: `.security-remediation/github-verification.json`. Folder preview diabaikan Git dan tidak boleh dipush sebagai file aplikasi.
+
+**Belum diterapkan ke GitHub. API key OpenRouter belum dicabut menurut konfirmasi pengguna.** Cabut key lama di [Dashboard OpenRouter](https://openrouter.ai/settings/keys); aplikasi sekarang tidak membutuhkan key itu. Revokasi berbeda dari penghapusan riwayat. Penerapan remote membutuhkan izin eksplisit untuk mengganti riwayat ketiga branch, pemeriksaan ulang hash remote, dan force-push dengan lease pada tiap branch. Jangan memakai push mirror yang dapat mengubah/menghapus refs lain. Jika ada commit baru sejak preview, siapkan ulang preview dari remote terbaru agar pekerjaan tersebut tetap terjaga.
+
+Sesudah penerapan, clone lama perlu diganti dengan clone baru agar commit lama tidak masuk kembali. PR aktif perlu dibuat ulang atau ditinjau terhadap hash baru; cached refs/PR GitHub mungkin memerlukan penanganan terpisah. Lihat [panduan GitHub tentang penghapusan data sensitif](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository). Riwayat repository kerja aktif tidak diubah oleh preview ini.
+
+Catatan di bawah adalah diagnosis awal sebelum preview terbaru; hasil terbaru di bagian ini menggantikan status pemindaian awal.
+
+
 Pemeriksaan pada 2 Oktober 2026 untuk branch `newversion/v2.1`, commit
 `8328e95fb7a3b09396e6dd7e59ec1b4573da7627`.
 

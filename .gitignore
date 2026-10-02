@@ -68,3 +68,6 @@ out
 /scripts/package-scripts-reference.json
 /scripts/pre-deploy-check.sh
 /scripts/setup-vercel-env.sh
+
+# Isolated security cleanup previews; never publish these local clones
+/.security-remediation/
