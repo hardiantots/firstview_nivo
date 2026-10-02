@@ -38,6 +38,101 @@ npm run format:features
 ```
 
 `check` mencakup pemeriksaan format modul yang sudah dirapikan, typecheck, lint, tes, dan production build. Tes arsitektur menjaga batas modul bersama dan graf import tanpa siklus. Konfigurasi TypeScript legacy belum sepenuhnya strict.
+## 🔐 Security
+
+- ✅ Environment variables are NOT committed (see `.gitignore`)
+- ✅ Supabase Row Level Security (RLS) enabled
+- ✅ API keys are server-side only
+- ✅ HTTPS enforced in production
+- ✅ Security headers configured
+
+**Never commit `.env.local` or any file containing secrets!**
+
+See [SECURITY.md](SECURITY.md) for detailed security guidelines.
+
+## 📊 Database Schema
+
+Main tables:
+
+- `user_profile` - User information
+- `smoke_free_journey` - User journey status (PRE_QUIT/POST_QUIT)
+- `daily_consumption_logs` - Daily cigarette consumption
+- `craving_logs` - Craving events with context
+- `ai_suggestions` - AI-generated advice history
+- `user_journey_stats` - Aggregated statistics
+
+## 🤖 AI Integration
+
+NIVO uses OpenRouter to access multiple AI models
+
+AI provides:
+
+- Personalized craving support
+- Context-aware coping strategies
+- NIVO Diffuser usage recommendations
+- Motivational messaging
+
+## 🧪 Testing
+
+```bash
+# Run type checking
+npm run type-check
+
+# Run linter
+npm run lint
+
+# Check environment variables
+node scripts/check-env.js
+
+# Test build
+npm run build
+npm start
+```
+
+## 📝 Development Scripts
+
+```bash
+npm run dev              # Start development server
+npm run build            # Build for production
+npm start                # Start production server
+npm run lint             # Run ESLint
+npm run type-check       # TypeScript type checking
+node scripts/check-env.js # Verify environment variables
+```
+
+## 🌟 Key Features Explained
+
+### AI-Powered Craving Support
+
+- Real-time response generation
+- Emotion and situation analysis
+- Personalized coping strategies
+- NIVO Diffuser recommendations with dosage
+
+### Progress Tracking
+
+- **PRE-QUIT:** Countdown to quit date, daily consumption reduction
+- **POST-QUIT:** Streak counter, cigarettes avoided, money saved
+
+### Health Milestones
+
+- 20 minutes: Heart rate normalizes
+- 12 hours: Carbon monoxide levels drop
+- 2 weeks: Circulation improves
+- 1 month: Lung function increases
+- And more...
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
 
 Regresi browser memerlukan Playwright/Edge terpisah; tes SQL memakai PGlite sesuai panduan database. Fixture lokal tidak menggantikan smoke test integrasi produksi.
 
