@@ -10,7 +10,7 @@ function fixture({ authenticated = true, broken = false } = {}) {
   const route = load('src/app/api/profile/motivations/route.ts', {
     '@/shared/server/http': { ...http,
       identity: async () => { if (!authenticated) throw new http.HttpError(401, 'Masuk kembali'); return 'verified-owner'; },
-      database: () => ({ from: () => ({ upsert: async value => { writes.push(value); return { error: broken ? { message: 'SECRET upstream content' } : null }; } }) }),
+      database: () => ({ from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { revision: 3 }, error: null }) }) }) }), rpc: async (name, value) => { assert.equal(name, 'nivo_update_profile'); assert.equal(value.p_expected, 3); writes.push({ user_id: value.p_user, ...value.p_profile }); return { data: { success: !broken }, error: broken ? { message: 'SECRET upstream content' } : null }; } }),
     },
     '@/shared/server/telemetry': { recordOperation: (...args) => metrics.push(args) },
   });

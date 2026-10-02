@@ -29,17 +29,17 @@ export async function prepareRecovery(url: string) {
   try { marker = JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { /* Invalid local marker. */ }
   const { data: { session } } = await supabase.auth.getSession();
   if (!session || marker?.userId !== session.user.id || marker.until < Date.now()) {
-    throw new Error('Mulai pemulihan password dari email atau kode yang baru.');
+    throw new Error('Mulai pemulihan kata sandi dari email atau kode yang baru.');
   }
 }
 export async function updateRecoveryPassword(password: string) {
-  if (password.length < 8 || password.length > 128) throw new Error('Password harus 8–128 karakter.');
+  if (password.length < 8 || password.length > 128) throw new Error('Kata sandi harus 8–128 karakter.');
   await prepareRecovery(window.location.origin + '/reset-password');
   const { data, error: verificationError } = await supabase.auth.getUser();
   const marker = JSON.parse(sessionStorage.getItem(key) || 'null');
   if (verificationError || !data.user || data.user.id !== marker?.userId) throw new Error('Sesi pemulihan tidak valid.');
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) throw new Error('Password belum berhasil diubah. Silakan coba lagi.');
+  if (error) throw new Error('Kata sandi belum berhasil diubah. Silakan coba lagi.');
   sessionStorage.removeItem(key);
   localStorage.removeItem('resetEmail');
   localStorage.removeItem('otpToken');

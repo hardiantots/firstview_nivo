@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { ArrowLeft, Eye, EyeOff, Mail, Loader } from "lucide-react";
+import { Eye, EyeOff, Mail, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
-import abstractHeader from "@/assets/abstract-header.jpg";
+import { signInReturnPath } from '@/shared/auth/return-path';
+import AuthFrame from '@/features/auth/AuthFrame';
 import { AuthStorage } from "@/lib/auth-storage";
 
 const SignInScreen = () => {
@@ -37,7 +37,7 @@ const SignInScreen = () => {
     setError("");
 
     if (!formData.email || !formData.password) {
-      setError("Email dan password harus diisi");
+      setError("Email dan kata sandi harus diisi.");
       setLoading(false);
       return;
     }
@@ -53,9 +53,9 @@ const SignInScreen = () => {
       
       // Session is already saved by AuthStorage in signInWithEmail
       
-      router.push("/home");
+      router.push(signInReturnPath(new URLSearchParams(window.location.search).get('next')));
     } else {
-      setError(result.error || "Sign in gagal. Silakan cek email dan password Anda.");
+      setError('Belum bisa masuk. Periksa email, kata sandi, dan koneksimu, lalu coba lagi.');
     }
 
     setLoading(false);
@@ -64,39 +64,23 @@ const SignInScreen = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError("");
+    sessionStorage.setItem('nivo.signin.next', signInReturnPath(new URLSearchParams(window.location.search).get('next')));
     const result = await signInWithGoogle();
     
     if (!result.success) {
-      setError(result.error || "Google sign in gagal");
+      setError('Belum bisa masuk dengan Google. Coba lagi atau gunakan email.');
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header with back button */}
-      <div className="h-48 relative overflow-hidden">
-        <Image
-          src={abstractHeader}
-          alt="Abstract colorful background"
-          fill
-          className="object-cover"
-        />
-        <button
-          onClick={() => router.back()}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-sm mx-auto px-6 py-8">
+    <AuthFrame onBack={() => router.back()}>
+      <div>
         <div className="animate-fade-in">
-          <h1 className="text-2xl font-bold mb-8">Sign In</h1>
+          <h1 className="text-2xl font-bold mb-8">Masuk</h1>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-sm text-red-800">
+            <div role="alert" className="mb-4 p-3 bg-destructive/10 border border-destructive/25 rounded-control text-sm text-destructive">
               {error}
             </div>
           )}
@@ -122,22 +106,23 @@ const SignInScreen = () => {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label htmlFor="signin-password" className="text-sm font-medium text-foreground">Password</label>
+              <label htmlFor="signin-password" className="text-sm font-medium text-foreground">Kata sandi</label>
               <div className="relative">
                 <Input
                   id="signin-password"
                   autoComplete="current-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Masukkan password"
+                  placeholder="Masukkan kata sandi"
                   value={formData.password}
                   onChange={handleInputChange("password")}
-                  className="pr-10"
+                  className="pr-12"
                   required
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="nivo-password-toggle"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -145,8 +130,8 @@ const SignInScreen = () => {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-h-11 items-center space-x-2">
                 <Checkbox
                   id="remember"
                   checked={formData.rememberMe}
@@ -154,16 +139,16 @@ const SignInScreen = () => {
                     setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                   }
                 />
-                <label htmlFor="remember" className="text-sm text-foreground">
-                  Remember me
+                <label htmlFor="remember" className="flex min-h-11 items-center text-sm text-foreground">
+                  Ingat email saya
                 </label>
               </div>
               <button
                 type="button"
                 onClick={() => router.push("/forgot-password")}
-                className="text-sm text-accent hover:text-accent/80 font-medium"
+                className="min-h-11 text-sm text-accent hover:text-accent/80 font-medium"
               >
-                Lupa Password?
+                Lupa kata sandi?
               </button>
             </div>
 
@@ -177,10 +162,10 @@ const SignInScreen = () => {
               {loading ? (
                 <>
                   <Loader className="w-4 h-4 mr-2 animate-spin" />
-                  Signing in...
+                  Memeriksa akun…
                 </>
               ) : (
-                "Sign In"
+                "Masuk"
               )}
             </Button>
           </form>
@@ -190,7 +175,7 @@ const SignInScreen = () => {
             <span className="text-sm text-muted-foreground">Belum punya akun? </span>
             <button
               onClick={() => router.push("/signup")}
-              className="text-sm text-accent hover:text-accent/80 font-medium"
+              className="min-h-11 text-sm text-accent hover:text-accent/80 font-medium"
             >
               Daftar di sini
             </button>
@@ -200,7 +185,7 @@ const SignInScreen = () => {
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-6">
               <hr className="flex-1 border-border" />
-              <span className="text-sm text-muted-foreground px-2">Or connect using</span>
+              <span className="text-sm text-muted-foreground px-2">Atau masuk dengan</span>
               <hr className="flex-1 border-border" />
             </div>
 
@@ -208,6 +193,7 @@ const SignInScreen = () => {
               <button 
                 type="button"
                 onClick={handleGoogleSignIn}
+                aria-label="Masuk dengan Google"
                 disabled={loading}
                 className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50"
               >
@@ -234,7 +220,7 @@ const SignInScreen = () => {
           </div>
         </div>
       </div>
-    </div>
+    </AuthFrame>
   );
 };
 

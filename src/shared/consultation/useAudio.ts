@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { authenticatedRequest } from '@/shared/journey/client';
+import { authenticatedRequest } from '@/shared/api/client';
 import { Room, RoomAction } from './domain';
 export function useAudio(roomId: string, room: Room | null, actor: string, send: (action: RoomAction) => Promise<void>) {
   const [status, setStatus] = useState('Belum ada panggilan'), [muted, setMuted] = useState(false), [active, setActive] = useState(false);

@@ -56,6 +56,7 @@
   "exclude": [
     "node_modules",
     ".next",
-    "SDD-Script/evidence/source-before"
+    "SDD-Script/evidence/source-before",
+    "supabase/functions"
   ]
 }

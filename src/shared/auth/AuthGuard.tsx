@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthStorage } from '@/lib/auth-storage';
+import { signInReturnPath } from '@/shared/auth/return-path';
 
 // Protected routes that require authentication
 const PROTECTED_ROUTES = [
@@ -92,7 +93,7 @@ export function useAuth() {
         AuthStorage.clearSession();
         router.replace('/signin');
       } else if (authenticated && pathname === '/signin') {
-        router.replace('/home');
+        router.replace(signInReturnPath(new URLSearchParams(window.location.search).get('next')));
       } else if (pathname === '/' && authenticated) {
         router.replace('/home');
       } else if (pathname === '/' && !authenticated) {
@@ -126,13 +127,13 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, verificationError } = useAuth();
   const pathname = usePathname();
 
-  if (verificationError) return <div className="min-h-screen flex items-center justify-center p-6"><div role="alert" className="nivo-stack"><p>{verificationError}</p><button className="nivo-action" onClick={() => window.location.reload()}>Coba verifikasi lagi</button></div></div>;
+  if (verificationError) return <div className="min-h-screen flex items-center justify-center bg-background p-6"><div role="alert" className="nivo-glass nivo-glass-warm nivo-error-card nivo-stack"><p>{verificationError}</p><button className="nivo-action" onClick={() => window.location.reload()}>Coba verifikasi lagi</button></div></div>;
 
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="nivo-glass nivo-error-card">
           <div className="animate-spin w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-sm text-gray-500">Memverifikasi sesi...</p>
         </div>
@@ -148,8 +149,8 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   if (isProtectedRoute && !isAuthenticated) {
     // Will be redirected by useAuth hook
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="nivo-glass nivo-error-card">
           <div className="animate-spin w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-sm text-gray-500">Mengalihkan...</p>
         </div>

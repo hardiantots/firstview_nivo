@@ -7,6 +7,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner"
 import { useState, useEffect } from "react"
 import React from "react"
 import { MotionConfig } from "framer-motion"
+import PageTransition from '@/shared/layout/PageTransition'
+import ServiceWorkerRegistration from '@/shared/push/ServiceWorkerRegistration'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
@@ -76,8 +78,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider><MotionConfig reducedMotion="user">
-        {children}
+      <TooltipProvider><MotionConfig reducedMotion="user" transition={{ duration: .24, ease: 'easeOut' }}>
+        <ServiceWorkerRegistration />
+        <PageTransition>{children}</PageTransition>
         <Toaster />
         <Sonner />
       </MotionConfig></TooltipProvider>

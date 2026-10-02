@@ -59,6 +59,18 @@ const nextConfig = {
   distDir: '.next',
   // Vercel compatibility
   poweredByHeader: false,
+  async headers() {
+    let supabaseOrigin = '';
+    try { supabaseOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin; } catch {}
+    const sockets = supabaseOrigin.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+    const policy = ["default-src 'self'", "script-src 'self' 'unsafe-inline'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''), "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:", "font-src 'self' data:", `connect-src 'self' ${supabaseOrigin} ${sockets}`, "media-src 'self' blob:", "worker-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
+    return [{ source: '/:path*', headers: [
+      { key: 'Content-Security-Policy', value: policy },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'no-referrer' },
+      { key: 'X-Frame-Options', value: 'DENY' },
+    ] }, { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }, { key: 'Service-Worker-Allowed', value: '/' }] }];
+  },
   // Experimental - optimize for dynamic routes
   experimental: {
     optimizePackageImports: ['@radix-ui/*', 'lucide-react'],

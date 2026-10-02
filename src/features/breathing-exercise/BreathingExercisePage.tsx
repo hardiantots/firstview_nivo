@@ -72,22 +72,22 @@ const BreathingExercisePage = () => {
   };
 
   return (
-    <div className="relative max-w-md mx-auto md:max-w-lg lg:max-w-xl">
+    <div className="nivo-standalone relative">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
-      <main className="px-3 sm:px-4 py-6 space-y-6">
+      <main className="nivo-page">
         <motion.h1
-          className="text-xl font-bold text-green-900"
-          initial={{ opacity: 0, y: -10 }}
+          className="text-2xl font-semibold text-primary"
+          initial={{ opacity: .65, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
         >
           Latihan Napas 4-7-8
         </motion.h1>
 
         <motion.section
-          className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 space-y-3"
-          initial={{ opacity: 0, y: 10 }}
+          className="nivo-glass p-5 space-y-3"
+          initial={{ opacity: .65, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <p className="text-sm text-gray-700">
@@ -110,53 +110,52 @@ const BreathingExercisePage = () => {
         </motion.section>
 
         <motion.section
-          className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl p-6 text-center text-white space-y-4"
-          initial={{ opacity: 0, y: 10 }}
+          className="nivo-glass nivo-glass-warm p-6 text-center text-foreground space-y-4"
+          initial={{ opacity: .65, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <p className="text-sm font-medium tracking-wide uppercase">
             Panduan Interaktif
           </p>
-          <p className="text-sm text-white/90">Ikuti lingkaran dan hitungan di layar.</p>
+          <p className="text-sm text-muted-foreground">Ikuti lingkaran dan hitungan di layar.</p>
 
           <div className="flex flex-col items-center gap-3">
-            <div className="w-32 h-32 rounded-full border-4 border-white/40 flex flex-col items-center justify-center">
-              <span className="text-xs font-semibold text-white/80 mb-1">
+            <div className="w-32 h-32 rounded-full border-4 border-secondary/35 bg-white/70 flex flex-col items-center justify-center">
+              <span className="text-xs font-semibold text-accent mb-1">
                 {getPhaseLabel()}
               </span>
               <span className="text-4xl font-bold">{count}</span>
             </div>
-            <p className="text-sm text-white/90 max-w-xs">{getInstruction()}</p>
+            <p className="text-sm text-foreground max-w-xs">{getInstruction()}</p>
           </div>
 
           <div className="flex gap-3 justify-center mt-2">
             {!isRunning ? (
               <Button
                 onClick={handleStart}
-                className="bg-white text-teal-700 hover:bg-gray-100 font-semibold px-6"
+                className="font-semibold px-6"
               >
                 Mulai Latihan
               </Button>
             ) : (
               <Button
                 onClick={handleStop}
-                variant="outline"
-                className="border-white text-white hover:bg-white/10"
+                variant="secondary"
               >
                 Selesai
               </Button>
             )}
           </div>
 
-          <p className="text-[11px] text-white/80 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Untuk manfaat optimal, latihan ini dapat diulang 4 siklus berturut-turut
             saat keinginan merokok muncul.
           </p>
         </motion.section>
 
         <Button
-          variant="outline"
-          className="w-full border-teal-600 text-teal-700 mt-2"
+          variant="secondary"
+          className="w-full mt-2"
           onClick={() => router.push("/craving-support")}
         >
           Kembali ke Craving Support

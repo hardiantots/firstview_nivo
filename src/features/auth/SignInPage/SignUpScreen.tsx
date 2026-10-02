@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { ArrowLeft, Eye, EyeOff, Mail, Loader, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Loader, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signUpWithEmail, signInWithGoogle, signInWithFacebook } from "@/lib/auth";
-import abstractHeader from "@/assets/abstract-header.jpg";
+import AuthFrame from '@/features/auth/AuthFrame';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const SignUpScreen = () => {
   const router = useRouter();
@@ -36,13 +36,13 @@ const SignUpScreen = () => {
 
     // Validation
     if (!formData.email || !formData.password) {
-      setError("Email dan password harus diisi");
+      setError("Email dan kata sandi harus diisi.");
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
-      setError("Password minimal 8 karakter");
+      setError("Kata sandi minimal 8 karakter.");
       setLoading(false);
       return;
     }
@@ -65,7 +65,7 @@ const SignUpScreen = () => {
       setVerificationEmail(formData.email);
       setShowVerificationModal(true);
     } else {
-      setError(result.error || "Sign up gagal. Silakan coba lagi.");
+      setError('Akun belum berhasil dibuat. Periksa email dan koneksi, lalu coba lagi. Jika sudah punya akun, gunakan halaman masuk.');
     }
 
     setLoading(false);
@@ -77,7 +77,7 @@ const SignUpScreen = () => {
     const result = await signInWithGoogle();
     
     if (!result.success) {
-      setError(result.error || "Google sign up gagal");
+      setError('Belum bisa daftar dengan Google. Coba lagi atau gunakan email.');
     }
     setLoading(false);
   };
@@ -88,17 +88,17 @@ const SignUpScreen = () => {
     const result = await signInWithFacebook();
     
     if (!result.success) {
-      setError(result.error || "Facebook sign up gagal");
+      setError('Belum bisa daftar dengan Facebook. Coba lagi atau gunakan email.');
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Verification Modal */}
       {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-sm w-full p-8 shadow-xl animate-fade-in my-8">
+        <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
+          <DialogContent className="nivo-glass nivo-glass-warm max-w-sm max-h-[90dvh] overflow-y-auto p-6 sm:p-8">
             {/* Success Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -107,7 +107,8 @@ const SignUpScreen = () => {
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-center mb-2">Akun Berhasil Dibuat!</h2>
+            <DialogTitle className="text-2xl font-bold text-center mb-2">Akun Berhasil Dibuat!</DialogTitle>
+            <DialogDescription className="sr-only">Periksa email untuk mengaktifkan akun NIVO.</DialogDescription>
             
             {/* Message */}
             <p className="text-center text-gray-600 mb-2">
@@ -118,10 +119,10 @@ const SignUpScreen = () => {
             </p>
 
             {/* Description */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                Silakan periksa email Anda (termasuk folder spam) untuk link verifikasi. 
-                Klik link tersebut untuk mengaktifkan akun Anda.
+            <div className="bg-secondary/10 border border-secondary/25 rounded-lg p-4 mb-6">
+              <p className="text-sm text-accent">
+                Periksa emailmu (termasuk folder spam) untuk tautan verifikasi.
+                Buka tautan tersebut untuk mengaktifkan akunmu.
               </p>
             </div>
 
@@ -135,11 +136,11 @@ const SignUpScreen = () => {
                 </li>
                 <li className="flex gap-3">
                   <span className="font-semibold text-primary min-w-fit">2.</span>
-                  <span>Klik link verifikasi dalam email</span>
+                  <span>Buka tautan verifikasi dalam email</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="font-semibold text-primary min-w-fit">3.</span>
-                  <span>Kembali ke halaman sign in dan login dengan email Anda</span>
+                  <span>Kembali ke halaman masuk dan gunakan emailmu</span>
                 </li>
               </ol>
             </div>
@@ -150,34 +151,18 @@ const SignUpScreen = () => {
               className="w-full bg-primary hover:bg-primary/90"
               size="lg"
             >
-              Kembali ke Sign In
+              Kembali ke halaman masuk
             </Button>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
-      {/* Header with back button */}
-      <div className="h-48 relative overflow-hidden">
-        <Image
-          src={abstractHeader}
-          alt="Abstract colorful background"
-          fill
-          className="object-cover"
-        />
-        <button
-          onClick={() => router.back()}
-          className="absolute top-6 left-6 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-sm mx-auto px-6 py-8">
+      <AuthFrame onBack={() => router.back()}>
+      <div>
         <div className="animate-fade-in">
-          <h1 className="text-2xl font-bold mb-8">Sign Up</h1>
+          <h1 className="text-2xl font-bold mb-8">Buat akun</h1>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-sm text-red-800">
+            <div role="alert" className="mb-4 p-3 bg-destructive/10 border border-destructive/25 rounded-control text-sm text-destructive">
               {error}
             </div>
           )}
@@ -203,22 +188,23 @@ const SignUpScreen = () => {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label htmlFor="signup-password" className="text-sm font-medium text-foreground">Password</label>
+              <label htmlFor="signup-password" className="text-sm font-medium text-foreground">Kata sandi</label>
               <div className="relative">
                 <Input
                   id="signup-password"
                   autoComplete="new-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Masukkan password"
+                  placeholder="Masukkan kata sandi"
                   value={formData.password}
                   onChange={handleInputChange("password")}
-                  className="pr-10"
+                  className="pr-12"
                   required
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="nivo-password-toggle"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -235,10 +221,10 @@ const SignUpScreen = () => {
               {loading ? (
                 <>
                   <Loader className="w-4 h-4 mr-2 animate-spin" />
-                  Signing up...
+                  Membuat akun…
                 </>
               ) : (
-                "Sign Up"
+                "Daftar"
               )}
             </Button>
           </form>
@@ -248,9 +234,9 @@ const SignUpScreen = () => {
             <span className="text-sm text-muted-foreground">Sudah punya akun? </span>
             <button
               onClick={() => router.push("/signin")}
-              className="text-sm text-accent hover:text-accent/80 font-medium"
+              className="min-h-11 text-sm text-accent hover:text-accent/80 font-medium"
             >
-              Sign in di sini
+              Masuk di sini
             </button>
           </div>
 
@@ -258,7 +244,7 @@ const SignUpScreen = () => {
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-6">
               <hr className="flex-1 border-border" />
-              <span className="text-sm text-muted-foreground px-2">Or connect using</span>
+              <span className="text-sm text-muted-foreground px-2">Atau daftar dengan</span>
               <hr className="flex-1 border-border" />
             </div>
 
@@ -304,7 +290,8 @@ const SignUpScreen = () => {
           </div>
         </div>
       </div>
-    </div>
+      </AuthFrame>
+    </>
   );
 };
 

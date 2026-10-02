@@ -43,3 +43,28 @@ out
 
 # Vercel
 .vercel
+
+# Local credentials and tooling; retain the environment template
+.env*
+!.env.example
+/.aws/
+/.agents/
+/.codex/
+
+# Generated caches and test reports
+*.tsbuildinfo
+/coverage/
+/playwright-report/
+/test-results/
+/.turbo/
+/supabase/.temp/
+
+# Local progress reports; operational guides remain versioned
+/CODE_QUALITY_REVIEW.md
+/SDD_IMPLEMENTATION_00_05.md
+/UI_GLASS_ORANGE.md
+
+# Superseded deployment helpers; use package.json scripts and .env.example
+/scripts/package-scripts-reference.json
+/scripts/pre-deploy-check.sh
+/scripts/setup-vercel-env.sh

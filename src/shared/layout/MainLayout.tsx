@@ -10,11 +10,11 @@ import ScrollToTop from './ScrollToTop';
 import headerlogo from '@/assets/logo-with-text-horizontal.png';
 
 const items = [
-  { href: '/home', icon: Home, label: 'Home' },
-  { href: '/craving-support', icon: Heart, label: 'Butuh bantuan' },
-  { href: '/tracker', icon: BarChart3, label: 'Catatan' },
-  { href: '/pencapaian', icon: Sprout, label: 'Perjalanan' },
-  { href: '/contact-professional', icon: MessageCircle, label: 'Konsultasi' },
+  { href: '/home', icon: Home, label: 'Beranda', mobile: 'Beranda' },
+  { href: '/craving-support', icon: Heart, label: 'Butuh bantuan', mobile: 'Bantuan' },
+  { href: '/tracker', icon: BarChart3, label: 'Catatan', mobile: 'Catatan' },
+  { href: '/pencapaian', icon: Sprout, label: 'Perjalanan', mobile: 'Rencana' },
+  { href: '/contact-professional', icon: MessageCircle, label: 'Konsultasi', mobile: 'Konselor' },
 ];
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -31,7 +31,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     <ScrollToTop />
     <a href="#main-content" className="nivo-skip">Lewati ke konten</a>
     <header className="nivo-header">
-      <div className="nivo-brand"><Link href="/home" aria-label="NIVO — Home"><Image src={headerlogo} alt="NIVO" height={32} className="h-8 w-auto" priority /></Link><span>Ruang untuk langkah kecil.</span></div>
+      <div className="nivo-brand"><Link href="/home" aria-label="NIVO — Beranda"><Image src={headerlogo} alt="NIVO" height={32} className="h-8 w-auto" priority /></Link><span>Ruang untuk langkah kecil.</span></div>
       <div className="flex items-center gap-2">
         <Link href="/notifications" className="nivo-icon-button" aria-label="Notifikasi"><Bell size={20} aria-hidden="true" /></Link>
         <button className="nivo-icon-button" onClick={() => setMenuOpen(true)} aria-label="Buka menu akun"><Menu size={20} aria-hidden="true" /></button>
@@ -41,10 +41,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     <div className="nivo-shell-body">
       <nav className="nivo-nav" aria-label="Navigasi utama">
         <p className="nivo-nav-caption">Ruangmu</p>
-        {items.map(({ href, icon: Icon, label }) => {
+        {items.map(({ href, icon: Icon, label, mobile }) => {
           const active = pathname === href || (href === '/tracker' && pathname.startsWith('/craving-history'));
           return <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
-            <Icon size={21} strokeWidth={1.7} aria-hidden="true" /><span>{label}</span>
+            <Icon size={21} strokeWidth={1.7} aria-hidden="true" /><span className="lg:hidden">{mobile}</span><span className="hidden lg:inline">{label}</span>
           </Link>;
         })}
         <div className="nivo-nav-note"><Sprout size={22} strokeWidth={1.5} aria-hidden="true" /><p>Satu langkah.<br />Sesuai ritmemu.</p></div>

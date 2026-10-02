@@ -1,329 +1,373 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from "react";
-import { ArrowLeft, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LoadingScreen } from "@/components/ui/loading";
-import { authenticatedRequest } from '@/shared/journey/client';
-import { StateNotice } from '@/components/ui/nivo';
-import logo from "@/assets/logo-with-text-horizontal.png";
-import AuthGuard from "@/shared/auth/AuthGuard";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Bell, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Panel, PageTitle, StateNotice } from '@/components/ui/nivo';
+import { authenticatedRequest } from '@/shared/api/client';
+import { deviceTimezone } from '@/shared/lib/format';
+import { profileSchema } from '@/shared/profile/schema';
+import { MOTIVATION_OPTIONS } from '@/content/copy-id';
+import logo from '@/assets/logo-with-text-horizontal.png';
+import AuthGuard from '@/shared/auth/AuthGuard';
+import LogoutButton from '@/shared/auth/LogoutButton';
 
-const ProfileSettingsPage = () => {
+type ProfileForm = {
+  fullName: string;
+  email: string;
+  motivations: string[];
+  ownReason: string;
+  timezone: string;
+};
+const emptyForm: ProfileForm = {
+  fullName: '',
+  email: '',
+  motivations: [],
+  ownReason: '',
+  timezone: '',
+};
+const timezoneOptions = [
+  { value: 'Asia/Jakarta', label: 'Jakarta · WIB' },
+  { value: 'Asia/Makassar', label: 'Makassar · WITA' },
+  { value: 'Asia/Jayapura', label: 'Jayapura · WIT' },
+];
+
+export default function ProfileSettingsPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [forceRender, setForceRender] = useState(0); // Add force render
-  const [profileError, setProfileError] = useState('');
-  const [profileNotice, setProfileNotice] = useState('');
-  const [saving, setSaving] = useState(false);
-  
-  const [initialData, setInitialData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    gender: "",
-    birthDate: "",
-    smokingPattern: "",
-    motivasiPilihan: [] as string[],
-  });
-  
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    gender: "",
-    birthDate: "",
-    smokingPattern: "",
-    motivasiPilihan: [] as string[],
-  });
+  const [loading, setLoading] = useState(true),
+    [loaded, setLoaded] = useState(false),
+    [saving, setSaving] = useState(false);
+  const [error, setError] = useState(''),
+    [notice, setNotice] = useState(''),
+    [conflict, setConflict] = useState(false);
+  const [initial, setInitial] = useState<ProfileForm>(emptyForm),
+    [form, setForm] = useState<ProfileForm>(emptyForm);
+  const [journeyRevision, setJourneyRevision] = useState(0);
+  const lock = useRef(false),
+    alive = useRef(true);
 
-  const motivationOptions = [
-    { value: "Kesehatan", label: "Kesehatan" },
-    { value: "Keuangan", label: "Keuangan" }, 
-    { value: "Keluarga", label: "Keluarga" },
-    { value: "Energi & Stamina", label: "Energi & Stamina" },
-    { value: "Fokus & Konsentrasi", label: "Fokus & Konsentrasi" },
-    { value: "Kepercayaan Diri", label: "Kepercayaan Diri" },
-  ];
-
-  const genderOptions = [
-    { value: "Laki-Laki", label: "Laki-Laki" },
-    { value: "Perempuan", label: "Perempuan" }
-  ];
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      let data;
-      try { data = (await authenticatedRequest('/api/profile')).profile; }
-      catch {
-        setProfileError('Profil belum dapat dimuat. Coba buka kembali halaman ini.');
-        setIsLoading(false);
-        return;
-      }
-
-      const currentPhase = "";
-      if (data) {
-        const loaded = {
-          fullName: (data.full_name as string) || "",
-          email: (data.email as string) || "",
-          phoneNumber: (data.phone_number as string) || "",
-          gender: (data.gender as string) || "",
-          birthDate: data.date_of_birth ? String(data.date_of_birth) : "",
-          smokingPattern: currentPhase || (data.smoking_pattern as string) || "",
-          motivasiPilihan: (data.motivations as string[] | null) || [],
-        };
-        
-        setInitialData(loaded);
-        setFormData(loaded);
-        setTimeout(() => setForceRender(prev => prev + 1), 100);
-      }
-      setIsLoading(false);
-    };
-
-    loadProfile();
+  const loadProfile = useCallback(async (keepDraft = false) => {
+    setLoading(true);
+    setError('');
+    try {
+      const { profile } = await authenticatedRequest('/api/profile');
+      if (!alive.current) return;
+      const next: ProfileForm = {
+        fullName: profile.full_name || '',
+        email: profile.email || '',
+        motivations: profile.motivations || [],
+        ownReason: profile.own_reason || '',
+        timezone: profile.timezone || deviceTimezone(),
+      };
+      setInitial(next);
+      if (!keepDraft) setForm(next);
+      setJourneyRevision(profile.journey_revision || 0);
+      setLoaded(true);
+      setConflict(false);
+      if (keepDraft)
+        setNotice(
+          'Profil terbaru sudah dimuat di bawah. Isianmu tetap ada. Periksa perbedaannya sebelum menyimpan lagi.',
+        );
+    } catch {
+      if (alive.current) setError('Profil belum dapat dimuat. Periksa koneksi, lalu coba lagi.');
+    } finally {
+      if (alive.current) setLoading(false);
+    }
   }, []);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  useEffect(() => {
+    alive.current = true;
+    loadProfile();
+    return () => {
+      alive.current = false;
+    };
+  }, [loadProfile]);
+  const setField = <K extends keyof ProfileForm>(field: K, value: ProfileForm[K]) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setNotice('');
   };
-
-  const toggleMotivation = (value: string) => {
-    setFormData(prev => {
-      const exists = prev.motivasiPilihan?.includes(value) || false;
-      const next = exists
-        ? prev.motivasiPilihan.filter(v => v !== value)
-        : prev.motivasiPilihan.length >= 2
-        ? prev.motivasiPilihan
-        : [...prev.motivasiPilihan, value];
-      
-      return { ...prev, motivasiPilihan: next };
+  const hasChanges = JSON.stringify(form) !== JSON.stringify(initial);
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (lock.current || !loaded || !hasChanges || conflict) return;
+    const input = profileSchema.safeParse({
+      full_name: form.fullName,
+      motivations: form.motivations,
+      own_reason: form.ownReason,
+      timezone: form.timezone,
+      journey_revision: journeyRevision,
     });
-    
-    setTimeout(() => setForceRender(prev => prev + 1), 50);
-  };
-
-  const hasChanges = JSON.stringify(formData) !== JSON.stringify(initialData);
-
-  const handleSaveChanges = async () => {
-    if (saving) return;
-    setSaving(true); setProfileError(''); setProfileNotice('');
+    if (!input.success) {
+      setError('Periksa kembali isianmu. Alasan pribadi maksimal 300 karakter.');
+      return;
+    }
+    lock.current = true;
+    setSaving(true);
+    setError('');
+    setNotice('');
     try {
-      await authenticatedRequest('/api/profile', { method: 'PUT', body: JSON.stringify({
-          full_name: formData.fullName,
-          phone_number: formData.phoneNumber,
-          gender: formData.gender,
-          date_of_birth: formData.birthDate || null,
-          motivations: formData.motivasiPilihan,
-      }) });
-      setInitialData(formData);
-      setProfileNotice('Perubahan profil tersimpan.');
-    } catch (error) { setProfileError(error instanceof Error ? error.message : 'Perubahan belum tersimpan.'); }
-    finally { setSaving(false); }
+      const result = await authenticatedRequest('/api/profile', {
+        method: 'PUT',
+        body: JSON.stringify(input.data),
+      });
+      setJourneyRevision(result.journey_revision ?? journeyRevision);
+      const saved = {
+        ...form,
+        fullName: input.data.full_name,
+        ownReason: input.data.own_reason || '',
+      };
+      setForm(saved);
+      setInitial(saved);
+      setNotice('Perubahan profil tersimpan.');
+    } catch (cause) {
+      setConflict(
+        Boolean(cause && typeof cause === 'object' && 'status' in cause && cause.status === 409),
+      );
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Belum bisa menyimpan. Periksa koneksi, lalu coba lagi.',
+      );
+    } finally {
+      lock.current = false;
+      setSaving(false);
+    }
   };
-
-  const handleCancelChanges = () => {
-    router.push("/home");
-  };
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-white max-w-md mx-auto md:max-w-lg lg:max-w-xl">
-        {/* Header */}
-        <div className="sticky top-0 z-20 bg-white px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => router.push("/home")} 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <div className="flex items-center gap-2">
-            <Image src={logo} alt="NIVO Logo" height={32} width={120}/>
-          </div>
-        </div>
-        <div className="w-6 h-6 text-gray-600">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-          </svg>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-6">
-        {profileError && <StateNotice error>{profileError}</StateNotice>}
-        {profileNotice && <StateNotice>{profileNotice}</StateNotice>}
-        {/* Profile Header - no photo upload for now */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 flex items-center justify-center overflow-hidden">
-            <span className="text-white font-medium text-lg">
-              {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : "U"}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-gray-900">{formData.fullName || "Nama belum diisi"}</span>
-            <span className="text-xs text-gray-500">{formData.email || "Email belum diisi"}</span>
-          </div>
-        </div>
-
-        {/* Personal Information Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Informasi Pribadi</h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="nama">Nama Lengkap</Label>
-            <Input
-              id="nama"
-              value={formData.fullName}
-              onChange={(e) => handleInputChange("fullName", e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              readOnly
-              aria-describedby="profile-email-hint"
-              className="bg-white border border-gray-200 rounded-lg shadow-sm"
-            />
-            <p id="profile-email-hint" className="text-sm text-muted-foreground">Email mengikuti akun login.</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Nomor WhatsApp</Label>
-            <Input
-              value={formData.phoneNumber}
-              onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Jenis Kelamin</Label>
-            <Select
-              value={formData.gender}
-              onValueChange={(value) => handleInputChange("gender", value)}
+      <div className="nivo-standalone">
+        <header className="nivo-standalone-header sticky top-0 z-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/home')}
+              className="nivo-icon-button"
+              aria-label="Kembali ke Beranda"
             >
-              <SelectTrigger className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                {genderOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <ArrowLeft size={20} />
+            </button>
+            <Image src={logo} alt="NIVO" height={32} className="h-8 w-auto" />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Tanggal Lahir</Label>
-            <Input
-              id="birthDate"
-              type="date"
-              value={formData.birthDate}
-              onChange={(e) => handleInputChange("birthDate", e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-full min-w-0 text-sm md:text-base"
-            />
-          </div>
-        </div>
-
-        {/* Preferences Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Preferensi</h3>
-
-          <div className="space-y-2">
-            <Label>Motivasi Utama (seperti saat onboarding)</Label>
-            <p className="text-xs text-gray-500 mb-1">
-              Pilih kembali maksimal 2 alasan terkuatmu. Ini akan mempengaruhi pesan di beranda.
-            </p>
-            <div className="grid grid-cols-2 gap-2" key={`motivations-${forceRender}`}>
-              {motivationOptions.map((m) => {
-                const active = formData.motivasiPilihan?.includes(m.value) || false;
-                return (
-                  <button
-                    key={`${m.value}-${forceRender}-${formData.motivasiPilihan?.length || 0}`}
-                    type="button"
-                    onClick={() => toggleMotivation(m.value)}
-                    className={`text-xs px-3 py-2 rounded-lg border transition-all duration-200 text-left flex items-center gap-2 ${
-                      active
-                        ? "bg-green-700 text-white border-green-700 hover:bg-green-800 shadow-md"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    }`}
-                  >
-                    {active && (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                    {m.label}
-                  </button>
-                );
-              })}
+          <Link href="/notifications" className="nivo-icon-button" aria-label="Notifikasi">
+            <Bell size={20} />
+          </Link>
+        </header>
+        <main className="nivo-profile-content space-y-6">
+          <PageTitle eyebrow="Akunmu" title="Pengaturan profil">
+            Pilih informasi yang ingin kamu simpan. Kamu bisa mengubahnya kapan saja.
+          </PageTitle>
+          {error && <StateNotice error>{error}</StateNotice>}
+          {notice && <StateNotice>{notice}</StateNotice>}
+          {loading && !loaded ? (
+            <div className="nivo-glass p-6" role="status" aria-busy="true">
+              <p>Memuat profil…</p>
+              <div className="nivo-skeleton" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
             </div>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-gray-100">
-            <a className="underline text-primary" href="/pencapaian">Atur tanggal dan fase perjalanan</a>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-4 pt-4">
-          <Button 
-            onClick={handleSaveChanges}
-            disabled={!hasChanges || saving || Boolean(profileError && !formData.email)}
-            className={`w-full py-3 rounded-lg shadow-sm ${
-              hasChanges
-                ? "bg-primary hover:bg-primary/90 text-white"
-                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            {saving ? 'Menyimpan…' : 'Simpan Perubahan'}
-          </Button>
-          <Button 
-            onClick={handleCancelChanges}
-            variant="outline"
-            className="w-full py-3 rounded-lg"
-          >
-            Batalkan Perubahan
-          </Button>
-          
-          {/* Logout Button */}
-          <div className="pt-6 border-t border-gray-200">
-            <Button 
-              onClick={async () => {
-                try {
-                  const { signOut } = await import('@/lib/auth');
-                  await signOut();
-                  router.replace('/signin');
-                } catch (e) {
-                  console.error('Logout error:', e);
-                }
-              }}
-              variant="outline"
-              className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500 py-3 rounded-lg shadow-sm"
-            >
-              Keluar / Logout
+          ) : !loaded ? (
+            <Button variant="secondary" onClick={() => loadProfile()}>
+              Coba muat profil lagi
             </Button>
-          </div>
-        </div>
-        </div>
+          ) : (
+            <>
+              <div className="nivo-glass nivo-glass-warm flex items-center gap-3 p-5">
+                <span
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-secondary/25 bg-secondary/20 text-lg font-medium text-accent"
+                  aria-hidden="true"
+                >
+                  {form.fullName.trim().charAt(0).toUpperCase() || 'N'}
+                </span>
+                <div className="min-w-0 break-words">
+                  <p className="font-semibold">{form.fullName || 'Nama belum diisi'}</p>
+                  <p className="text-sm text-muted-foreground">{form.email}</p>
+                </div>
+              </div>
+              <form onSubmit={save} className="grid gap-6">
+                <fieldset disabled={saving || loading} className="grid min-w-0 gap-6">
+                  <Panel title="Informasi pribadi">
+                    <div className="nivo-field">
+                      <Label htmlFor="nama">Nama Lengkap</Label>
+                      <Input
+                        id="nama"
+                        autoComplete="name"
+                        maxLength={200}
+                        value={form.fullName}
+                        onChange={(e) => setField('fullName', e.target.value)}
+                      />
+                    </div>
+                    <div className="nivo-field">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={form.email}
+                        readOnly
+                        aria-describedby="profile-email-hint"
+                      />
+                      <p id="profile-email-hint" className="nivo-caption">
+                        Email mengikuti akun yang kamu gunakan untuk masuk.
+                      </p>
+                    </div>
+                  </Panel>
+                  <Panel title="Alasanmu" tone="soft">
+                    <fieldset className="grid gap-3">
+                      <legend className="mb-2 font-medium">Pilih maksimal dua alasan</legend>
+                      <p className="nivo-caption">
+                        Pilihan ini menjadi pengingat pribadi saat keinginan merokok muncul.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          ...MOTIVATION_OPTIONS,
+                          ...form.motivations.filter(
+                            (value) => !MOTIVATION_OPTIONS.some((option) => option === value),
+                          ),
+                        ].map((value) => {
+                          const selected = form.motivations.includes(value);
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              aria-pressed={selected}
+                              disabled={!selected && form.motivations.length >= 2}
+                              onClick={() =>
+                                setField(
+                                  'motivations',
+                                  selected
+                                    ? form.motivations.filter((item) => item !== value)
+                                    : [...form.motivations, value],
+                                )
+                              }
+                              className={`nivo-button flex min-h-12 items-center gap-2 rounded-control border px-3 py-2 text-left text-sm ${selected ? 'border-primary bg-primary text-white' : 'border-secondary/25 bg-white/80 text-foreground'}`}
+                            >
+                              {selected && <Check size={16} aria-hidden="true" />}
+                              {value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
+                    <div className="nivo-field">
+                      <Label htmlFor="own-reason">Alasanku sendiri (opsional)</Label>
+                      <textarea
+                        id="own-reason"
+                        maxLength={300}
+                        rows={3}
+                        value={form.ownReason}
+                        onChange={(e) => setField('ownReason', e.target.value)}
+                        aria-describedby="own-reason-hint"
+                      />
+                      <p id="own-reason-hint" className="nivo-caption">
+                        Pengingat untukmu saat keinginan merokok muncul. {form.ownReason.length}/300
+                        karakter.
+                      </p>
+                    </div>
+                  </Panel>
+                  <Panel title="Waktu dan perjalanan">
+                    <div className="nivo-field">
+                      <Label htmlFor="profile-timezone">Zona waktu</Label>
+                      <select
+                        id="profile-timezone"
+                        value={form.timezone}
+                        onChange={(e) => setField('timezone', e.target.value)}
+                        aria-describedby="timezone-hint"
+                      >
+                        {!timezoneOptions.some((option) => option.value === form.timezone) && (
+                          <option value={form.timezone}>
+                            Zona waktu perangkat atau pilihan tersimpan
+                          </option>
+                        )}
+                        {timezoneOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p id="timezone-hint" className="nivo-caption">
+                        Awalnya mengikuti perangkat. Pilihan ini menentukan tanggal catatan dan jam
+                        pengingatmu.
+                      </p>
+                    </div>
+                    <Link className="nivo-text-link" href="/pencapaian">
+                      Atur tanggal dan langkah perjalanan
+                    </Link>
+                  </Panel>
+                </fieldset>
+                {conflict && (
+                  <div className="nivo-glass p-5">
+                    <p className="mb-3 text-sm">
+                      Isianmu masih ada. Muat versi terbaru untuk memeriksa perubahan dari perangkat
+                      lain.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={loading}
+                      onClick={() => loadProfile(true)}
+                    >
+                      {loading ? 'Memuat…' : 'Muat profil terbaru'}
+                    </Button>
+                  </div>
+                )}
+                {notice.startsWith('Profil terbaru') && (
+                  <Panel title="Profil terakhir di server" tone="soft">
+                    <dl className="grid gap-2 text-sm">
+                      <div>
+                        <dt className="text-muted-foreground">Nama</dt>
+                        <dd>{initial.fullName || 'Belum diisi'}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Alasan pribadi</dt>
+                        <dd>{initial.ownReason || 'Belum diisi'}</dd>
+                      </div>
+                    </dl>
+                  </Panel>
+                )}
+                <div className="nivo-glass nivo-glass-warm grid gap-3 p-5 sm:p-6">
+                  <Button
+                    type="submit"
+                    disabled={!hasChanges || saving || loading || conflict}
+                    aria-describedby="profile-save-hint"
+                  >
+                    {saving ? 'Menyimpan…' : 'Simpan Perubahan'}
+                  </Button>
+                  <p id="profile-save-hint" className="nivo-caption">
+                    {saving
+                      ? 'Tunggu sampai penyimpanan selesai.'
+                      : conflict
+                        ? 'Muat profil terbaru sebelum menyimpan.'
+                        : hasChanges
+                          ? 'Perubahanmu belum disimpan.'
+                          : 'Belum ada perubahan.'}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={saving}
+                    onClick={() => {
+                      setForm(initial);
+                      setError('');
+                      setNotice('');
+                    }}
+                  >
+                    Batalkan Perubahan
+                  </Button>
+                </div>
+              </form>
+              <div className="border-t border-border pt-6">
+                <LogoutButton />
+              </div>
+            </>
+          )}
+        </main>
       </div>
     </AuthGuard>
   );
-};
-
-export default ProfileSettingsPage;
+}

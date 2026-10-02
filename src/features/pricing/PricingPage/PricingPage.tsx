@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import headerlogo from "@/assets/logo-with-text-horizontal.png";
@@ -53,13 +53,14 @@ const PricingPage = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-white max-w-md mx-auto md:max-w-lg lg:max-w-xl">
+    <div className="nivo-standalone">
       {/* Header template dengan tombol back */}
-      <div className="bg-white px-3 sm:px-4 py-4 flex items-center justify-between border-b border-gray-100 shadow-sm">
+      <div className="nivo-standalone-header flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => router.push("/home")}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            className="nivo-icon-button flex-shrink-0"
+            aria-label="Kembali ke Home"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
           </button>
@@ -70,19 +71,19 @@ const PricingPage = () => {
         <div className="text-xs sm:text-sm font-semibold text-gray-700">Paket NIVO</div>
       </div>
 
-      <div className="px-3 sm:px-4 py-6">
-        <h1 className="text-lg sm:text-xl font-bold text-green-900 mb-2 text-center">
+      <div className="nivo-page">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-primary text-center">
           Pilih Paket NIVO
         </h1>
-        <p className="text-xs text-gray-500 mb-6 text-center">
+        <p className="text-sm text-muted-foreground text-center">
           Sesuaikan dengan kebutuhan dan komitmenmu untuk berhenti merokok.
         </p>
 
         {/* Tabel Pricing */}
-        <div className="overflow-x-auto mb-6 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
-          <div className="min-w-[600px] bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="hidden lg:block overflow-x-auto mb-6">
+          <div className="nivo-glass min-w-[600px] overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-6 bg-gradient-to-r from-green-500 to-emerald-600">
+            <div className="grid grid-cols-6 bg-primary">
               <div className="col-span-1 p-3 border-r border-white/20">
                 <p className="text-xs font-bold text-white">Harga</p>
               </div>
@@ -108,8 +109,8 @@ const PricingPage = () => {
               <div
                 key={tier.id}
                 className={`grid grid-cols-6 ${
-                  idx % 2 === 0 ? 'bg-green-50' : 'bg-white'
-                } hover:bg-green-100/50 transition-colors`}
+                  idx % 2 === 0 ? 'bg-secondary/5' : 'bg-white/40'
+                } hover:bg-secondary/10 transition-colors`}
               >
                 <div className="col-span-1 p-3 border-r border-t border-gray-200">
                   <p className="text-xs font-bold text-gray-900">
@@ -153,9 +154,9 @@ const PricingPage = () => {
           {tiers.map((tier) => (
             <div
               key={`mobile-${tier.id}`}
-              className="bg-white rounded-2xl p-4 shadow-md border border-gray-200"
+              className="nivo-glass nivo-glass-warm p-5"
             >
-              <div className="flex items-baseline justify-between mb-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
                 <h2 className="text-base font-bold text-gray-900">{tier.name}</h2>
                 <p className="text-xl font-bold text-primary">
                   {tier.price === 0 ? 'Gratis' : `Rp ${tier.price.toLocaleString("id-ID")}`}
@@ -198,16 +199,15 @@ const PricingPage = () => {
                 </div>
               </div>
 
-              <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white text-sm py-2 rounded-lg">
+              <Button disabled className="w-full mt-4 bg-primary text-white text-sm py-2 rounded-lg">
                 Pilih {tier.name}
               </Button>
             </div>
           ))}
         </div>
 
-        <p className="mt-4 text-[11px] text-gray-500 text-center">
-          Pembayaran belum terhubung. Setelah memilih paket, kamu akan diarahkan ke
-          langkah pembayaran di versi berikutnya.
+        <p className="nivo-glass nivo-glass-warm p-4 text-sm text-muted-foreground text-center">
+          Pembayaran belum terhubung. Paket belum dapat dipilih saat ini.
         </p>
       </div>
     </div>
