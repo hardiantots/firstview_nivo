@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Panel, PageTitle, StateNotice } from '@/components/ui/nivo';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
 import { authenticatedRequest } from '@/shared/api/client';
 import { deviceTimezone } from '@/shared/lib/format';
 import { profileSchema } from '@/shared/profile/schema';
@@ -192,113 +193,121 @@ export default function ProfileSettingsPage() {
               </div>
               <form onSubmit={save} className="grid gap-6">
                 <fieldset disabled={saving || loading} className="grid min-w-0 gap-6">
-                  <Panel title="Informasi pribadi">
-                    <div className="nivo-field">
-                      <Label htmlFor="nama">Nama Lengkap</Label>
-                      <Input
-                        id="nama"
-                        autoComplete="name"
-                        maxLength={200}
-                        value={form.fullName}
-                        onChange={(e) => setField('fullName', e.target.value)}
-                      />
-                    </div>
-                    <div className="nivo-field">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={form.email}
-                        readOnly
-                        aria-describedby="profile-email-hint"
-                      />
-                      <p id="profile-email-hint" className="nivo-caption">
-                        Email mengikuti akun yang kamu gunakan untuk masuk.
-                      </p>
-                    </div>
-                  </Panel>
-                  <Panel title="Alasanmu" tone="soft">
-                    <fieldset className="grid gap-3">
-                      <legend className="mb-2 font-medium">Pilih maksimal dua alasan</legend>
-                      <p className="nivo-caption">
-                        Pilihan ini menjadi pengingat pribadi saat keinginan merokok muncul.
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          ...MOTIVATION_OPTIONS,
-                          ...form.motivations.filter(
-                            (value) => !MOTIVATION_OPTIONS.some((option) => option === value),
-                          ),
-                        ].map((value) => {
-                          const selected = form.motivations.includes(value);
-                          return (
-                            <button
-                              key={value}
-                              type="button"
-                              aria-pressed={selected}
-                              disabled={!selected && form.motivations.length >= 2}
-                              onClick={() =>
-                                setField(
-                                  'motivations',
-                                  selected
-                                    ? form.motivations.filter((item) => item !== value)
-                                    : [...form.motivations, value],
-                                )
-                              }
-                              className={`nivo-button flex min-h-12 items-center gap-2 rounded-control border px-3 py-2 text-left text-sm ${selected ? 'border-primary bg-primary text-white' : 'border-secondary/25 bg-white/80 text-foreground'}`}
-                            >
-                              {selected && <Check size={16} aria-hidden="true" />}
-                              {value}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-                    <div className="nivo-field">
-                      <Label htmlFor="own-reason">Alasanku sendiri (opsional)</Label>
-                      <textarea
-                        id="own-reason"
-                        maxLength={300}
-                        rows={3}
-                        value={form.ownReason}
-                        onChange={(e) => setField('ownReason', e.target.value)}
-                        aria-describedby="own-reason-hint"
-                      />
-                      <p id="own-reason-hint" className="nivo-caption">
-                        Pengingat untukmu saat keinginan merokok muncul. {form.ownReason.length}/300
-                        karakter.
-                      </p>
-                    </div>
-                  </Panel>
-                  <Panel title="Waktu dan perjalanan">
-                    <div className="nivo-field">
-                      <Label htmlFor="profile-timezone">Zona waktu</Label>
-                      <select
-                        id="profile-timezone"
-                        value={form.timezone}
-                        onChange={(e) => setField('timezone', e.target.value)}
-                        aria-describedby="timezone-hint"
-                      >
-                        {!timezoneOptions.some((option) => option.value === form.timezone) && (
-                          <option value={form.timezone}>
-                            Zona waktu perangkat atau pilihan tersimpan
-                          </option>
-                        )}
-                        {timezoneOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <p id="timezone-hint" className="nivo-caption">
-                        Awalnya mengikuti perangkat. Pilihan ini menentukan tanggal catatan dan jam
-                        pengingatmu.
-                      </p>
-                    </div>
-                    <Link className="nivo-text-link" href="/pencapaian">
-                      Atur tanggal dan langkah perjalanan
-                    </Link>
-                  </Panel>
+                  <ResponsiveSections label="Profil">
+                    <SectionPage name="pribadi" label="Informasi pribadi">
+                      <Panel title="Informasi pribadi">
+                        <div className="nivo-field">
+                          <Label htmlFor="nama">Nama Lengkap</Label>
+                          <Input
+                            id="nama"
+                            autoComplete="name"
+                            maxLength={200}
+                            value={form.fullName}
+                            onChange={(e) => setField('fullName', e.target.value)}
+                          />
+                        </div>
+                        <div className="nivo-field">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={form.email}
+                            readOnly
+                            aria-describedby="profile-email-hint"
+                          />
+                          <p id="profile-email-hint" className="nivo-caption">
+                            Email mengikuti akun yang kamu gunakan untuk masuk.
+                          </p>
+                        </div>
+                      </Panel>
+                    </SectionPage>
+                    <SectionPage name="alasan" label="Alasan pribadi">
+                      <Panel title="Alasanmu" tone="soft">
+                        <fieldset className="grid gap-3">
+                          <legend className="mb-2 font-medium">Pilih maksimal dua alasan</legend>
+                          <p className="nivo-caption">
+                            Pilihan ini menjadi pengingat pribadi saat keinginan merokok muncul.
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              ...MOTIVATION_OPTIONS,
+                              ...form.motivations.filter(
+                                (value) => !MOTIVATION_OPTIONS.some((option) => option === value),
+                              ),
+                            ].map((value) => {
+                              const selected = form.motivations.includes(value);
+                              return (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  aria-pressed={selected}
+                                  disabled={!selected && form.motivations.length >= 2}
+                                  onClick={() =>
+                                    setField(
+                                      'motivations',
+                                      selected
+                                        ? form.motivations.filter((item) => item !== value)
+                                        : [...form.motivations, value],
+                                    )
+                                  }
+                                  className={`nivo-button flex min-h-12 items-center gap-2 rounded-control border px-3 py-2 text-left text-sm ${selected ? 'border-primary bg-primary text-white' : 'border-secondary/25 bg-white/80 text-foreground'}`}
+                                >
+                                  {selected && <Check size={16} aria-hidden="true" />}
+                                  {value}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </fieldset>
+                        <div className="nivo-field">
+                          <Label htmlFor="own-reason">Alasanku sendiri (opsional)</Label>
+                          <textarea
+                            id="own-reason"
+                            maxLength={300}
+                            rows={3}
+                            value={form.ownReason}
+                            onChange={(e) => setField('ownReason', e.target.value)}
+                            aria-describedby="own-reason-hint"
+                          />
+                          <p id="own-reason-hint" className="nivo-caption">
+                            Pengingat untukmu saat keinginan merokok muncul. {form.ownReason.length}
+                            /300 karakter.
+                          </p>
+                        </div>
+                      </Panel>
+                    </SectionPage>
+                    <SectionPage name="waktu" label="Waktu dan perjalanan">
+                      <Panel title="Waktu dan perjalanan">
+                        <div className="nivo-field">
+                          <Label htmlFor="profile-timezone">Zona waktu</Label>
+                          <select
+                            id="profile-timezone"
+                            value={form.timezone}
+                            onChange={(e) => setField('timezone', e.target.value)}
+                            aria-describedby="timezone-hint"
+                          >
+                            {!timezoneOptions.some((option) => option.value === form.timezone) && (
+                              <option value={form.timezone}>
+                                Zona waktu perangkat atau pilihan tersimpan
+                              </option>
+                            )}
+                            {timezoneOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <p id="timezone-hint" className="nivo-caption">
+                            Awalnya mengikuti perangkat. Pilihan ini menentukan tanggal catatan dan
+                            jam pengingatmu.
+                          </p>
+                        </div>
+                        <Link className="nivo-text-link" href="/pencapaian">
+                          Atur tanggal dan langkah perjalanan
+                        </Link>
+                      </Panel>
+                    </SectionPage>
+                  </ResponsiveSections>
                 </fieldset>
                 {conflict && (
                   <div className="nivo-glass p-5">

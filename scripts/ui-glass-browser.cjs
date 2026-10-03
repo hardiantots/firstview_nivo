@@ -48,7 +48,7 @@ function analyticsFixture(days) {
 const routes = [
   ['', 'home-entry'], ['welcome', 'welcome'], ['journey-start', 'journey-start'],
   ['time-selection', 'time-selection'], ['set-quit-date-past', 'set-quit-date-past'],
-  ['motivation', 'motivation'], ['signin', 'signin'], ['signup', 'signup'],
+  ['onboarding', 'onboarding'], ['signin', 'signin'], ['signup', 'signup'],
   ['forgot-password', 'forgot-password'], ['otp-verification', 'otp-verification'],
   ['reset-password', 'reset-password'], ['password-reset-success', 'password-reset-success'],
   ['home', 'home'], ['tracker', 'tracker'], ['pencapaian', 'pencapaian'],
@@ -71,15 +71,16 @@ let browser;
 (async () => {
   browser = await chromium.launch({ channel: 'msedge' });
   const context = await browser.newContext({ viewport: { width: 390, height: 900 } });
-  let emptyHistory = false;
+  let emptyHistory = false, setupPreview = false;
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.pathname === '/api/journey') {
       assert.equal(request.method(), 'GET', 'visual review must not mutate journey data');
-      return route.fulfill({ json: { revision: 0, state: fixtureState, flags: { triggers: true, coping: true, slips: true, followups: true } } });
+      return route.fulfill({ json: { revision: 0, state: setupPreview ? journey.emptyJourney() : fixtureState, flags: { triggers: true, coping: true, slips: true, followups: true } } });
     }
     if (url.pathname === '/api/journey/analytics') return route.fulfill({ json: analyticsFixture(Number(url.searchParams.get('days') || 7)) });
     if (url.pathname === '/api/journey/legacy') return route.fulfill({ json: { records: [], nextOffset: null } });
+    if (url.pathname === '/api/onboarding') return route.fulfill({ json: { required: false } });
     if (url.pathname === '/api/buddy') return route.fulfill({ json: url.searchParams.has('token') ? { metrics: ['total_smoke_free_days'] } : { owned: [], receiving: [], pending: [] } });
     if (url.pathname === '/api/push/subscriptions') return route.fulfill({ json: { configured: false, subscribed: false, publicKey: null } });
     if (url.pathname === '/api/profile') return route.fulfill({ json: { profile: { full_name: 'Profil Uji', email: user.email, phone_number: '', gender: '', date_of_birth: '1990-01-01', motivations: ['Kesehatan'] } } });
@@ -116,9 +117,10 @@ let browser;
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
     for (const [path, label, subview] of reviewRoutes) {
+      setupPreview = label === 'onboarding';
       const response = await go(path);
       if (['home', 'tracker', 'pencapaian', 'craving-support', 'time-selection', 'set-quit-date-past'].includes(path.split('?')[0])) {
-        await page.locator('.nivo-journey-page > section, .nivo-journey-page .nivo-tabs').first().waitFor();
+        await page.locator('.nivo-journey-page [data-section-pager]').first().waitFor();
         await page.getByText('Menyiapkan ruangmu', { exact: true }).waitFor({ state: 'hidden' });
       }
       if (['practice', 'reason', 'result'].includes(subview)) {
@@ -133,7 +135,7 @@ let browser;
         if (subview === 'wizard4') for (let step = 0; step < 3; step++) await page.getByRole('button', { name: 'Lewati langkah ini', exact: true }).click();
       }
       if (subview?.startsWith('period')) await page.getByRole('button', { name: subview === 'period30' ? '30 hari' : '90 hari', exact: true }).click();
-      if (['tracker', 'tracker-30', 'tracker-90'].includes(label)) await page.getByRole('heading', { name: 'Rincian catatan', exact: true }).waitFor();
+      if (['tracker', 'tracker-30', 'tracker-90'].includes(label)) await page.getByRole('heading', { name: /^Catatan \d+ hari terakhir$/ }).waitFor();
       if (label === 'profile-settings') await page.getByLabel('Nama Lengkap', { exact: true }).waitFor();
       if (label === 'craving-detail') await page.getByRole('heading', { name: 'Ingin jeda', exact: true }).waitFor();
       if (label === 'auth-callback') await page.getByRole('heading', { name: 'Belum berhasil masuk' }).waitFor();
@@ -173,7 +175,7 @@ let browser;
       if (['breathing-exercise', 'distractions'].includes(label)) {
         assert.ok(await page.locator('h1').evaluate(el => el.getBoundingClientRect().top >= document.querySelector('.legacy-header').getBoundingClientRect().bottom), label + ' title clear of header');
       }
-      if (width >= 768 && ['journey-start', 'time-selection', 'set-quit-date-past', 'motivation'].includes(label)) {
+      if (width >= 768 && ['journey-start', 'time-selection', 'set-quit-date-past', 'onboarding'].includes(label)) {
         assert.ok(await page.locator('.nivo-setup .nivo-welcome-story img').evaluate(el => el.getBoundingClientRect().top < 150), label + ' logo stays near top of long form');
       }
       results.push({ route: path, width, ...metrics });

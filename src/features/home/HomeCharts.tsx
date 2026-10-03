@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { Panel } from '@/components/ui/nivo';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
 import { TrendArea } from '@/features/charts/lazy';
 import { ChartSkeleton } from '@/features/charts/chart-skeleton';
 import { displayDay, rupiah } from '@/features/charts/data';
@@ -48,114 +49,126 @@ export default function HomeCharts({ state, today }: { state: JourneyState; toda
           ))}
         </div>
       </header>
-      <div className="nivo-home-chart-grid">
-        <Panel title="Tren konsumsi" eyebrow={`${days} hari terakhir`}>
-          <p className="nivo-home-chart-value">
-            {period.average === null
-              ? 'Belum ada catatan'
-              : `${period.average.toLocaleString('id-ID', { maximumFractionDigits: 1 })} batang`}
-            <span>
+      <ResponsiveSections
+        label="Grafik beranda"
+        queryKey="chart"
+        desktopClassName="nivo-home-chart-grid"
+      >
+        <SectionPage name="konsumsi" label="Tren konsumsi">
+          <Panel title="Tren konsumsi" eyebrow={`${days} hari terakhir`}>
+            <p className="nivo-home-chart-value">
               {period.average === null
-                ? 'Mulai dengan mencatat hari ini'
-                : 'rata-rata per hari tercatat'}
-            </span>
-          </p>
-          <TrendArea data={data.series} />
-          <details className="nivo-disclosure">
-            <summary>Lihat angka konsumsi</summary>
-            <dl className="nivo-chart-details">
-              {data.series.map((point) => (
-                <div key={point.day}>
-                  <dt>{displayDay(point.day)}</dt>
-                  <dd>
-                    {point.cigarettes === null ? 'Belum tercatat' : `${point.cigarettes} batang`}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </details>
-        </Panel>
-        <Panel title="Ruang untuk tabunganmu" eyebrow="Akumulasi estimasi" tone="soft">
-          <p className="nivo-home-chart-value">
-            {period.saved === null ? 'Belum tersedia' : rupiah(period.saved)}
-            <span>estimasi hemat pada periode ini</span>
-          </p>
-          {period.estimateDays === 0 ? (
-            <p className="nivo-caption py-6">
-              Isi kebiasaan awal dan catatan harian untuk melihat estimasi hemat.
+                ? 'Belum ada catatan'
+                : `${period.average.toLocaleString('id-ID', { maximumFractionDigits: 1 })} batang`}
+              <span>
+                {period.average === null
+                  ? 'Mulai dengan mencatat hari ini'
+                  : 'rata-rata per hari tercatat'}
+              </span>
             </p>
-          ) : (
-            <SavingsChart data={data.savings} />
-          )}
-          <p className="nivo-caption">
-            Memakai baseline dan harga yang melekat pada {period.estimateDays} dari {period.logged}{' '}
-            hari tercatat. Celah berarti data estimasi belum tersedia.
-          </p>
-          <details className="nivo-disclosure">
-            <summary>Lihat angka estimasi hemat</summary>
-            <dl className="nivo-chart-details">
-              {data.savings.map((point) => (
-                <div key={point.day}>
-                  <dt>{displayDay(point.day)}</dt>
-                  <dd>{point.saved === null ? 'Belum tersedia' : rupiah(point.saved)}</dd>
-                </div>
-              ))}
-            </dl>
-            <p>
-              Selisih positif konsumsi awal dan jumlah batang × harga per batang. Perubahan
-              kebiasaan awal tidak menghitung ulang catatan lama.
-            </p>
-          </details>
-        </Panel>
-        <Panel title="Hasil jedamu" eyebrow="Catatan Craving SOS">
-          {state.insightsHidden ? (
-            <p className="nivo-caption py-6">
-              Insight disembunyikan sesuai pilihanmu. Kamu dapat menampilkannya kembali dari Catatan
-              harian.
-            </p>
-          ) : data.cravingTotal === 0 ? (
-            <p className="nivo-caption py-6">
-              Belum ada hasil craving tercatat pada periode ini. Catat dari Craving SOS saat kamu
-              membutuhkannya.
-            </p>
-          ) : (
-            <>
-              <OutcomeChart data={data.outcomes} />
-              <dl className="nivo-outcome-legend" aria-label="Jumlah hasil craving">
-                {data.outcomes.map((item) => (
-                  <div key={item.outcome}>
-                    <dt>
-                      <span style={{ backgroundColor: item.color }} aria-hidden="true" />
-                      {item.label}
-                    </dt>
-                    <dd>{item.total} kejadian</dd>
+            <TrendArea data={data.series} />
+            <details className="nivo-disclosure">
+              <summary>Lihat angka konsumsi</summary>
+              <dl className="nivo-chart-details">
+                {data.series.map((point) => (
+                  <div key={point.day}>
+                    <dt>{displayDay(point.day)}</dt>
+                    <dd>
+                      {point.cigarettes === null ? 'Belum tercatat' : `${point.cigarettes} batang`}
+                    </dd>
                   </div>
                 ))}
               </dl>
-              <p className="nivo-caption mt-3">
-                {data.cravingTotal} kejadian dengan hasil tercatat. Check-in lama tanpa hasil tidak
-                dimasukkan.
+            </details>
+          </Panel>
+        </SectionPage>
+        <SectionPage name="hemat" label="Estimasi hemat">
+          <Panel title="Ruang untuk tabunganmu" eyebrow="Akumulasi estimasi" tone="soft">
+            <p className="nivo-home-chart-value">
+              {period.saved === null ? 'Belum tersedia' : rupiah(period.saved)}
+              <span>estimasi hemat pada periode ini</span>
+            </p>
+            {period.estimateDays === 0 ? (
+              <p className="nivo-caption py-6">
+                Isi kebiasaan awal dan catatan harian untuk melihat estimasi hemat.
               </p>
-            </>
-          )}
-        </Panel>
-        <Panel title="Ritme mencatatmu" eyebrow="Periode pilihanmu" tone="soft">
-          <Ring
-            value={(period.logged / days) * 100}
-            label="Hari yang sudah tercatat"
-            hint={`${period.logged} dari ${days} hari`}
-            tone="secondary"
-          />
-          <p className="nivo-caption mt-4">
-            Catatan 0 batang tetap dihitung sebagai isian. Hari yang kosong belum memberi informasi
-            tentang konsumsi.
-          </p>
-          <Link href="/tracker" className="nivo-text-link mt-4 inline-flex items-center gap-2">
-            Lihat catatan lengkap
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
-        </Panel>
-      </div>
+            ) : (
+              <SavingsChart data={data.savings} />
+            )}
+            <p className="nivo-caption">
+              Memakai baseline dan harga yang melekat pada {period.estimateDays} dari{' '}
+              {period.logged} hari tercatat. Celah berarti data estimasi belum tersedia.
+            </p>
+            <details className="nivo-disclosure">
+              <summary>Lihat angka estimasi hemat</summary>
+              <dl className="nivo-chart-details">
+                {data.savings.map((point) => (
+                  <div key={point.day}>
+                    <dt>{displayDay(point.day)}</dt>
+                    <dd>{point.saved === null ? 'Belum tersedia' : rupiah(point.saved)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p>
+                Selisih positif konsumsi awal dan jumlah batang × harga per batang. Perubahan
+                kebiasaan awal tidak menghitung ulang catatan lama.
+              </p>
+            </details>
+          </Panel>
+        </SectionPage>
+        <SectionPage name="craving" label="Hasil jeda">
+          <Panel title="Hasil jedamu" eyebrow="Catatan Craving SOS">
+            {state.insightsHidden ? (
+              <p className="nivo-caption py-6">
+                Insight disembunyikan sesuai pilihanmu. Kamu dapat menampilkannya kembali dari
+                Catatan harian.
+              </p>
+            ) : data.cravingTotal === 0 ? (
+              <p className="nivo-caption py-6">
+                Belum ada hasil craving tercatat pada periode ini. Catat dari Craving SOS saat kamu
+                membutuhkannya.
+              </p>
+            ) : (
+              <>
+                <OutcomeChart data={data.outcomes} />
+                <dl className="nivo-outcome-legend" aria-label="Jumlah hasil craving">
+                  {data.outcomes.map((item) => (
+                    <div key={item.outcome}>
+                      <dt>
+                        <span style={{ backgroundColor: item.color }} aria-hidden="true" />
+                        {item.label}
+                      </dt>
+                      <dd>{item.total} kejadian</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="nivo-caption mt-3">
+                  {data.cravingTotal} kejadian dengan hasil tercatat. Check-in lama tanpa hasil
+                  tidak dimasukkan.
+                </p>
+              </>
+            )}
+          </Panel>
+        </SectionPage>
+        <SectionPage name="cakupan" label="Ritme mencatat">
+          <Panel title="Ritme mencatatmu" eyebrow="Periode pilihanmu" tone="soft">
+            <Ring
+              value={(period.logged / days) * 100}
+              label="Hari yang sudah tercatat"
+              hint={`${period.logged} dari ${days} hari`}
+              tone="secondary"
+            />
+            <p className="nivo-caption mt-4">
+              Catatan 0 batang tetap dihitung sebagai isian. Hari yang kosong belum memberi
+              informasi tentang konsumsi.
+            </p>
+            <Link href="/tracker" className="nivo-text-link mt-4 inline-flex items-center gap-2">
+              Lihat catatan lengkap
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+          </Panel>
+        </SectionPage>
+      </ResponsiveSections>
     </section>
   );
 }

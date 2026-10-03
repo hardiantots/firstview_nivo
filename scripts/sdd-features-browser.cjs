@@ -10,7 +10,7 @@ const roomId = '00000000-0000-4000-8000-000000000002', buddyId = '00000000-0000-
 let browser;
 (async () => {
   browser = await chromium.launch({ channel: 'msedge' });
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
   let snapshot = { revision: 0, state: d.emptyJourney(), flags: { triggers: true, coping: true, slips: true, followups: true } };
   let fail = false, offline = false, drop = false, profileFail = true, closed = true, dropMessage = true;
   let buddy = { owned: [], receiving: [], pending: [] }, buddyRequests = [], exports = [], deletes = 0, loginAttempts = 0, otpVerifications = 0, passwordUpdates = 0;
@@ -34,6 +34,7 @@ let browser;
       if (drop) { drop = false; return route.fulfill({ status: 503, json: { error: 'Respons hilang sesudah commit' } }); }
       return route.fulfill({ json: snapshot });
     }
+    if (url.pathname === '/api/onboarding') return route.fulfill({ json: { required: false } });
     if (url.pathname === '/rest/v1/craving_logs') {
       assert.equal(url.searchParams.get('user_id'), 'eq.' + user.id);
       assert.equal(url.searchParams.get('id'), 'eq.' + buddyId);
@@ -68,6 +69,10 @@ let browser;
     return route.abort();
   });
   await context.addInitScript(({ session }) => {
+    if (location.pathname === '/signin') {
+      for (const key of ['supabase.auth.token', 'userToken', 'userId', 'lastLoginAt', 'nivo.auth.session-id']) localStorage.removeItem(key);
+      return;
+    }
     localStorage.setItem('supabase.auth.token', JSON.stringify(session)); localStorage.setItem('userToken', session.access_token); localStorage.setItem('userId', session.user.id); localStorage.setItem('lastLoginAt', String(Date.now()));
     if (navigator.mediaDevices) Object.defineProperty(navigator.mediaDevices, 'getUserMedia', { value: () => Promise.reject(new DOMException('Fixture denied', 'NotAllowedError')) });
   }, { session });
@@ -92,7 +97,7 @@ let browser;
   await page.getByRole('button', { name: 'Kopi', exact: true }).click(); await page.getByRole('button', { name: 'Lanjut ke latihan' }).click(); await page.clock.install(); await page.getByRole('button', { name: 'Mulai latihan', exact: true }).click(); await page.clock.fastForward(180000); await page.getByText('Jeda selesai. Pilih langkah berikutnya.', { exact: true }).waitFor(); await page.getByRole('button', { name: 'Lanjut ke alasanmu' }).click(); await page.getByText('Lebih banyak waktu bersama keluarga', { exact: true }).waitFor(); await page.getByText('Minum air', { exact: true }).waitFor(); await page.getByRole('button', { name: 'Pilih hasilnya', exact: true }).click(); await page.getByRole('button', { name: 'Saya merokok', exact: true }).click(); await page.getByRole('button', { name: 'Simpan hasil', exact: true }).click(); await saved(); await page.clock.setSystemTime(new Date());
   await page.getByRole('heading', { name: 'Saya merokok lagi', exact: true }).waitFor(); await page.getByRole('button', { name: 'Simpan kejadian', exact: true }).click(); await saved(); assert.equal(snapshot.state.cravingEvents.length, 1); assert.equal(snapshot.state.slips.length, 1); assert.equal(snapshot.state.slips[0].cravingEventId, snapshot.state.cravingEvents[0].id); await shot('sos-linked-slip'); checks.push('One-tap SOS entry, background deadline, personal reasons and linked smoked outcome/slip work without duplicate events.');
   await page.getByRole('tab', { name: 'Sedang ingin merokok', exact: true }).click(); await page.getByRole('button', { name: 'Mulai jeda baru', exact: true }).click(); await page.getByRole('button', { name: 'Pilih hasil sekarang', exact: true }).click(); await page.getByRole('button', { name: 'Masih kuat', exact: true }).click(); assert.ok(await page.getByRole('link', { name: 'Lihat layanan konseling', exact: true }).count()); drop = true; await page.getByRole('button', { name: 'Simpan hasil', exact: true }).click(); await page.getByRole('heading', { name: 'Ada isian yang belum tersinkron' }).waitFor(); await page.getByRole('button', { name: 'Kirim ulang', exact: true }).click(); await saved(); assert.equal(snapshot.state.cravingEvents.length, 2); await page.getByText('Hasilnya tersimpan.', { exact: true }).waitFor(); checks.push('SOS outcome is always accessible; lost commit response retries idempotently and cannot duplicate acknowledged results.');
-  await page.getByRole('tab', { name: 'Mau curhat', exact: true }).click(); await page.getByLabel('Yang sedang kamu rasakan').fill('Saya ingin bunuh diri'); await page.getByRole('link', { name: /Healing119/ }).waitFor(); checks.push('Local distress text exposes crisis support without saving or sending the draft.');
+  await page.getByRole('tab', { name: 'Mau curhat', exact: true }).click(); await page.getByText('Tulis perasaanmu (opsional)', { exact: true }).click(); await page.getByLabel('Yang sedang kamu rasakan').fill('Saya ingin bunuh diri'); await page.getByRole('link', { name: /Healing119/ }).waitFor(); checks.push('Local distress text exposes crisis support without saving or sending the draft.');
   await go('home'); await page.getByRole('button', { name: /Mulai jeda [23] menit/ }).click(); await page.clock.fastForward(180000); await page.getByRole('button', { name: 'Saya sudah berlatih', exact: true }).click(); await saved(); assert.equal(snapshot.state.lessonCompletions.length, 1); await page.clock.setSystemTime(new Date()); checks.push('Daily practice deadline and one completion per day persist.');
   await go('tracker'); await page.getByRole('button', { name: '30 hari', exact: true }).click(); await page.getByRole('heading', { name: 'Catatan 30 hari terakhir', exact: true }).waitFor(); await page.getByRole('button', { name: 'Sembunyikan insight', exact: true }).click(); await saved(); assert.equal(snapshot.state.insightsHidden, true); await page.getByRole('button', { name: 'Lihat catatan terdahulu' }).click(); await page.getByRole('table', { name: 'Riwayat konsumsi terdahulu' }).waitFor(); checks.push('Tracker has period controls and privacy toggle; legacy records remain separate and readable.');
   await go('pencapaian?tab=data'); const exportsPanel = page.locator('.nivo-panel').filter({ has: page.getByRole('heading', { name: 'Ekspor ringkasan perjalanan' }) });

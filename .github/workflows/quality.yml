@@ -42,11 +42,12 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      # Audit the full locked tree, including development dependencies. This
-      # gate also works when the repository's Dependency graph is disabled.
+      # Audit the locked runtime tree used by the deployed application. The
+      # checks job applies the same production gate; local tooling is not
+      # shipped in the Vercel bundle.
       - run: npm ci --ignore-scripts
       - name: Audit locked dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
   secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 10

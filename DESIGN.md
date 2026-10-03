@@ -15,7 +15,8 @@ References: https://github.com/voltagent/awesome-design-md, specifically design-
 - White canvas with softly tinted glass cards, translucent borders, and restrained blur. Preserve an opaque fallback when backdrop filters are unavailable. Semantic warning/error colors retain independent meaning.
 - Primary teal signals the main action and selected navigation. Secondary orange appears on supporting actions, chart series, card accents, and focusable period selections; destructive actions use the destructive token.
 - Each page has one introduction, then its immediate task. Home prioritizes daily entry and access to craving help. Use detail disclosures for explanations and destructive data controls.
-- Use tabs for separate tasks, preserving mounted form contents when switching. Tabs support arrow keys, Home/End, and visible focus.
+- At widths up to 1024px, show one section per task with a labeled section picker, previous/next controls and a section count. Repeat navigation after long content and return focus to the active section. Keep desktop reading grids or keyboard tabs above this breakpoint. Preserve visited form contents, URL selection, browser Back, and visible focus. Reveal hidden invalid fields before asking users to fix them.
+- Daily/legacy records and consultation rooms have their own bounded pagination. Immediate help and privacy/error notices stay accessible outside optional disclosures. New-account setup uses two saved steps (motivation and quit plan); an unsuccessful write never completes setup.
 - Mobile is one column. Desktop task/content ratio around 1.35:1. Avoid stretching short copy across the entire viewport.
 
 ## Type and shapes
@@ -44,4 +45,4 @@ References: https://github.com/voltagent/awesome-design-md, specifically design-
 
 ## Scope
 
-This design change does not mark consultation stage 04 complete. Stages 05–06 remain pending its acceptance conditions, as requested by the user. No backend deployment or AWS cutover is part of the design implementation.
+Optional consultation, push, and audio still depend on their service configuration and availability. UI verification uses isolated fixtures and does not replace integration checks in the deployment environment. AWS migration and database reset are separate operational tasks.

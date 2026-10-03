@@ -30,6 +30,8 @@ Buka `http://localhost:3000`. Konfigurasi database dijelaskan di [supabase/RESET
 
 Perjalanan memakai API/RPC dengan revision dan operation ID untuk konflik antar perangkat serta retry idempoten. Draft perangkat dan API memakai kontrak validasi yang sama. Helper HTTP berada di `src/shared/api/client.ts`; konsultasi dipisah menjadi pemilihan layanan, sesi, dan moderasi.
 
+Pada layar sampai **1024 px**, menu panjang dibagi menjadi section dengan pilihan bagian serta tombol Sebelumnya/Berikutnya di awal dan akhir konten. Beranda, Catatan, bantuan, rencana, pengingat, profil, pendamping, konsultasi, dan paket memakai komponen navigasi yang sama. Section aktif tercermin di URL dan mengikuti Back browser. Isian pada section yang sudah dibuka tetap tersimpan selama halaman aktif; field yang gagal validasi akan ditampilkan dan difokuskan. Daftar catatan dan sesi juga memiliki pagination tersendiri.
+
 ## Grafik dan bantuan
 
 Beranda menampilkan ring capaian hari bebas rokok tercatat, tren konsumsi, akumulasi estimasi hemat, hasil Craving SOS, dan cakupan catatan pada periode 7/30 hari. Semua grafik berasal dari snapshot perjalanan server; hari kosong tetap kosong dan estimasi memakai baseline historis. Ring menghitung hari bebas rokok yang tercatat, bukan streak yang disimpulkan dari tanggal berhenti. Penambahan grafik ini tidak membutuhkan migrasi database.
@@ -41,6 +43,8 @@ Pengingat push, konsultasi, dan audio tetap nonaktif sampai konfigurasi serta ke
 ## Autentikasi
 
 Login email dan Google menyimpan sesi pada browser yang sama dengan masa aplikasi **14 hari sejak login**, tanpa memperpanjang masa tersebut pada refresh token atau pergantian halaman. Supabase tetap memakai access token pendek dan refresh token, dan route tetap memverifikasi identitas melalui `getUser()`. Sesi aktif melewati signin/signup/welcome dan kembali ke route internal yang diminta, atau `/home`.
+
+Akun baru diarahkan ke **`/onboarding`** setelah sesi login tersedia, termasuk pendaftaran email langsung, login pertama setelah verifikasi email, dan callback Google. Pengisian terdiri dari motivasi lalu target tanggal, tanggal mulai berhenti, atau pilihan mengurangi bertahap. Alasan dan rencana disimpan ke `nivo_journeys.document` memakai action `reasons`/`plan` dan RPC yang sudah ada; tidak memerlukan tabel atau migrasi baru. Langkah yang sudah tersimpan dapat dilanjutkan setelah reload atau login ulang. Setelah selesai, pengguna kembali ke tujuan internal sebelumnya atau Beranda. Akun lama yang sudah memiliki aktivitas/riwayat pengaturan tidak dipaksa mengulang, dan bantuan segera tetap dapat dibuka sebelum setup selesai. Route lama `/motivation` mengarah ke alur ini.
 
 Logout manual menghapus sesi. Saat sesi kedaluwarsa, draft retry milik akun tetap tersimpan agar bisa ditinjau setelah login ulang. Gangguan verifikasi sementara tidak membuka halaman terlindungi atau menghapus draft.
 
@@ -61,6 +65,7 @@ Regresi browser beranda dan sesi tersedia melalui:
 ```sh
 npm run test:ui:home
 npm run test:ui:auth
+npm run test:ui:sections
 ```
 
 Jalankan server lokal terlebih dahulu, sediakan Playwright dengan browser Edge (atau tunjuk modulnya melalui `PLAYWRIGHT_MODULE`), dan gunakan `UI_ORIGIN` bila port berbeda dari `http://127.0.0.1:3000`. Pengujian memakai sesi dan data sintetis serta mencegat permintaan auth/data sehingga tidak mengubah Supabase production. Screenshot dan hasil uji disimpan di folder lokal `SDD-Script/evidence` yang tidak ikut Git. Fixture lokal tidak menggantikan smoke test integrasi produksi.

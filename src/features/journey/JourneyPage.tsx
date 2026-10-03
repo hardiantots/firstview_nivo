@@ -3,19 +3,13 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Heart } from 'lucide-react';
 import { PageTitle, Panel, StateNotice, ActionLink } from '@/components/ui/nivo';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
+import { useCompactLayout } from '@/shared/hooks/use-compact-layout';
 import { useJourneyState } from '@/shared/journey/client';
 import { dueReminders, localDate } from '@/shared/journey/domain';
-import {
-  JourneyStatus,
-  PendingSummary,
-  SupportLinks,
-  SupportStrip,
-  TabPanel,
-  Tabs,
-  WeekOverview,
-} from './JourneyVisuals';
-import LegacyRecords from './LegacyRecords';
+import { JourneyStatus, SupportLinks, SupportStrip, WeekOverview } from './JourneyVisuals';
 import QuickLog from '@/features/log/QuickLog';
+import { JourneySyncStatus } from './JourneySyncStatus';
 import { JourneyProgress } from './JourneyProgress';
 import HomeOverview from '@/features/home/HomeOverview';
 import DailyPractice from './DailyPractice';
@@ -47,6 +41,7 @@ export default function JourneyPage({
   view?: 'journey' | 'home' | 'tracker' | 'craving';
 }) {
   const j = useJourneyState();
+  const compact = useCompactLayout();
   const [clock, setClock] = useState(new Date()),
     [journeyTab, setJourneyTab] = useState('plan'),
     [cravingTab, setCravingTab] = useState('sos');
@@ -56,12 +51,6 @@ export default function JourneyPage({
     const timer = setInterval(() => setClock(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (['plan', 'reminders', 'buddy', 'data'].includes(query.get('tab')))
-      setJourneyTab(query.get('tab'));
-    if (['sos', 'slip', 'talk'].includes(query.get('mode'))) setCravingTab(query.get('mode'));
-  }, [view]);
   const state = j.snapshot?.state,
     today = state ? localDate(clock, state.timezone) : '',
     flags = j.snapshot?.flags || {};
@@ -98,45 +87,7 @@ export default function JourneyPage({
   return (
     <div className="nivo-page nivo-journey-page">
       <PageTitle title={titles[view]}>{descriptions[view]}</PageTitle>
-      {j.error && <StateNotice error>{j.error}</StateNotice>}
-      {j.notice && <StateNotice>{j.notice}</StateNotice>}
-      {j.pending && (
-        <Panel title="Ada isian yang belum tersinkron" tone="soft">
-          <p>Tinjau isian sebelum mengirim ulang.</p>
-          <PendingSummary action={j.pending.action} />
-          <div className="nivo-button-row">
-            <button className="nivo-action" disabled={j.busy} onClick={() => j.retry()}>
-              Kirim ulang
-            </button>
-            <button
-              className="nivo-action nivo-action-secondary"
-              disabled={j.busy}
-              onClick={j.refresh}
-            >
-              Muat versi server
-            </button>
-          </div>
-          <details className="nivo-disclosure">
-            <summary>Pilihan jika catatan berubah di perangkat lain</summary>
-            <div className="nivo-stack">
-              <p>
-                Setelah meninjau versi terbaru, kamu dapat menerapkan isian di atas atau
-                membatalkannya.
-              </p>
-              <button
-                className="nivo-action nivo-action-secondary"
-                disabled={j.busy}
-                onClick={() => j.retry(true)}
-              >
-                Terapkan isian ini pada versi terbaru
-              </button>
-              <button className="nivo-text-link" disabled={j.busy} onClick={j.discard}>
-                Batalkan isian tertunda
-              </button>
-            </div>
-          </details>
-        </Panel>
-      )}
+      <JourneySyncStatus journey={j} />
       {!state ? (
         <Panel title={j.error ? 'Perjalanan belum dapat dimuat' : 'Menyiapkan ruangmu'}>
           {j.error ? (
@@ -157,29 +108,46 @@ export default function JourneyPage({
       ) : (
         <>
           {view === 'home' && (
-            <>
-              <HomeOverview state={state} today={today} />
-              <SupportStrip />
-              <div className="nivo-dashboard-grid">
-                <QuickLog key={today} state={state} today={today} busy={busy} onSave={j.save} />
-                <WeekOverview state={state} today={today} />
-              </div>
-              <JourneyProgress state={state} today={today} />
-              <HomeCharts state={state} today={today} />
-              <div className="nivo-dashboard-grid">
-                <JourneyStatus state={state} today={today} />
-                <DailyPractice
-                  key={today}
-                  state={state}
-                  today={today}
-                  busy={busy}
-                  onSave={j.save}
-                />
-              </div>
-              <Panel title="Dukungan, saat kamu perlu">
-                <SupportLinks />
-              </Panel>
-            </>
+            <ResponsiveSections label="Beranda">
+              <SectionPage name="ringkasan" label="Ringkasan">
+                <HomeOverview state={state} today={today} />
+                <SupportStrip />
+                <ActionLink href="/home?section=catat#catat" secondary>
+                  Catat hari ini
+                </ActionLink>
+              </SectionPage>
+              <SectionPage name="catat" label="Catat hari ini">
+                <div className="nivo-dashboard-grid">
+                  <QuickLog key={today} state={state} today={today} busy={busy} onSave={j.save} />
+                  <div className="nivo-wide-only">
+                    <WeekOverview state={state} today={today} />
+                  </div>
+                </div>
+              </SectionPage>
+              <SectionPage name="grafik" label="Grafik">
+                <HomeCharts state={state} today={today} />
+              </SectionPage>
+              <SectionPage name="perjalanan" label="Perjalanan">
+                <div className="nivo-dashboard-grid">
+                  <JourneyProgress state={state} today={today} />
+                  <JourneyStatus state={state} today={today} />
+                </div>
+              </SectionPage>
+              <SectionPage name="latihan" label="Latihan dan dukungan">
+                <div className="nivo-dashboard-grid">
+                  <DailyPractice
+                    key={today}
+                    state={state}
+                    today={today}
+                    busy={busy}
+                    onSave={j.save}
+                  />
+                  <Panel title="Dukungan, saat kamu perlu">
+                    <SupportLinks />
+                  </Panel>
+                </div>
+              </SectionPage>
+            </ResponsiveSections>
           )}
           {view === 'tracker' && (
             <>
@@ -192,37 +160,47 @@ export default function JourneyPage({
                   await j.save(action);
                 }}
               />
-              <JourneyProgress state={state} today={today} />
-              <LegacyRecords />
             </>
           )}
           {view === 'journey' && (
             <>
-              <Tabs
+              <ResponsiveSections
                 label="Pengaturan perjalanan"
                 value={activeJourney}
                 onChange={setJourneyTab}
-                items={journeyItems}
-              />
-              <TabPanel name="plan" selected={activeJourney}>
-                <div className="nivo-stack">
-                  <JourneyWizard state={state} today={today} busy={busy} onSave={j.save} />
-                  {flags.coping && <CopingPlans state={state} busy={busy} onSave={j.save} />}
-                  <JourneyProgress state={state} today={today} />
-                  <HealthEducation />
-                </div>
-              </TabPanel>
-              {flags.followups && (
-                <TabPanel name="reminders" selected={activeJourney}>
-                  <PushPreferences state={state} busy={busy} onSave={j.save} />
-                </TabPanel>
-              )}
-              <TabPanel name="buddy" selected={activeJourney}>
-                <BuddySettings />
-              </TabPanel>
-              <TabPanel name="data" selected={activeJourney}>
-                <JourneyData snapshot={j.snapshot} busy={busy} refresh={j.refresh} />
-              </TabPanel>
+                queryKey="tab"
+                desktop="tabs"
+              >
+                <SectionPage name="plan" label="Rencana">
+                  <ResponsiveSections label="Rencana" queryKey="planSection">
+                    <SectionPage name="susun" label="Susun rencana">
+                      <JourneyWizard state={state} today={today} busy={busy} onSave={j.save} />
+                    </SectionPage>
+                    {flags.coping && (
+                      <SectionPage name="pemicu" label="Langkah saat pemicu muncul">
+                        <CopingPlans state={state} busy={busy} onSave={j.save} />
+                      </SectionPage>
+                    )}
+                    <SectionPage name="kemajuan" label="Kemajuan">
+                      <JourneyProgress state={state} today={today} />
+                    </SectionPage>
+                    <SectionPage name="edukasi" label="Informasi kesehatan">
+                      <HealthEducation />
+                    </SectionPage>
+                  </ResponsiveSections>
+                </SectionPage>
+                {flags.followups && (
+                  <SectionPage name="reminders" label="Pengingat">
+                    <PushPreferences state={state} busy={busy} onSave={j.save} />
+                  </SectionPage>
+                )}
+                <SectionPage name="buddy" label="Pendamping">
+                  <BuddySettings />
+                </SectionPage>
+                <SectionPage name="data" label="Data saya">
+                  <JourneyData snapshot={j.snapshot} busy={busy} refresh={j.refresh} />
+                </SectionPage>
+              </ResponsiveSections>
             </>
           )}
           {view === 'craving' && (
@@ -231,65 +209,79 @@ export default function JourneyPage({
                 <Heart size={22} aria-hidden="true" />
                 <p>Kamu boleh berhenti sejenak. Pilih yang paling kamu butuhkan sekarang.</p>
               </div>
-              <Tabs
+              <ResponsiveSections
                 label="Bantuan mandiri"
                 value={activeCraving}
                 onChange={(value) => {
                   setCravingTab(value);
                   setLinkedSlip(false);
                 }}
-                items={cravingItems}
-              />
-              {flags.triggers && (
-                <TabPanel name="sos" selected={activeCraving}>
-                  <CravingFlow
-                    state={state}
-                    busy={busy}
-                    onSave={j.save}
-                    onSmoked={() => {
-                      setLinkedSlip(true);
-                      setCravingTab('slip');
-                    }}
-                  />
-                </TabPanel>
-              )}
-              {flags.slips && (
-                <TabPanel name="slip" selected={activeCraving}>
-                  <SlipForm
-                    key={linkedSlip ? state.cravingEvents?.at(-1)?.id || 'linked' : 'standalone'}
-                    state={state}
-                    busy={busy}
-                    onSave={j.save}
-                    cravingEventId={linkedSlip ? state.cravingEvents?.at(-1)?.id : undefined}
-                  />
-                </TabPanel>
-              )}
-              <TabPanel name="talk" selected={activeCraving}>
-                <div className="nivo-stack">
-                  <Panel title="Ada ruang untuk bercerita">
-                    <p>
-                      Kamu bisa langsung memilih layanan konseling di bawah. Jika ingin, tulis satu
-                      kalimat untuk dirimu; tulisan ini tidak disimpan atau dikirim.
-                    </p>
-                    <label className="nivo-field">
-                      Yang sedang kamu rasakan (opsional)
-                      <textarea
-                        value={reflection}
-                        maxLength={500}
-                        onChange={(event) => setReflection(event.target.value)}
-                      />
-                    </label>
-                    <CrisisSupport text={reflection} />
-                    <ActionLink href="/contact-professional" secondary>
-                      Lihat konsultasi NIVO
-                    </ActionLink>
-                  </Panel>
-                  <NationalSupport />
-                </div>
-              </TabPanel>
+                queryKey="mode"
+                desktop="tabs"
+              >
+                {flags.triggers && (
+                  <SectionPage name="sos" label="Sedang ingin merokok">
+                    <CravingFlow
+                      state={state}
+                      busy={busy}
+                      onSave={j.save}
+                      onSmoked={() => {
+                        setLinkedSlip(true);
+                        setCravingTab('slip');
+                      }}
+                    />
+                  </SectionPage>
+                )}
+                {flags.slips && (
+                  <SectionPage name="slip" label="Saya merokok lagi">
+                    <SlipForm
+                      key={linkedSlip ? state.cravingEvents?.at(-1)?.id || 'linked' : 'standalone'}
+                      state={state}
+                      busy={busy}
+                      onSave={j.save}
+                      cravingEventId={linkedSlip ? state.cravingEvents?.at(-1)?.id : undefined}
+                    />
+                  </SectionPage>
+                )}
+                <SectionPage name="talk" label="Mau curhat">
+                  <div className="nivo-stack">
+                    <Panel title="Ada ruang untuk bercerita">
+                      <p>
+                        Kamu bisa langsung memilih layanan konseling di bawah. Jika ingin, tulis
+                        satu kalimat untuk dirimu; tulisan ini tidak disimpan atau dikirim.
+                      </p>
+                      <details className="nivo-disclosure">
+                        <summary>Tulis perasaanmu (opsional)</summary>
+                        <label className="nivo-field">
+                          Yang sedang kamu rasakan (opsional)
+                          <textarea
+                            value={reflection}
+                            maxLength={500}
+                            onChange={(event) => setReflection(event.target.value)}
+                          />
+                        </label>
+                      </details>
+                      <CrisisSupport text={reflection} />
+                      <ActionLink href="/contact-professional" secondary>
+                        Lihat konsultasi NIVO
+                      </ActionLink>
+                    </Panel>
+                    <NationalSupport />
+                  </div>
+                </SectionPage>
+              </ResponsiveSections>
             </>
           )}
-          {flags.followups &&
+          {compact && flags.followups && dueReminders(state, clock).length > 0 && (
+            <StateNotice>
+              Ada {dueReminders(state, clock).length} pengingat pilihanmu.{' '}
+              <ActionLink href="/notifications" secondary>
+                Tinjau pengingat
+              </ActionLink>
+            </StateNotice>
+          )}
+          {!compact &&
+            flags.followups &&
             dueReminders(state, clock).map((reminder) => (
               <Panel
                 key={reminder.id}

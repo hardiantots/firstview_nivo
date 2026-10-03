@@ -78,6 +78,7 @@ let browser;
             flags: { triggers: true, coping: true, slips: true, followups: false },
           },
         });
+      if (url.pathname === '/api/onboarding') return route.fulfill({ json: { required: false } });
       if (url.pathname === '/api/journey/analytics') {
         const days = Number(url.searchParams.get('days') || 7),
           today = domain.localDate(new Date(), state.timezone);

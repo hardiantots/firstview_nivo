@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Check, Minus, Plus } from 'lucide-react';
 import { Panel, StateNotice } from '@/components/ui/nivo';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
 import { nextStepChoices, triggerChoices } from '@/content/craving-practices';
 import { CrisisSupport } from '@/features/support/NationalSupport';
 import { JourneyAction, JourneyState } from '@/shared/journey/domain';
@@ -144,148 +145,157 @@ export default function SlipForm({
       ) : (
         <form className="nivo-stack mt-4" onSubmit={save}>
           <fieldset disabled={busy || saving} className="nivo-stack min-w-0">
-            <legend className="mb-2 text-sm font-medium">Kapan kejadiannya?</legend>
-            <div
-              role="group"
-              aria-label="Pilih waktu kejadian merokok"
-              className="flex flex-wrap gap-2"
-            >
-              {(
-                [
-                  { value: 'now', label: linked ? 'Dari Craving SOS' : 'Sekarang' },
-                  { value: 'earlier', label: 'Tadi' },
-                  { value: 'yesterday', label: 'Kemarin' },
-                  { value: 'custom', label: 'Pilih waktu' },
-                ] as const
-              ).map((item) => (
-                <button
-                  type="button"
-                  aria-pressed={choice === item.value}
-                  key={item.value}
-                  className={`min-h-11 rounded-full border px-3 text-sm ${choice === item.value ? 'border-secondary/30 bg-secondary/10 text-accent' : 'border-primary/10 bg-white/70'}`}
-                  onClick={() => {
-                    setChoice(item.value);
-                    setReferenceAt(Date.now());
-                  }}
+            <legend className="mb-2 text-sm font-medium">Catatan kejadian</legend>
+            <ResponsiveSections label="Kejadian merokok" queryKey="slipSection">
+              <SectionPage name="waktu" label="Waktu dan jumlah">
+                <p className="text-sm font-medium">Kapan kejadiannya?</p>
+                <div
+                  role="group"
+                  aria-label="Pilih waktu kejadian merokok"
+                  className="flex flex-wrap gap-2"
                 >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            {choice === 'custom' && (
-              <label className="nivo-field">
-                Tanggal dan jam kejadian
-                <input
-                  type="datetime-local"
-                  value={customTime}
-                  max={localDateTime(Date.now(), state.timezone)}
-                  min="1970-01-01T00:00"
-                  onChange={(event) => setCustomTime(event.target.value)}
-                  required
-                />
-              </label>
-            )}
-            <p className="nivo-caption" aria-live="polite">
-              {preview}. Jam mengikuti zona perjalanan {state.timezone.replace(/_/g, ' ')}.
-              {choice === 'earlier' && ' “Tadi” berarti kira-kira satu jam lalu.'}
-            </p>
-            <div>
-              <label className="mb-2 block text-sm font-medium" htmlFor={`${id}-count`}>
-                Jumlah batang pada kejadian ini
-              </label>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Kurangi jumlah batang pada kejadian"
-                  className="nivo-icon-button"
-                  disabled={Number(count) <= 1}
-                  onClick={() => setCount(String(Math.max(1, Number(count || 1) - 1)))}
-                >
-                  <Minus size={18} aria-hidden="true" />
-                </button>
-                <input
-                  id={`${id}-count`}
-                  type="number"
-                  min={1}
-                  max={200}
-                  step={1}
-                  required
-                  inputMode="numeric"
-                  value={count}
-                  onChange={(event) => setCount(event.target.value)}
-                  className="h-12 min-w-0 flex-1 rounded-xl border border-primary/15 bg-white/80 px-3 text-center text-lg"
-                />
-                <button
-                  type="button"
-                  aria-label="Tambah jumlah batang pada kejadian"
-                  className="nivo-icon-button"
-                  disabled={Number(count) >= 200}
-                  onClick={() => setCount(String(Math.min(200, Number(count || 0) + 1)))}
-                >
-                  <Plus size={18} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-sm font-medium">Pemicu (opsional)</p>
-              <div
-                role="group"
-                aria-label="Pilih pemicu kejadian merokok"
-                className="flex flex-wrap gap-2"
-              >
-                {triggerChoices.map((item) => (
-                  <button
-                    type="button"
-                    aria-pressed={trigger === item}
-                    key={item}
-                    className={`min-h-11 rounded-full border px-3 text-sm ${trigger === item ? 'border-secondary/30 bg-secondary/10 text-accent' : 'border-primary/10 bg-white/70'}`}
-                    onClick={() => setTrigger(trigger === item ? '' : item)}
+                  {(
+                    [
+                      { value: 'now', label: linked ? 'Dari Craving SOS' : 'Sekarang' },
+                      { value: 'earlier', label: 'Tadi' },
+                      { value: 'yesterday', label: 'Kemarin' },
+                      { value: 'custom', label: 'Pilih waktu' },
+                    ] as const
+                  ).map((item) => (
+                    <button
+                      type="button"
+                      aria-pressed={choice === item.value}
+                      key={item.value}
+                      className={`min-h-11 rounded-full border px-3 text-sm ${choice === item.value ? 'border-secondary/30 bg-secondary/10 text-accent' : 'border-primary/10 bg-white/70'}`}
+                      onClick={() => {
+                        setChoice(item.value);
+                        setReferenceAt(Date.now());
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                {choice === 'custom' && (
+                  <label className="nivo-field">
+                    Tanggal dan jam kejadian
+                    <input
+                      type="datetime-local"
+                      value={customTime}
+                      max={localDateTime(Date.now(), state.timezone)}
+                      min="1970-01-01T00:00"
+                      onChange={(event) => setCustomTime(event.target.value)}
+                      required
+                    />
+                  </label>
+                )}
+                <p className="nivo-caption" aria-live="polite">
+                  {preview}. Jam mengikuti zona perjalanan {state.timezone.replace(/_/g, ' ')}.
+                  {choice === 'earlier' && ' “Tadi” berarti kira-kira satu jam lalu.'}
+                </p>
+                <div>
+                  <label className="mb-2 block text-sm font-medium" htmlFor={`${id}-count`}>
+                    Jumlah batang pada kejadian ini
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Kurangi jumlah batang pada kejadian"
+                      className="nivo-icon-button"
+                      disabled={Number(count) <= 1}
+                      onClick={() => setCount(String(Math.max(1, Number(count || 1) - 1)))}
+                    >
+                      <Minus size={18} aria-hidden="true" />
+                    </button>
+                    <input
+                      id={`${id}-count`}
+                      type="number"
+                      min={1}
+                      max={200}
+                      step={1}
+                      required
+                      inputMode="numeric"
+                      value={count}
+                      onChange={(event) => setCount(event.target.value)}
+                      className="h-12 min-w-0 flex-1 rounded-xl border border-primary/15 bg-white/80 px-3 text-center text-lg"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Tambah jumlah batang pada kejadian"
+                      className="nivo-icon-button"
+                      disabled={Number(count) >= 200}
+                      onClick={() => setCount(String(Math.min(200, Number(count || 0) + 1)))}
+                    >
+                      <Plus size={18} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </SectionPage>
+              <SectionPage name="pemicu" label="Pemicu">
+                <div>
+                  <p className="mb-2 text-sm font-medium">Pemicu (opsional)</p>
+                  <div
+                    role="group"
+                    aria-label="Pilih pemicu kejadian merokok"
+                    className="flex flex-wrap gap-2"
                   >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <label className="nivo-field">
-              Pemicu dalam kata-katamu (opsional)
-              <input
-                value={trigger}
-                maxLength={120}
-                onChange={(event) => setTrigger(event.target.value)}
-              />
-            </label>
-            <div>
-              <p className="mb-2 text-sm font-medium">Langkah berikutnya</p>
-              <div
-                role="group"
-                aria-label="Pilih langkah setelah kejadian merokok"
-                className="grid gap-2 sm:grid-cols-2"
-              >
-                {nextStepChoices.map((item) => (
-                  <button
-                    type="button"
-                    aria-pressed={nextStep === item}
-                    key={item}
-                    className={`min-h-12 rounded-xl border p-3 text-left text-sm ${nextStep === item ? 'border-primary/20 bg-primary/5 text-primary' : 'border-primary/10 bg-white/70'}`}
-                    onClick={() => setNextStep(item)}
+                    {triggerChoices.map((item) => (
+                      <button
+                        type="button"
+                        aria-pressed={trigger === item}
+                        key={item}
+                        className={`min-h-11 rounded-full border px-3 text-sm ${trigger === item ? 'border-secondary/30 bg-secondary/10 text-accent' : 'border-primary/10 bg-white/70'}`}
+                        onClick={() => setTrigger(trigger === item ? '' : item)}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="nivo-field">
+                  Pemicu dalam kata-katamu (opsional)
+                  <input
+                    value={trigger}
+                    maxLength={120}
+                    onChange={(event) => setTrigger(event.target.value)}
+                  />
+                </label>
+              </SectionPage>
+              <SectionPage name="langkah" label="Langkah berikutnya">
+                <div>
+                  <p className="mb-2 text-sm font-medium">Langkah berikutnya</p>
+                  <div
+                    role="group"
+                    aria-label="Pilih langkah setelah kejadian merokok"
+                    className="grid gap-2 sm:grid-cols-2"
                   >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <label className="nivo-field">
-              Langkah dalam kata-katamu
-              <input
-                value={nextStep}
-                maxLength={200}
-                required
-                onChange={(event) => setNextStep(event.target.value)}
-              />
-            </label>
-            <button type="submit" className="nivo-action" disabled={busy || saving}>
-              {saving ? 'Menyimpan…' : 'Simpan kejadian'}
-            </button>
+                    {nextStepChoices.map((item) => (
+                      <button
+                        type="button"
+                        aria-pressed={nextStep === item}
+                        key={item}
+                        className={`min-h-12 rounded-xl border p-3 text-left text-sm ${nextStep === item ? 'border-primary/20 bg-primary/5 text-primary' : 'border-primary/10 bg-white/70'}`}
+                        onClick={() => setNextStep(item)}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="nivo-field">
+                  Langkah dalam kata-katamu
+                  <input
+                    value={nextStep}
+                    maxLength={200}
+                    required
+                    onChange={(event) => setNextStep(event.target.value)}
+                  />
+                </label>
+                <button type="submit" className="nivo-action" disabled={busy || saving}>
+                  {saving ? 'Menyimpan…' : 'Simpan kejadian'}
+                </button>
+              </SectionPage>
+            </ResponsiveSections>
           </fieldset>
           <p className="nivo-caption">
             Kejadian merokok membantu refleksi. Jumlah di sini tidak otomatis ditambahkan ke catatan

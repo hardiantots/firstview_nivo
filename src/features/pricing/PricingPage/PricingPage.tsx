@@ -1,51 +1,52 @@
-"use client";
+'use client';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
 
-import { useRouter } from "next/navigation";
-import { ArrowLeft, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import headerlogo from "@/assets/logo-with-text-horizontal.png";
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import headerlogo from '@/assets/logo-with-text-horizontal.png';
 
 const tiers = [
   {
-    id: "free",
-    name: "Freemium",
+    id: 'free',
+    name: 'Freemium',
     price: 0,
-    tier: "Freemium",
-    tracking: "Basic",
+    tier: 'Freemium',
+    tracking: 'Basic',
     reward: false,
     ai: false,
     professional: false,
   },
   {
-    id: "starter",
-    name: "Starter",
+    id: 'starter',
+    name: 'Starter',
     price: 25000,
-    tier: "Starter",
-    tracking: "Full",
-    reward: "Limited",
-    ai: "Light Insight",
+    tier: 'Starter',
+    tracking: 'Full',
+    reward: 'Limited',
+    ai: 'Light Insight',
     professional: false,
   },
   {
-    id: "advanced",
-    name: "Advanced",
+    id: 'advanced',
+    name: 'Advanced',
     price: 35000,
-    tier: "Advanced",
-    tracking: "Advanced",
-    reward: "Premium",
-    ai: "AI Craving Support",
+    tier: 'Advanced',
+    tracking: 'Advanced',
+    reward: 'Premium',
+    ai: 'AI Craving Support',
     professional: false,
   },
   {
-    id: "elite",
-    name: "Elite",
+    id: 'elite',
+    name: 'Elite',
     price: 100000,
-    tier: "Elite",
-    tracking: "Advanced",
-    reward: "Advanced",
-    ai: "AI Craving Support",
-    professional: "✓ Konsultasi",
+    tier: 'Elite',
+    tracking: 'Advanced',
+    reward: 'Advanced',
+    ai: 'AI Craving Support',
+    professional: '✓ Konsultasi',
   },
 ];
 
@@ -58,14 +59,20 @@ const PricingPage = () => {
       <div className="nivo-standalone-header flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
           <button
-            onClick={() => router.push("/home")}
+            onClick={() => router.push('/home')}
             className="nivo-icon-button flex-shrink-0"
             aria-label="Kembali ke Home"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
           </button>
           <div className="flex items-center gap-2">
-            <Image src={headerlogo} alt="NIVO Logo" height={28} width={100} className="sm:h-8 sm:w-[120px]" />
+            <Image
+              src={headerlogo}
+              alt="NIVO Logo"
+              height={28}
+              width={100}
+              className="sm:h-8 sm:w-[120px]"
+            />
           </div>
         </div>
         <div className="text-xs sm:text-sm font-semibold text-gray-700">Paket NIVO</div>
@@ -80,7 +87,7 @@ const PricingPage = () => {
         </p>
 
         {/* Tabel Pricing */}
-        <div className="hidden lg:block overflow-x-auto mb-6">
+        <div className="nivo-wide-only overflow-x-auto mb-6">
           <div className="nivo-glass min-w-[600px] overflow-hidden">
             {/* Header */}
             <div className="grid grid-cols-6 bg-primary">
@@ -150,60 +157,66 @@ const PricingPage = () => {
         </div>
 
         {/* Mobile Friendly Cards (visible on small screens) */}
-        <div className="lg:hidden space-y-4 mb-6">
-          {tiers.map((tier) => (
-            <div
-              key={`mobile-${tier.id}`}
-              className="nivo-glass nivo-glass-warm p-5"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-                <h2 className="text-base font-bold text-gray-900">{tier.name}</h2>
-                <p className="text-xl font-bold text-primary">
-                  {tier.price === 0 ? 'Gratis' : `Rp ${tier.price.toLocaleString("id-ID")}`}
-                  {tier.price > 0 && <span className="text-xs text-gray-500 font-normal"> /bulan</span>}
-                </p>
-              </div>
-              
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-600 font-medium">Tier:</span>
-                  <span className="text-gray-900 font-semibold">{tier.tier}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-600 font-medium">Tracking:</span>
-                  <span className="text-gray-900">{tier.tracking}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-600 font-medium">Reward:</span>
-                  {tier.reward === false ? (
-                    <X className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <span className="text-gray-900">{tier.reward}</span>
-                  )}
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-600 font-medium">AI:</span>
-                  {tier.ai === false ? (
-                    <X className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <span className="text-gray-900">{tier.ai}</span>
-                  )}
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-600 font-medium">Professional:</span>
-                  {tier.professional === false ? (
-                    <X className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <span className="text-gray-900">{tier.professional}</span>
-                  )}
-                </div>
-              </div>
+        <div className="nivo-compact-only mb-6">
+          <ResponsiveSections label="Paket NIVO" queryKey="tier">
+            {tiers.map((tier) => (
+              <SectionPage key={tier.id} name={String(tier.id)} label={tier.name}>
+                <div key={`mobile-${tier.id}`} className="nivo-glass nivo-glass-warm p-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+                    <h2 className="text-base font-bold text-gray-900">{tier.name}</h2>
+                    <p className="text-xl font-bold text-primary">
+                      {tier.price === 0 ? 'Gratis' : `Rp ${tier.price.toLocaleString('id-ID')}`}
+                      {tier.price > 0 && (
+                        <span className="text-xs text-gray-500 font-normal"> /bulan</span>
+                      )}
+                    </p>
+                  </div>
 
-              <Button disabled className="w-full mt-4 bg-primary text-white text-sm py-2 rounded-lg">
-                Pilih {tier.name}
-              </Button>
-            </div>
-          ))}
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1.5 border-b border-gray-100">
+                      <span className="text-gray-600 font-medium">Tier:</span>
+                      <span className="text-gray-900 font-semibold">{tier.tier}</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-gray-100">
+                      <span className="text-gray-600 font-medium">Tracking:</span>
+                      <span className="text-gray-900">{tier.tracking}</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-gray-100">
+                      <span className="text-gray-600 font-medium">Reward:</span>
+                      {tier.reward === false ? (
+                        <X className="w-4 h-4 text-red-500" />
+                      ) : (
+                        <span className="text-gray-900">{tier.reward}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-gray-100">
+                      <span className="text-gray-600 font-medium">AI:</span>
+                      {tier.ai === false ? (
+                        <X className="w-4 h-4 text-red-500" />
+                      ) : (
+                        <span className="text-gray-900">{tier.ai}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between py-1.5">
+                      <span className="text-gray-600 font-medium">Professional:</span>
+                      {tier.professional === false ? (
+                        <X className="w-4 h-4 text-red-500" />
+                      ) : (
+                        <span className="text-gray-900">{tier.professional}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    disabled
+                    className="w-full mt-4 bg-primary text-white text-sm py-2 rounded-lg"
+                  >
+                    Pilih {tier.name}
+                  </Button>
+                </div>
+              </SectionPage>
+            ))}
+          </ResponsiveSections>
         </div>
 
         <p className="nivo-glass nivo-glass-warm p-4 text-sm text-muted-foreground text-center">

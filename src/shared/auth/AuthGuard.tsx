@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthStorage } from '@/lib/auth-storage';
-import { isAuthEntryRoute, isProtectedRoute } from './routes';
+import { isAuthEntryRoute, isProtectedRoute, shouldCheckJourneySetup } from './routes';
 import { signInReturnPath } from './return-path';
 
 export function useAuth() {
@@ -12,6 +12,7 @@ export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [verificationError, setVerificationError] = useState('');
+  const [redirectingToSetup, setRedirectingToSetup] = useState(false);
 
   useEffect(() => {
     let disposed = false;
@@ -23,6 +24,8 @@ export function useAuth() {
       const current = ++version;
       const active = () => !disposed && current === version;
       setVerificationError('');
+      setRedirectingToSetup(false);
+      let checkingSetup = false;
       try {
         const { supabase } = await import('@/lib/supabase');
         const {
@@ -64,6 +67,22 @@ export function useAuth() {
         const authenticated = !!user && !error && !!session && user.id === session.user.id;
         if (authenticated && session) AuthStorage.saveSupabaseSession(session);
         else if (AuthStorage.getSession()) AuthStorage.clearSession({ preserveDrafts: true });
+        if (authenticated && shouldCheckJourneySetup(pathname)) {
+          checkingSetup = true;
+          const { authenticatedRequest } = await import('@/shared/api/client');
+          const setup = await authenticatedRequest<{ required: boolean }>('/api/onboarding');
+          if (!active()) return;
+          if (setup.required) {
+            const next = isAuthEntryRoute(pathname)
+              ? signInReturnPath(new URLSearchParams(window.location.search).get('next'))
+              : signInReturnPath(pathname + window.location.search + window.location.hash);
+            setIsAuthenticated(true);
+            setRedirectingToSetup(true);
+            router.replace('/onboarding?next=' + encodeURIComponent(next));
+            setIsLoading(false);
+            return;
+          }
+        }
         setIsAuthenticated(authenticated);
         if (isProtectedRoute(pathname) && !authenticated) {
           router.replace(
@@ -77,7 +96,9 @@ export function useAuth() {
       } catch {
         if (!active()) return;
         setVerificationError(
-          'Sesi belum dapat diverifikasi. Isian sementara tetap tersimpan; coba lagi saat koneksi tersedia.',
+          checkingSetup
+            ? 'Rencana awal belum dapat diperiksa. Sesi dan isian sementara tetap tersimpan; coba lagi saat koneksi tersedia.'
+            : 'Sesi belum dapat diverifikasi. Isian sementara tetap tersimpan; coba lagi saat koneksi tersedia.',
         );
         setIsLoading(false);
       }
@@ -128,11 +149,11 @@ export function useAuth() {
     };
   }, [pathname, router]);
 
-  return { isAuthenticated, isLoading, verificationError };
+  return { isAuthenticated, isLoading, verificationError, redirectingToSetup };
 }
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, verificationError } = useAuth();
+  const { isAuthenticated, isLoading, verificationError, redirectingToSetup } = useAuth();
   const pathname = usePathname();
   if (verificationError)
     return (
@@ -146,6 +167,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       </div>
     );
   const redirecting =
+    redirectingToSetup ||
     (!isAuthenticated && isProtectedRoute(pathname)) ||
     (isAuthenticated && isAuthEntryRoute(pathname));
   if (isLoading || redirecting)
