@@ -74,6 +74,7 @@ const results = [];
       return route.fulfill({ json: snapshot() });
     }
     if (url.pathname === '/auth/v1/user') return route.fulfill({ json: user });
+    if (url.pathname === '/api/onboarding') return route.fulfill({ json: { required: false } });
     if (url.pathname.startsWith('/rest/v1/')) return route.fulfill({ json: [] });
     if (url.origin === origin) return route.continue();
     return route.abort();
@@ -108,10 +109,12 @@ const results = [];
     const response = await page.goto(origin + '/home');
     assert.equal(response.status(), 200);
     await overview.getByRole('heading', { name: 'Setiap langkahmu berarti' }).waitFor();
-    await graphs.getByRole('heading', { name: 'Tren konsumsi' }).waitFor();
-    await page.waitForFunction(
-      () => document.querySelectorAll('.nivo-home-chart-grid .recharts-surface').length === 3,
-    );
+    if (page.viewportSize().width > 1024) {
+      await graphs.getByRole('heading', { name: 'Tren konsumsi' }).waitFor();
+      await page.waitForFunction(
+        () => document.querySelectorAll('.nivo-home-chart-grid .recharts-surface').length === 3,
+      );
+    }
   };
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
@@ -135,7 +138,7 @@ const results = [];
     await page.screenshot({ path: `${output}/home-${width}.png`, fullPage: true });
     results.push(`Home charts, glass surfaces, images and layout fit ${width}px.`);
   }
-  await page.setViewportSize({ width: 390, height: 900 });
+  await page.setViewportSize({ width: 1280, height: 900 });
   await openHome();
   await graphs.getByRole('button', { name: '30 hari', exact: true }).click();
   assert.equal(

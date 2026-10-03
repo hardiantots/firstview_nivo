@@ -4,27 +4,24 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Brain } from 'lucide-react';
 import { CravingHistoryItem, toCravingHistoryItem } from './craving-history';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+import { PageNavigation } from '@/components/ui/page-navigation';
+import { useCompactLayout } from '@/shared/hooks/use-compact-layout';
 import { fetchRecentCravingLogs } from '@/lib/db/cravingLogs';
 import { supabase } from '@/lib/supabase';
 import CravingHistoryDetailPage from './CravingHistoryDetailPage';
 
-const ITEMS_PER_PAGE = 5;
-
 const CravingHistoryListPage = () => {
+  const compact = useCompactLayout(),
+    perPage = compact ? 3 : 5;
   const router = useRouter();
   const searchParams = useSearchParams();
   const cravingId = searchParams.get('id');
   const [currentPage, setCurrentPage] = useState(1);
   const [allCravingHistory, setAllCravingHistory] = useState<CravingHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [perPage]);
 
   useEffect(() => {
     const loadCravingHistory = async () => {
@@ -54,9 +51,9 @@ const CravingHistoryListPage = () => {
     return <CravingHistoryDetailPage />;
   }
 
-  const totalPages = Math.ceil(allCravingHistory.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentItems = allCravingHistory.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(allCravingHistory.length / perPage);
+  const startIndex = (currentPage - 1) * perPage;
+  const currentItems = allCravingHistory.slice(startIndex, startIndex + perPage);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -127,50 +124,12 @@ const CravingHistoryListPage = () => {
 
         {totalPages > 1 && (
           <footer className="p-6">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    aria-disabled={currentPage === 1}
-                    tabIndex={currentPage === 1 ? -1 : 0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }}
-                    className={currentPage === 1 ? 'pointer-events-none text-muted-foreground' : ''}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(i + 1);
-                      }}
-                      isActive={currentPage === i + 1}
-                    >
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    aria-disabled={currentPage === totalPages}
-                    tabIndex={currentPage === totalPages ? -1 : 0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }}
-                    className={
-                      currentPage === totalPages ? 'pointer-events-none text-muted-foreground' : ''
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PageNavigation
+              label="Halaman riwayat craving"
+              page={currentPage - 1}
+              pages={totalPages}
+              onChange={(index) => handlePageChange(index + 1)}
+            />
           </footer>
         )}
       </div>

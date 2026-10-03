@@ -478,6 +478,23 @@ All colors MUST be HSL.
   .nivo-progress-ring { width:7rem; max-width:100%; overflow:visible; }
   .nivo-progress-ring-large { width:10rem; }
   .nivo-progress-ring-value { transition:stroke-dashoffset 550ms ease-out; }
+  .nivo-section-pager, .nivo-section-pages, .nivo-section-page { min-width:0; }
+  .nivo-section-pager { scroll-margin-top:5.5rem; }
+  .nivo-section-page[hidden] { display:none !important; }
+  .nivo-section-page:focus-visible { outline:2px solid hsl(var(--primary)); outline-offset:5px; border-radius:var(--radius-control); }
+  .nivo-section-navigation { display:grid; gap:.75rem; padding:1rem; }
+  .nivo-section-navigation > label { font-size:.875rem; font-weight:600; }
+  .nivo-section-navigation > select { width:100%; min-width:0; min-height:48px; border:1px solid hsl(var(--secondary) / .3); border-radius:var(--radius-control); background:hsl(0 0% 100% / .8); color:hsl(var(--foreground)); padding:.65rem .75rem; font:inherit; }
+  .nivo-pagination { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:.5rem; min-width:0; }
+  .nivo-pagination > button { min-width:0; min-height:48px; padding:.65rem .5rem; gap:.2rem; font-size:.8125rem; }
+  .nivo-pagination > button svg { flex-shrink:0; }
+  .nivo-pagination > span { color:hsl(var(--muted-foreground)); font-size:.8125rem; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .nivo-wide-only { display:none; }
+  .nivo-compact-only { display:block; }
+  @media(min-width:1025px) { .nivo-compact-only { display:none; } }
+  @media(min-width:1025px) { .nivo-wide-only { display:block; } }
+  .nivo-support-pages { display:grid; gap:1.5rem; }
+  @media(min-width:1025px) { .nivo-support-pages { grid-template-columns:repeat(3,minmax(0,1fr)); } .nivo-support-pages > :last-child { grid-column:1 / -1; } }
   .nivo-home-overview { position:relative; isolation:isolate; overflow:hidden; border-color:hsl(var(--secondary) / .25); }
   .nivo-home-overview > .nivo-panel-heading, .nivo-home-overview-content { position:relative; z-index:1; }
   .nivo-home-texture { object-fit:cover; opacity:.055; pointer-events:none; }

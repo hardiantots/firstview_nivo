@@ -1,8 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Panel, StateNotice } from '@/components/ui/nivo';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
+import { PageNavigation } from '@/components/ui/page-navigation';
+import { useCompactLayout } from '@/shared/hooks/use-compact-layout';
+import { JourneyProgress } from './JourneyProgress';
+import LegacyRecords from './LegacyRecords';
 import { authenticatedRequest } from '@/shared/api/client';
 import { JourneyAction, JourneyState } from '@/shared/journey/domain';
 import {
@@ -27,12 +32,14 @@ function recordSavings(point: DailyPoint) {
 }
 
 function DailyRecords({ data }: { data: DailyPoint[] }) {
+  const compact = useCompactLayout(),
+    perPage = compact ? 3 : 7;
   const [page, setPage] = useState(0),
-    pages = Math.ceil(data.length / 7);
+    pages = Math.ceil(data.length / perPage);
   useEffect(() => {
     setPage(0);
-  }, [data.length]);
-  const visible = [...data].reverse().slice(page * 7, page * 7 + 7);
+  }, [data.length, perPage]);
+  const visible = [...data].reverse().slice(page * perPage, page * perPage + perPage);
   return (
     <Panel title="Rincian catatan" eyebrow="Satu hari, satu catatan">
       <p className="nivo-caption">
@@ -98,35 +105,8 @@ function DailyRecords({ data }: { data: DailyPoint[] }) {
           );
         })}
       </ul>
-      {pages > 1 && (
-        <nav
-          className="mt-4 flex flex-wrap items-center justify-between gap-2"
-          aria-label="Halaman catatan harian"
-        >
-          <button
-            type="button"
-            className="nivo-action nivo-action-secondary"
-            disabled={page === 0}
-            onClick={() => setPage((current) => Math.max(0, current - 1))}
-          >
-            <ChevronLeft size={16} aria-hidden="true" />
-            Sebelumnya
-          </button>
-          <span className="text-sm text-muted-foreground" role="status">
-            {page + 1} / {pages}
-          </span>
-          <button
-            type="button"
-            className="nivo-action nivo-action-secondary"
-            disabled={page >= pages - 1}
-            onClick={() => setPage((current) => Math.min(pages - 1, current + 1))}
-          >
-            Berikutnya
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-        </nav>
-      )}
-      <Link href="/home" className="nivo-text-link mt-4 inline-flex">
+      <PageNavigation label="Halaman catatan harian" page={page} pages={pages} onChange={setPage} />
+      <Link href="/home?section=catat#catat" className="nivo-text-link mt-4 inline-flex">
         Catat atau perbarui dari Beranda
       </Link>
       <details className="nivo-disclosure">
@@ -223,146 +203,171 @@ export default function TrackerInsights({
           <ChartSkeleton />
         </Panel>
       ) : (
-        <>
-          <div className="nivo-dashboard-grid">
-            <Panel title={`Catatan ${days} hari terakhir`} eyebrow="Dari catatanmu">
-              <TrendArea data={data.series} />
-            </Panel>
-            <Panel title="Ringkasan periode" tone="soft">
-              <Ring
-                value={(period!.logged / days) * 100}
-                label="Hari tercatat"
-                hint={`${period!.logged} dari ${days} hari`}
-              />
-              <dl className="mt-4 grid grid-cols-2 gap-3">
-                <div>
-                  <dt className="text-sm text-muted-foreground">Rata-rata per hari tercatat</dt>
-                  <dd className="mt-1 text-lg font-semibold">
-                    {period!.average === null
-                      ? 'Belum tersedia'
-                      : `${period!.average.toLocaleString('id-ID', { maximumFractionDigits: 1 })} batang`}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Estimasi hemat</dt>
-                  <dd className="mt-1 break-words text-lg font-semibold">
-                    {period!.saved === null ? 'Belum tersedia' : rupiah(period!.saved)}
-                  </dd>
-                </div>
-              </dl>
-              <p className="nivo-caption mt-3">
-                Estimasi tersedia untuk {period!.estimateDays} dari {period!.logged} hari tercatat.
-                Hari kosong tidak dihitung sebagai nol.
-              </p>
-            </Panel>
-          </div>
-          <Panel title="Pemicu dan jam catatan" eyebrow="Pahami, tanpa menghakimi">
-            <button
-              type="button"
-              className="nivo-action nivo-action-secondary"
-              disabled={busy}
-              onClick={() => onSave({ type: 'insights', hidden: !hidden })}
-            >
-              {hidden ? (
-                <Eye size={17} aria-hidden="true" />
-              ) : (
-                <EyeOff size={17} aria-hidden="true" />
-              )}
-              {hidden ? 'Tampilkan insight' : 'Sembunyikan insight'}
-            </button>
-            {hidden ? (
-              <p className="nivo-caption mt-4">
-                Insight disembunyikan sesuai pilihanmu. Catatanmu tetap tersimpan.
-              </p>
-            ) : cravings!.total === 0 ? (
-              <p className="nivo-caption mt-4">
-                Belum ada kejadian craving pada periode ini. Gunakan Craving SOS ketika kamu ingin
-                mencatatnya.
-              </p>
-            ) : (
-              <>
-                <p className="nivo-caption mt-4">
-                  {cravings!.total < 5
-                    ? `Ada ${cravings!.total} kejadian. Ringkasan jam terbanyak muncul setelah minimal 5 kejadian.`
-                    : `Catatan terbanyak sekitar pukul ${hourLabel(cravings!.busiestHour!)}–${hourLabel((cravings!.busiestHour! + 1) % 24)}. Ini ringkasan catatan, bukan prediksi.`}
+        <ResponsiveSections label="Catatan">
+          <SectionPage name="ringkasan" label="Ringkasan periode">
+            <div className="nivo-dashboard-grid">
+              <Panel title={`Catatan ${days} hari terakhir`} eyebrow="Dari catatanmu">
+                <TrendArea data={data.series} />
+              </Panel>
+              <Panel title="Ringkasan periode" tone="soft">
+                <Ring
+                  value={(period!.logged / days) * 100}
+                  label="Hari tercatat"
+                  hint={`${period!.logged} dari ${days} hari`}
+                />
+                <dl className="mt-4 grid grid-cols-2 gap-3">
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Rata-rata per hari tercatat</dt>
+                    <dd className="mt-1 text-lg font-semibold">
+                      {period!.average === null
+                        ? 'Belum tersedia'
+                        : `${period!.average.toLocaleString('id-ID', { maximumFractionDigits: 1 })} batang`}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Estimasi hemat</dt>
+                    <dd className="mt-1 break-words text-lg font-semibold">
+                      {period!.saved === null ? 'Belum tersedia' : rupiah(period!.saved)}
+                    </dd>
+                  </div>
+                </dl>
+                <p className="nivo-caption mt-3">
+                  Estimasi tersedia untuk {period!.estimateDays} dari {period!.logged} hari
+                  tercatat. Hari kosong tidak dihitung sebagai nol.
                 </p>
-                <div className="mt-4 grid min-w-0 gap-6 lg:grid-cols-2">
-                  <figure className="min-w-0">
-                    <h3 className="text-sm font-semibold">Kejadian menurut jam</h3>
-                    <HourBars data={data.hours} />
-                    <figcaption className="nivo-caption">
-                      Jam mengikuti {data.timezone}. Tidak ada batang pada jam tanpa kejadian.
-                    </figcaption>
-                  </figure>
-                  <figure className="min-w-0">
-                    <h3 className="text-sm font-semibold">Pemicu yang tercatat</h3>
-                    <TriggerBars data={data.triggers} />
-                    <figcaption className="nivo-caption">
-                      Maksimal 8 pemicu dengan catatan terbanyak.
-                    </figcaption>
-                  </figure>
-                </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-[140px_1fr]">
-                  <Ring value={cravings!.passedPercentage} label="Craving mereda" />
-                  <div className="self-center">
-                    <p className="nivo-caption">
-                      {cravings!.passed} dari {cravings!.completed} kejadian dengan hasil selesai
-                      tercatat mereda. Hasil “masih kuat” dan check-in lama tanpa hasil tidak
-                      dimasukkan ke persentase.
-                    </p>
-                    {recommendedTime && (
-                      <>
-                        <button
-                          type="button"
-                          className="nivo-action nivo-action-secondary mt-3"
-                          disabled={busy}
-                          onClick={() =>
-                            onSave({
-                              type: 'preferences',
-                              ...state.preferences,
-                              time: recommendedTime,
-                            })
-                          }
-                        >
-                          Gunakan pukul {recommendedTime} untuk pengingat
-                        </button>
-                        <p className="nivo-caption mt-2">
-                          Jam diubah atas pilihanmu. Pengingat tetap mengikuti persetujuan dan
-                          status aktif pada pengaturan perjalanan. Manfaat pengingat dari pola ini
-                          belum dapat dipastikan.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <details className="nivo-disclosure">
-                  <summary>Lihat angka jam dan pemicu</summary>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <dl className="grid gap-2 text-sm">
-                      {data.hours.map((point) => (
-                        <div key={point.hour} className="flex items-start justify-between gap-2">
-                          <dt>Pukul {hourLabel(point.hour)}</dt>
-                          <dd>{point.total} kejadian</dd>
+              </Panel>
+            </div>
+          </SectionPage>
+          <SectionPage name="pemicu" label="Pola craving">
+            <Panel title="Pemicu dan jam catatan" eyebrow="Pahami, tanpa menghakimi">
+              <button
+                type="button"
+                className="nivo-action nivo-action-secondary"
+                disabled={busy}
+                onClick={() => onSave({ type: 'insights', hidden: !hidden })}
+              >
+                {hidden ? (
+                  <Eye size={17} aria-hidden="true" />
+                ) : (
+                  <EyeOff size={17} aria-hidden="true" />
+                )}
+                {hidden ? 'Tampilkan insight' : 'Sembunyikan insight'}
+              </button>
+              {hidden ? (
+                <p className="nivo-caption mt-4">
+                  Insight disembunyikan sesuai pilihanmu. Catatanmu tetap tersimpan.
+                </p>
+              ) : cravings!.total === 0 ? (
+                <p className="nivo-caption mt-4">
+                  Belum ada kejadian craving pada periode ini. Gunakan Craving SOS ketika kamu ingin
+                  mencatatnya.
+                </p>
+              ) : (
+                <>
+                  <p className="nivo-caption mt-4">
+                    {cravings!.total < 5
+                      ? `Ada ${cravings!.total} kejadian. Ringkasan jam terbanyak muncul setelah minimal 5 kejadian.`
+                      : `Catatan terbanyak sekitar pukul ${hourLabel(cravings!.busiestHour!)}–${hourLabel((cravings!.busiestHour! + 1) % 24)}. Ini ringkasan catatan, bukan prediksi.`}
+                  </p>
+                  <ResponsiveSections
+                    label="Pola craving"
+                    queryKey="insight"
+                    desktopClassName="nivo-dashboard-grid"
+                  >
+                    <SectionPage name="jam" label="Menurut jam">
+                      <figure className="min-w-0">
+                        <h3 className="text-sm font-semibold">Kejadian menurut jam</h3>
+                        <HourBars data={data.hours} />
+                        <figcaption className="nivo-caption">
+                          Jam mengikuti {data.timezone}. Tidak ada batang pada jam tanpa kejadian.
+                        </figcaption>
+                      </figure>
+                    </SectionPage>
+                    <SectionPage name="pemicu" label="Pemicu tercatat">
+                      <figure className="min-w-0">
+                        <h3 className="text-sm font-semibold">Pemicu yang tercatat</h3>
+                        <TriggerBars data={data.triggers} />
+                        <figcaption className="nivo-caption">
+                          Maksimal 8 pemicu dengan catatan terbanyak.
+                        </figcaption>
+                      </figure>
+                    </SectionPage>
+                    <SectionPage name="hasil" label="Hasil dan pengingat">
+                      <div className="mt-4 grid gap-4 sm:grid-cols-[140px_1fr]">
+                        <Ring value={cravings!.passedPercentage} label="Craving mereda" />
+                        <div className="self-center">
+                          <p className="nivo-caption">
+                            {cravings!.passed} dari {cravings!.completed} kejadian dengan hasil
+                            selesai tercatat mereda. Hasil “masih kuat” dan check-in lama tanpa
+                            hasil tidak dimasukkan ke persentase.
+                          </p>
+                          {recommendedTime && (
+                            <>
+                              <button
+                                type="button"
+                                className="nivo-action nivo-action-secondary mt-3"
+                                disabled={busy}
+                                onClick={() =>
+                                  onSave({
+                                    type: 'preferences',
+                                    ...state.preferences,
+                                    time: recommendedTime,
+                                  })
+                                }
+                              >
+                                Gunakan pukul {recommendedTime} untuk pengingat
+                              </button>
+                              <p className="nivo-caption mt-2">
+                                Jam diubah atas pilihanmu. Pengingat tetap mengikuti persetujuan dan
+                                status aktif pada pengaturan perjalanan. Manfaat pengingat dari pola
+                                ini belum dapat dipastikan.
+                              </p>
+                            </>
+                          )}
                         </div>
-                      ))}
-                    </dl>
-                    <dl className="grid gap-2 text-sm">
-                      {data.triggers.map((point) => (
-                        <div key={point.trigger} className="flex items-start justify-between gap-2">
-                          <dt className="min-w-0 break-words [overflow-wrap:anywhere]">
-                            {point.trigger}
-                          </dt>
-                          <dd className="shrink-0">{point.total} kejadian</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
-                </details>
-              </>
-            )}
-          </Panel>
-          <DailyRecords data={data.series} />
-        </>
+                      </div>
+                    </SectionPage>
+                  </ResponsiveSections>
+                  <details className="nivo-disclosure">
+                    <summary>Lihat angka jam dan pemicu</summary>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <dl className="grid gap-2 text-sm">
+                        {data.hours.map((point) => (
+                          <div key={point.hour} className="flex items-start justify-between gap-2">
+                            <dt>Pukul {hourLabel(point.hour)}</dt>
+                            <dd>{point.total} kejadian</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <dl className="grid gap-2 text-sm">
+                        {data.triggers.map((point) => (
+                          <div
+                            key={point.trigger}
+                            className="flex items-start justify-between gap-2"
+                          >
+                            <dt className="min-w-0 break-words [overflow-wrap:anywhere]">
+                              {point.trigger}
+                            </dt>
+                            <dd className="shrink-0">{point.total} kejadian</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  </details>
+                </>
+              )}
+            </Panel>
+          </SectionPage>
+          <SectionPage name="rincian" label="Rincian harian">
+            <DailyRecords data={data.series} />
+          </SectionPage>
+          <SectionPage name="kemajuan" label="Kemajuan">
+            <JourneyProgress state={state} today={today} />
+          </SectionPage>
+          <SectionPage name="terdahulu" label="Catatan terdahulu">
+            <LegacyRecords />
+          </SectionPage>
+        </ResponsiveSections>
       )}
     </div>
   );

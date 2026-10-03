@@ -5,6 +5,7 @@ import { Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Panel, StateNotice } from '@/components/ui/nivo';
+import { ResponsiveSections, SectionPage } from '@/components/ui/responsive-sections';
 import { authenticatedRequest } from '@/shared/api/client';
 import {
   dateBefore,
@@ -313,145 +314,156 @@ export default function PushPreferences({
       )}
       <form onSubmit={saveSchedule} className="grid gap-4">
         <fieldset disabled={blocked} className="grid min-w-0 gap-4">
-          <div>
-            <p className="mb-2 font-medium">Jam pengingat · format 24 jam</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="nivo-field">
-                <Label htmlFor="push-hour">Jam</Label>
-                <select
-                  id="push-hour"
-                  value={hours}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      time: event.target.value + ':' + minutes,
-                    }))
-                  }
-                >
-                  {Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0')).map(
-                    (hour) => (
-                      <option key={hour} value={hour}>
-                        {hour}
-                      </option>
-                    ),
-                  )}
-                </select>
+          <ResponsiveSections label="Jadwal pengingat" queryKey="schedule">
+            <SectionPage name="jam" label="Jam dan batas harian">
+              <div>
+                <p className="mb-2 font-medium">Jam pengingat · format 24 jam</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="nivo-field">
+                    <Label htmlFor="push-hour">Jam</Label>
+                    <select
+                      id="push-hour"
+                      value={hours}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          time: event.target.value + ':' + minutes,
+                        }))
+                      }
+                    >
+                      {Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0')).map(
+                        (hour) => (
+                          <option key={hour} value={hour}>
+                            {hour}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+                  <div className="nivo-field">
+                    <Label htmlFor="push-minute">Menit</Label>
+                    <select
+                      id="push-minute"
+                      value={minutes}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          time: hours + ':' + event.target.value,
+                        }))
+                      }
+                    >
+                      {minuteOptions.map((minute) => (
+                        <option key={minute} value={minute}>
+                          {minute}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="nivo-caption mt-2">
+                  Jadwal {draft.time} mengikuti zona waktu pada profilmu.
+                </p>
               </div>
-              <div className="nivo-field">
-                <Label htmlFor="push-minute">Menit</Label>
-                <select
-                  id="push-minute"
-                  value={minutes}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, time: hours + ':' + event.target.value }))
-                  }
-                >
-                  {minuteOptions.map((minute) => (
-                    <option key={minute} value={minute}>
-                      {minute}
-                    </option>
+              <div className="grid gap-2">
+                <p className="font-medium">Maksimum pengingat per hari</p>
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    disabled={draft.maxPerDay <= 1 || blocked}
+                    onClick={() =>
+                      setDraft((current) => ({ ...current, maxPerDay: current.maxPerDay - 1 }))
+                    }
+                    aria-label="Kurangi maksimum pengingat"
+                  >
+                    <Minus aria-hidden="true" />
+                  </Button>
+                  <output aria-live="polite">{draft.maxPerDay}</output>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    disabled={draft.maxPerDay >= 3 || blocked}
+                    onClick={() =>
+                      setDraft((current) => ({ ...current, maxPerDay: current.maxPerDay + 1 }))
+                    }
+                    aria-label="Tambah maksimum pengingat"
+                  >
+                    <Plus aria-hidden="true" />
+                  </Button>
+                </div>
+                <p className="nivo-caption">
+                  Termasuk pengingat harian dan kabar perjalanan setelah berhenti.
+                </p>
+              </div>
+            </SectionPage>
+            <SectionPage name="kabar" label="Kabar perjalanan">
+              <fieldset className="grid gap-2">
+                <legend className="mb-2 font-medium">Kabar perjalanan pada hari ke-</legend>
+                <div className="nivo-button-row">
+                  {FOLLOWUP_DAYS.map((day) => (
+                    <Button
+                      key={day}
+                      type="button"
+                      variant="outline"
+                      aria-pressed={draft.followupDays.includes(day)}
+                      onClick={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          followupDays: current.followupDays.includes(day)
+                            ? current.followupDays.filter((value) => value !== day)
+                            : [...current.followupDays, day].sort((a, b) => a - b),
+                        }))
+                      }
+                    >
+                      {day}
+                    </Button>
                   ))}
-                </select>
+                </div>
+                <p className="nivo-caption">
+                  Dihitung dari tanggal mulai berhenti yang kamu catat. Boleh tidak memilih.
+                </p>
+              </fieldset>
+            </SectionPage>
+            <SectionPage name="jeda" label="Jeda pengingat">
+              <div className="grid gap-2">
+                <p className="font-medium">Jeda pengingat</p>
+                <div className="nivo-button-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-pressed={!draft.pausedUntil || draft.pausedUntil < today}
+                    onClick={() => setDraft((current) => ({ ...current, pausedUntil: null }))}
+                  >
+                    Tanpa jeda
+                  </Button>
+                  {[1, 3, 7].map((days) => (
+                    <Button
+                      key={days}
+                      type="button"
+                      variant="outline"
+                      aria-pressed={draft.pausedUntil === dateBefore(today, 1 - days)}
+                      onClick={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          pausedUntil: dateBefore(today, 1 - days),
+                        }))
+                      }
+                    >
+                      {days} hari
+                    </Button>
+                  ))}
+                </div>
+                {draft.pausedUntil && draft.pausedUntil >= today && (
+                  <p className="nivo-caption">
+                    Dijeda sampai {formatDate(draft.pausedUntil)}. Pengingat kembali pada hari
+                    berikutnya.
+                  </p>
+                )}
               </div>
-            </div>
-            <p className="nivo-caption mt-2">
-              Jadwal {draft.time} mengikuti zona waktu pada profilmu.
-            </p>
-          </div>
-          <div className="grid gap-2">
-            <p className="font-medium">Maksimum pengingat per hari</p>
-            <div className="flex items-center gap-4">
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                disabled={draft.maxPerDay <= 1 || blocked}
-                onClick={() =>
-                  setDraft((current) => ({ ...current, maxPerDay: current.maxPerDay - 1 }))
-                }
-                aria-label="Kurangi maksimum pengingat"
-              >
-                <Minus aria-hidden="true" />
-              </Button>
-              <output aria-live="polite">{draft.maxPerDay}</output>
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                disabled={draft.maxPerDay >= 3 || blocked}
-                onClick={() =>
-                  setDraft((current) => ({ ...current, maxPerDay: current.maxPerDay + 1 }))
-                }
-                aria-label="Tambah maksimum pengingat"
-              >
-                <Plus aria-hidden="true" />
-              </Button>
-            </div>
-            <p className="nivo-caption">
-              Termasuk pengingat harian dan kabar perjalanan setelah berhenti.
-            </p>
-          </div>
-          <fieldset className="grid gap-2">
-            <legend className="mb-2 font-medium">Kabar perjalanan pada hari ke-</legend>
-            <div className="nivo-button-row">
-              {FOLLOWUP_DAYS.map((day) => (
-                <Button
-                  key={day}
-                  type="button"
-                  variant="outline"
-                  aria-pressed={draft.followupDays.includes(day)}
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      followupDays: current.followupDays.includes(day)
-                        ? current.followupDays.filter((value) => value !== day)
-                        : [...current.followupDays, day].sort((a, b) => a - b),
-                    }))
-                  }
-                >
-                  {day}
-                </Button>
-              ))}
-            </div>
-            <p className="nivo-caption">
-              Dihitung dari tanggal mulai berhenti yang kamu catat. Boleh tidak memilih.
-            </p>
-          </fieldset>
-          <div className="grid gap-2">
-            <p className="font-medium">Jeda pengingat</p>
-            <div className="nivo-button-row">
-              <Button
-                type="button"
-                variant="outline"
-                aria-pressed={!draft.pausedUntil || draft.pausedUntil < today}
-                onClick={() => setDraft((current) => ({ ...current, pausedUntil: null }))}
-              >
-                Tanpa jeda
-              </Button>
-              {[1, 3, 7].map((days) => (
-                <Button
-                  key={days}
-                  type="button"
-                  variant="outline"
-                  aria-pressed={draft.pausedUntil === dateBefore(today, 1 - days)}
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      pausedUntil: dateBefore(today, 1 - days),
-                    }))
-                  }
-                >
-                  {days} hari
-                </Button>
-              ))}
-            </div>
-            {draft.pausedUntil && draft.pausedUntil >= today && (
-              <p className="nivo-caption">
-                Dijeda sampai {formatDate(draft.pausedUntil)}. Pengingat kembali pada hari
-                berikutnya.
-              </p>
-            )}
-          </div>
+            </SectionPage>
+          </ResponsiveSections>
         </fieldset>
         <Button type="submit" disabled={blocked}>
           {working || busy ? 'Menyimpan…' : 'Simpan jadwal pengingat'}

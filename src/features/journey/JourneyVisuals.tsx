@@ -1,5 +1,4 @@
 'use client';
-import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, Heart, MessageCircle, Sprout } from 'lucide-react';
 import { Panel } from '@/components/ui/nivo';
@@ -12,84 +11,6 @@ import {
   phase,
 } from '@/shared/journey/domain';
 import { formatDate } from '@/shared/lib/format';
-
-export function Tabs({
-  label,
-  value,
-  onChange,
-  items,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  items: { value: string; label: string }[];
-}) {
-  return (
-    <div
-      className="nivo-tabs"
-      role="tablist"
-      aria-label={label}
-      onKeyDown={(event) => {
-        const index = items.findIndex((item) => item.value === value);
-        const next =
-          event.key === 'ArrowRight'
-            ? (index + 1) % items.length
-            : event.key === 'ArrowLeft'
-              ? (index - 1 + items.length) % items.length
-              : event.key === 'Home'
-                ? 0
-                : event.key === 'End'
-                  ? items.length - 1
-                  : -1;
-        if (next < 0) return;
-        event.preventDefault();
-        onChange(items[next].value);
-        (event.currentTarget.querySelectorAll('[role="tab"]')[next] as HTMLButtonElement).focus();
-      }}
-    >
-      {items.map((item) => (
-        <button
-          type="button"
-          role="tab"
-          key={item.value}
-          id={`tab-${item.value}`}
-          aria-controls={`panel-${item.value}`}
-          aria-selected={value === item.value}
-          tabIndex={value === item.value ? 0 : -1}
-          onClick={() => onChange(item.value)}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-export function TabPanel({
-  name,
-  selected,
-  children,
-}: {
-  name: string;
-  selected: string;
-  children: ReactNode;
-}) {
-  const [visited, setVisited] = useState(name === selected);
-  useEffect(() => {
-    if (name === selected) setVisited(true);
-  }, [name, selected]);
-  return (
-    <div
-      role="tabpanel"
-      id={`panel-${name}`}
-      aria-labelledby={`tab-${name}`}
-      hidden={name !== selected}
-      tabIndex={0}
-    >
-      {(visited || name === selected) && children}
-    </div>
-  );
-}
 
 export function JourneyStatus({ state, today }: { state: JourneyState; today: string }) {
   const currentPhase = phase(state);

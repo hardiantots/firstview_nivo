@@ -1,5 +1,5 @@
-import MotivationScreen from "@/features/auth/SignInPage/MotivationScreen"
+import { redirect } from 'next/navigation';
 
 export default function MotivationPage() {
-  return <MotivationScreen />
+  redirect('/onboarding');
 }

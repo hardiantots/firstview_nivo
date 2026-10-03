@@ -7,20 +7,25 @@ import { authenticatedRequest } from '@/shared/api/client';
 import { JourneyAction, JourneyState } from '@/shared/journey/domain';
 import { formatDate } from '@/shared/lib/format';
 import { CrisisSupport } from '@/features/support/NationalSupport';
+import { hasJourneyMotivation } from '@/shared/journey/onboarding';
 
 export default function JourneyWizard({
   state,
   today,
   busy,
   onSave,
+  onboarding = false,
+  onComplete,
 }: {
   state: JourneyState;
   today: string;
   busy: boolean;
   onSave: (action: JourneyAction) => Promise<boolean>;
+  onboarding?: boolean;
+  onComplete?: () => void;
 }) {
   const baseline = state.baselines.at(-1);
-  const [step, setStep] = useState(1),
+  const [step, setStep] = useState(onboarding && hasJourneyMotivation(state) ? 3 : 1),
     [selected, setSelected] = useState(state.motivations || []),
     [reason, setReason] = useState(state.ownReason || '');
   const [cigarettes, setCigarettes] = useState(String(baseline?.cigarettesPerDay ?? 0)),
@@ -38,6 +43,12 @@ export default function JourneyWizard({
   const reasonsTouched = useRef(false);
   const initialState = useRef(state);
   useEffect(() => {
+    if (!onboarding || state === initialState.current) return;
+    if (hasJourneyMotivation(state)) {
+      setStep(state.targetQuitDate || state.actualQuitDate || state.reduceFirst ? 4 : 3);
+    }
+  }, [state, onboarding]);
+  useEffect(() => {
     let disposed = false;
     authenticatedRequest('/api/profile')
       .then((result) => {
@@ -54,10 +65,19 @@ export default function JourneyWizard({
   const save = async (action: JourneyAction) => {
     setError('');
     setNotice('');
+    if (
+      onboarding &&
+      action.type === 'reasons' &&
+      !action.motivations.length &&
+      !action.ownReason.trim()
+    ) {
+      setError('Pilih setidaknya satu motivasi atau tulis alasanmu sendiri.');
+      return;
+    }
     try {
       if (await onSave(action)) {
         setNotice('Langkah ini tersimpan.');
-        setStep((value) => Math.min(4, value + 1));
+        setStep((value) => (onboarding && value === 1 ? 3 : Math.min(4, value + 1)));
       }
     } catch {
       setError('Periksa kembali isianmu.');
@@ -65,22 +85,33 @@ export default function JourneyWizard({
   };
   const choices = [...new Set([...MOTIVATION_OPTIONS, ...selected])];
   return (
-    <Panel title={step === 4 ? 'Rencanamu' : `Susun rencana · ${step} dari 3`}>
+    <Panel
+      title={
+        step === 4
+          ? 'Rencanamu'
+          : onboarding
+            ? `Rencana awal · ${step === 1 ? 1 : 2} dari 2`
+            : `Susun rencana · ${step} dari 3`
+      }
+    >
       <div className="nivo-button-row" aria-label="Langkah rencana">
-        {['Alasanmu', 'Kebiasaan awal', 'Tanggal berhenti'].map((label, index) => (
-          <button
-            className="nivo-action nivo-action-secondary"
-            key={label}
-            disabled={busy}
-            aria-pressed={step === index + 1}
-            onClick={() => {
-              setStep(index + 1);
-              setNotice('');
-            }}
-          >
-            {index + 1}. {label}
-          </button>
-        ))}
+        {['Alasanmu', 'Kebiasaan awal', 'Tanggal berhenti'].map(
+          (label, index) =>
+            (!onboarding || index !== 1) && (
+              <button
+                className="nivo-action nivo-action-secondary"
+                key={label}
+                disabled={busy || (onboarding && index === 2 && !hasJourneyMotivation(state))}
+                aria-pressed={step === index + 1}
+                onClick={() => {
+                  setStep(index + 1);
+                  setNotice('');
+                }}
+              >
+                {onboarding && index === 2 ? 2 : index + 1}. {label}
+              </button>
+            ),
+        )}
       </div>
       {error && <StateNotice error>{error}</StateNotice>}
       {notice && <StateNotice>{notice}</StateNotice>}
@@ -93,6 +124,11 @@ export default function JourneyWizard({
           }}
         >
           <p>Pilih sampai dua alasan yang penting bagimu.</p>
+          {onboarding && (
+            <p className="nivo-caption">
+              Pilih setidaknya satu motivasi atau isi alasanmu sendiri untuk melanjutkan.
+            </p>
+          )}
           <fieldset className="grid gap-3 sm:grid-cols-2">
             <legend className="sr-only">Alasan berhenti</legend>
             {choices.map((choice) => (
@@ -270,11 +306,13 @@ export default function JourneyWizard({
               state.motivations?.join(', ') ||
               'Alasanmu belum diisi. Kamu dapat menambahkannya kapan saja.'}
           </p>
-          <p>
-            {state.baselines.at(-1)
-              ? `Kebiasaan awal: ${state.baselines.at(-1).cigarettesPerDay} batang per hari.`
-              : 'Kebiasaan awal belum diisi.'}
-          </p>
+          {!onboarding && (
+            <p>
+              {state.baselines.at(-1)
+                ? `Kebiasaan awal: ${state.baselines.at(-1).cigarettesPerDay} batang per hari.`
+                : 'Kebiasaan awal belum diisi.'}
+            </p>
+          )}
           <p>
             {state.actualQuitDate
               ? `Mulai berhenti pada ${formatDate(state.actualQuitDate)}.`
@@ -282,10 +320,21 @@ export default function JourneyWizard({
                 ? `Tanggal pilihanmu: ${formatDate(state.targetQuitDate)}.`
                 : 'Mulai dari mengurangi bertahap sesuai pilihanmu.'}
           </p>
-          <p className="nivo-caption">Kamu bisa mengubah setiap langkah melalui tombol di atas.</p>
+          <p className="nivo-caption">Kamu bisa mengubah rencana melalui menu Perjalanan.</p>
+          {onboarding && (
+            <p className="nivo-caption">
+              Tambahkan kebiasaan awal dan harga rokok di Perjalanan jika ingin melihat estimasi
+              hemat.
+            </p>
+          )}
+          {onboarding && (
+            <button type="button" className="nivo-action" disabled={busy} onClick={onComplete}>
+              Mulai perjalanan
+            </button>
+          )}
         </div>
       )}
-      {step < 4 && (
+      {!onboarding && step < 4 && (
         <button
           className="nivo-text-link"
           disabled={busy}
